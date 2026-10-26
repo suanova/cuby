@@ -293,6 +293,26 @@ describe("WebSocket channel", () => {
     expect(channel.subscriptions.size).toBe(0);
   });
 
+  it("coalesces a first-message retry after its empty session binding has been persisted", async () => {
+    const bus = new MessageBus();
+    const channel = webuiChannel(bus);
+    const first = connection();
+    const duplicate = connection();
+    const request = { type: "message", chat_id: "new-chat-retry", content: "review the report", webui: true,
+      client_request_id: "98989898-9898-4989-8989-989898989898", target: { kind: "standalone" } };
+    await channel.dispatchEnvelope(first, "owner", request);
+    const session = channel.sessionManager.getOrCreate("websocket:new-chat-retry");
+    Object.assign(session.metadata, { webui: true, webuiProjectId: null, webuiWorkspaceCwd: channel.workspacePath });
+    channel.sessionManager.save(session);
+    await channel.dispatchEnvelope(duplicate, "owner", request);
+    expect(bus.inboundSize).toBe(1);
+    expect(duplicate.send.mock.calls.some(([payload]) => JSON.parse(payload).event === "error")).toBe(false);
+    const retarget = connection();
+    await channel.dispatchEnvelope(retarget, "owner", { ...request, client_request_id: "97979797-9797-4979-8979-979797979797" });
+    expect(retarget.send.mock.calls.map(([payload]) => JSON.parse(payload))).toContainEqual(expect.objectContaining({ event: "error", reason: "session_target_invalid" }));
+    expect(bus.inboundSize).toBe(1);
+  });
+
   it("acknowledges queued WebUI requests without accepting or duplicating them", async () => {
     const bus = new MessageBus();
     const channel = webuiChannel(bus);

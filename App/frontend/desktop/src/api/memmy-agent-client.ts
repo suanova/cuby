@@ -6,6 +6,8 @@
  * bearer tokens and a WebSocket protocol owned by memmy-agent.
  */
 import { z } from "zod";
+import { FinanceCatalogSchema, FinanceOpenSchema, FinanceNotesSchema,
+  type FinanceCatalog, type FinanceOpen, type FinanceRequest, type FinanceNotes } from "@memmy/local-api-contracts";
 import {
   ApplicationIconSchema,
   ComputerHistorySnapshotSchema,
@@ -194,6 +196,7 @@ const ModelSelectionSchema = ModelSelectionWireSchema.transform((value): MemmyAg
 }));
 
 const BootstrapSchema = z.object({
+  tool_names: z.array(z.string()).optional(),
   token: z.string(),
   ws_path: z.string(),
   expires_in: z.number(),
@@ -799,6 +802,8 @@ export type MemmyAgentRunLifecycleEvent = MemmyAgentWsEvent & {
 };
 
 export interface MemmyAgentClient {
+  getFinanceCatalog?(): Promise<FinanceCatalog>;
+  financeReaderRequest?(input: FinanceRequest): Promise<unknown>;
   bootstrap(options?: { force?: boolean }): Promise<MemmyAgentBootstrap>;
   getSettings(): Promise<MemmyAgentSettings>;
   listMcpPresets(): Promise<McpPresetsPayload>;
@@ -1427,6 +1432,17 @@ class HttpMemmyAgentClient implements MemmyAgentClient {
       method: "POST",
       body: { path, sessionKey }
     });
+  }
+
+  async getFinanceCatalog(): Promise<FinanceCatalog> {
+    return this.request("/api/webui/finance/catalog", FinanceCatalogSchema);
+  }
+
+  async financeReaderRequest(input: FinanceRequest): Promise<unknown> {
+    const result = await this.request("/api/webui/finance/request", z.unknown(), { method: "POST", body: input });
+    if (input.action === "open") return FinanceOpenSchema.parse(result) satisfies FinanceOpen;
+    if (input.action === "decisions" || input.action === "save") return FinanceNotesSchema.parse(result) satisfies FinanceNotes;
+    return result;
   }
 
   async revealArtifact(path: string, sessionKey: string): Promise<void> {

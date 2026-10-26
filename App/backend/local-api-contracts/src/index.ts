@@ -3,6 +3,8 @@ import { z } from "zod";
 
 export * from "./model-catalog-resolver.js";
 export * from "./model-kinds.js";
+export * from "./finance-reader.js";
+export * from "./finance-workflows.js";
 
 export * from "./memory-runtime.js";
 export * from "./memory-canonical-json.js";

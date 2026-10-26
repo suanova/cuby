@@ -1,3 +1,5 @@
+import { financeWorkflowDisplayText } from "@memmy/local-api-contracts";
+
 const GOAL_CONTROL_SUBCOMMANDS: ReadonlySet<string> = new Set([
   "status",
   "help",
@@ -35,7 +37,7 @@ export function goalObjectiveFromCommand(content: string): string | null {
 
 /** Removes the Goal command wrapper from user-facing WebUI text. */
 export function visibleWebuiUserContent(content: string): string {
-  return goalObjectiveFromCommand(content) ?? content;
+  return goalObjectiveFromCommand(content) ?? financeWorkflowDisplayText(content) ?? content;
 }
 
 /** Returns user text that may participate in automatic WebUI title generation. */
@@ -45,5 +47,5 @@ export function webuiTitleUserText(message: SessionMessageLike): string | null {
   if (!content) return null;
   if (message.commandMessage === true) return goalObjectiveFromCommand(content);
   if (content.startsWith("/")) return null;
-  return content;
+  return financeWorkflowDisplayText(content) ?? content;
 }

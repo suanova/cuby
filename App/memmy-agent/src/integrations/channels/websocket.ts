@@ -12,6 +12,7 @@ import {
   ModelEndpointProtocolSchema,
 } from "@memmy/local-api-contracts";
 import { requestMcpReload } from "../../core/agent-runtime/tools/mcp.js";
+import { FinanceReaderApi, FinanceReaderError, type FinanceToolCall } from "../../entrypoints/frontend-bridge/finance-reader-api.js";
 import { BaseChannel, type ChannelHandleMessageOptions } from "./base.js";
 import {
   OUTBOUND_META_AGENT_UI,
@@ -712,6 +713,27 @@ export class WebSocketChannel extends BaseChannel {
   goalControlConnections = new Map<string, Set<any>>();
   dispatchingGoalControls = new Map<string, string>();
   readonly computerHistory: ComputerHistoryDemoService;
+  private financeReader: FinanceReaderApi | null = null;
+
+  setFinanceReaderTools(callTool: FinanceToolCall): void {
+    this.financeReader = new FinanceReaderApi(callTool);
+  }
+
+  async handleFinanceReader(request: HttpRequestLike, catalog = false): Promise<HttpLikeResponse> {
+    if (!this.checkApiToken(request)) return httpError(401, "Unauthorized");
+    if ((request.method ?? "GET").toUpperCase() !== (catalog ? "GET" : "POST")) return httpError(405, "method not allowed");
+    if (!this.financeReader) return httpError(503, "FinanceBuddy MCP service is unavailable.");
+    try {
+      if (catalog) return httpJsonResponse(await this.financeReader.catalog());
+      const text = String(request.body ?? "");
+      if (Buffer.byteLength(text) > 16384) return httpError(413, "Reader request too large.");
+      return httpJsonResponse(await this.financeReader.request(JSON.parse(text)) as Record<string, unknown>);
+    } catch (error) {
+      if (error instanceof FinanceReaderError) return httpError(error.status, error.message);
+      if (error instanceof SyntaxError) return httpError(400, "Invalid JSON reader request.");
+      return httpError(502, "FinanceBuddy reader unavailable or its data contract changed. Reconnect the MCP service.");
+    }
+  }
 
   constructor(config: any = {}, bus?: any, options: WebSocketChannelOptions = {}) {
     const normalized = config instanceof WebSocketConfig ? config : new WebSocketConfig(config);
@@ -2766,6 +2788,8 @@ export class WebSocketChannel extends BaseChannel {
     if (got === "/api/webui/artifacts/resolve") return this.handleArtifactResolve(request);
     if (got === "/api/webui/artifacts/reveal") return this.handleArtifactReveal(request);
     if (got === "/api/webui/artifacts/open") return this.handleArtifactOpen(request);
+    if (got === "/api/webui/finance/catalog") return this.handleFinanceReader(request, true);
+    if (got === "/api/webui/finance/request") return this.handleFinanceReader(request);
     if (got === "/api/webui/media/upload") return this.handleWebuiMediaUpload(request);
     if (got === "/api/settings/update") return this.handleSettingsUpdate(request);
     if (got === "/api/settings/model-configurations/create") return this.handleSettingsModelConfigurationCreate(request);
@@ -3373,16 +3397,6 @@ export class WebSocketChannel extends BaseChannel {
         return;
       }
     }
-    if (existing && envelope.target != null) {
-      await this.sendWebuiRequestError(connection, {
-        chatId,
-        clientRequestId,
-        detail: "session_binding_rejected",
-        reason: "session_target_invalid",
-      });
-      return;
-    }
-
     const requestKey = clientRequestId
       ? this.webuiRequestKey(sessionKey, clientRequestId)
       : null;
@@ -3415,6 +3429,18 @@ export class WebSocketChannel extends BaseChannel {
         }
         return;
       }
+    }
+
+    // A first request can materialize the binding before its user message is
+    // persisted. Coalesce its identical retry above before rejecting retargets.
+    if (existing && envelope.target != null) {
+      await this.sendWebuiRequestError(connection, {
+        chatId,
+        clientRequestId,
+        detail: "session_binding_rejected",
+        reason: "session_target_invalid",
+      });
+      return;
     }
 
     let createdReservation = false;

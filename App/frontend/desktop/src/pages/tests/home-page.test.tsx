@@ -288,7 +288,7 @@ describe("HomePage", () => {
     expect(source).toContain("const activeImTitleDisplay = imChannelTitleDisplay(activeConversationTitle);");
     expect(source).toContain("formatConversationTitleForDisplay(activeImTitleDisplay?.title ?? activeConversationTitle)");
     expect(source).toContain("topBar={hasActiveConversation || environmentScope ? (");
-    expect(source).toContain("topBarEnd={hasActiveConversation || environmentScope ? (");
+    expect(source).toContain("topBarEnd={<>");
     expect(source).toContain('title={hasActiveConversation ? activeConversationTitle : selectedDraftProject?.name}');
     expect(source).toContain("{hasActiveConversation ? activeConversationTitleDisplay : selectedDraftProject?.name}");
     expect(source).toContain('{hasActiveConversation && activeImTitleDisplay ? <ImChannelTitleIcon slug={activeImTitleDisplay.slug} name={activeImTitleDisplay.channelName} /> : null}');
@@ -345,7 +345,7 @@ describe("HomePage", () => {
     expect(source).toContain("state.agent.composerPendingAttachmentsByScope");
     expect(source).toContain("agentActions.composerDraftUpdated(scopeKey, nextValue)");
     expect(source).toContain("const sendScopeKey = chatScopeKey;");
-    expect(source).toContain("clearComposer: () => clearComposerAfterSend(sendScopeKey)");
+    expect(source).toContain("clearComposer: () => { if (!workflowContent) clearComposerAfterSend(sendScopeKey); }");
     expect(source).not.toContain("useState<Record<string, string>>({})");
     expect(source).not.toContain("useState<Record<string, PendingAttachment[]>>({})");
     expect(source).not.toContain("composerMediaErrorByScope");
@@ -489,7 +489,7 @@ describe("HomePage", () => {
 
   it("passes the current UI language into agent websocket messages", () => {
     const source = readFileSync(homePageSourcePath, "utf8");
-    const sendBlock = source.slice(source.indexOf("async function sendMessage()"), source.indexOf("  /**\n   * 停止当前 Agent 回合"));
+    const sendBlock = source.slice(source.indexOf("async function sendMessage("), source.indexOf("  /**\n   * 停止当前 Agent 回合"));
 
     expect(source).toContain("const { language, t } = useTranslation();");
     expect(sendBlock).toContain("language,");
@@ -497,10 +497,10 @@ describe("HomePage", () => {
 
   it("intercepts exact local slash commands before normal message submission", () => {
     const source = readFileSync(homePageSourcePath, "utf8");
-    const sendBlock = source.slice(source.indexOf("async function sendMessage()"), source.indexOf("  /**\n   * 停止当前 Agent 回合"));
+    const sendBlock = source.slice(source.indexOf("async function sendMessage("), source.indexOf("  /**\n   * 停止当前 Agent 回合"));
     const localSlashBlock = source.slice(source.indexOf("function runExactLocalSlashCommand"), source.indexOf("  /**\n   * 停止当前 Agent 回合"));
 
-    expect(sendBlock).toContain("if (runExactLocalSlashCommand(input))");
+    expect(sendBlock).toContain("if (!workflowContent && runExactLocalSlashCommand(input))");
     expect(sendBlock.indexOf("runExactLocalSlashCommand(input)")).toBeLessThan(sendBlock.indexOf("submitAgentComposerMessage({"));
     expect(localSlashBlock).toContain("if (pendingAttachments.length > 0) return false;");
     expect(localSlashBlock).toContain('normalized === "/last-compaction"');
@@ -743,7 +743,7 @@ describe("HomePage", () => {
 
   it("prechecks platform quota only for the resolved account-sourced candidate", () => {
     const source = readFileSync(homePageSourcePath, "utf8");
-    const sendBlock = source.slice(source.indexOf("async function sendMessage()"), source.indexOf("async function removeQueuedMessage"));
+    const sendBlock = source.slice(source.indexOf("async function sendMessage("), source.indexOf("async function removeQueuedMessage"));
 
     expect(sendBlock).toContain('resolvedConversationModel.candidate?.source === "platform"');
     expect(sendBlock).toContain("isAccountTokenQuotaExhausted(state.bootstrap)");
@@ -816,7 +816,7 @@ describe("HomePage", () => {
       source.indexOf("/**\n   * Updates the input draft")
     );
     const sendBlock = source.slice(
-      source.indexOf("async function sendMessage()"),
+      source.indexOf("async function sendMessage("),
       source.indexOf("/**\n   * Stops the current Agent turn.")
     );
 

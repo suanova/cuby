@@ -15,6 +15,7 @@ export type AgentArtifactClient = {
   resolveArtifact(path: string): ReturnType<MemmyAgentClient["resolveArtifact"]>;
   revealArtifact(path: string): Promise<void>;
   openArtifact(path: string): Promise<void>;
+  openReview?(path: string, resolvedPath: string): Promise<boolean>;
 };
 export type AttachmentActionStatus = "opened" | "revealed" | "downloaded" | "failed";
 export type AttachmentCopyTarget = "path" | "url";
@@ -409,6 +410,11 @@ function FileReferenceChip(props: {
     if (!resolved) {
       setActionState("error");
       return;
+    }
+    if (props.artifactClient?.openReview) {
+      try {
+        if (await props.artifactClient.openReview(cleanPath, resolved.path)) { setActionState("idle"); return; }
+      } catch { setActionState("error"); return; }
     }
     const result = await runAttachmentAction({
       path: resolved.path,

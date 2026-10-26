@@ -1,0 +1,147 @@
+import { describe, it, expect, vi } from "vitest";
+import { FinanceReaderApi } from "../../../src/entrypoints/frontend-bridge/finance-reader-api.js";
+
+const sha = "a".repeat(64);
+const path = "outputs/c2-reviews/business-review/review.json";
+const review = {
+  schema_version: "financebuddy-reader-1",
+  review_sha256: sha,
+  source: { file_name: "report.pdf", report_fiscal_year: "2025/26", sha256: sha, language: "en" },
+  target_period: {
+    fiscal_year: "2025/26",
+    start: "2025-04-01",
+    end: "2026-03-31",
+    scenario_assumption: false,
+  },
+  mode: "same_year",
+  rules: { status: "selected_text_matches", checked_at: "2026-10-26", scope: "C2 28-29 only" },
+  checks: [],
+  anchors: {},
+  pages: [{ number: 1, width: 100, height: 200 }],
+  status_counts: {},
+  rule_url: "https://en-rules.hkex.com.hk/",
+  exclusions: [],
+  human_review_notice: "Human review required",
+};
+const notes = { review_sha256: sha, revision: 0, decisions: {}, history: [] };
+function setup(url = "http://127.0.0.1:60939") {
+  const tool = vi.fn(async () => JSON.stringify({ reader_url: url }));
+  const fetchFn = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+    const route = String(url);
+    if (route.endsWith("/api/health"))
+      return Response.json({ app: "financebuddy-review-reader", review_sha256: sha });
+    if (route.endsWith("/api/review")) return Response.json(review);
+    if (route.endsWith("/api/decisions"))
+      return Response.json(notes, { status: init?.method === "POST" ? 409 : 200 });
+    if (route.endsWith("/1.png"))
+      return new Response(Buffer.from("89504e470d0a1a0a00000000", "hex"), {
+        headers: { "Content-Type": "image/png" },
+      });
+    return new Response("company,period\n", { headers: { "Content-Type": "text/csv" } });
+  });
+  return { api: new FinanceReaderApi(tool, fetchFn as typeof fetch), tool, fetchFn };
+}
+
+describe("Native Cuby FinanceBuddy adapter", () => {
+  it("opens only through the installed MCP tool and returns opaque handles, not upstream URLs", async () => {
+    const { api, tool, fetchFn } = setup();
+    const result = (await api.request({ action: "open", review_path: path })) as any;
+    expect(tool).toHaveBeenCalledWith("mcp_financebuddy_reports_open_c2_reader", {
+      review_path: path,
+    });
+    expect(result.handle).toMatch(/^[a-f0-9-]{36}$/);
+    expect(result).not.toHaveProperty("reader_url");
+    const image = await api.request({ action: "page", handle: result.handle, page: 1 });
+    expect(image).toHaveProperty("data_url", expect.stringMatching(/^data:image\/png;base64,/));
+    expect(fetchFn).toHaveBeenLastCalledWith(
+      "http://127.0.0.1:60939/api/page/1.png",
+      expect.objectContaining({ redirect: "error" }),
+    );
+  });
+  it.each([
+    "http://169.254.169.254",
+    "http://localhost:60939",
+    "http://127.0.0.1:60939/evil",
+    "http://127.0.0.1:99999",
+    "https://127.0.0.1:60939",
+    "http://127.0.0.1:60939@evil.test",
+  ])("rejects non-protocol reader address %s", async (address) => {
+    const { api, fetchFn } = setup(address);
+    await expect(api.request({ action: "open", review_path: path })).rejects.toThrow();
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+  it.each([
+    "../../secrets.json",
+    "outputs/c2-reviews/../../secrets/review.json",
+    "D:/report.json",
+    "outputs/c2-reviews/business-review/review.json?url=evil",
+  ])("rejects arbitrary paths %s", async (review_path) => {
+    const { api, tool } = setup();
+    await expect(api.request({ action: "open", review_path })).rejects.toThrow();
+    expect(tool).not.toHaveBeenCalled();
+  });
+  it("refuses unknown handles and generic forwarding", async () => {
+    const { api, tool } = setup();
+    await expect(
+      api.request({ action: "page", handle: crypto.randomUUID(), page: 1 }),
+    ).rejects.toMatchObject({ status: 410 });
+    await expect(api.request({ action: "fetch", url: "http://evil.test" })).rejects.toThrow();
+    expect(tool).not.toHaveBeenCalled();
+  });
+  it("preserves 409 note conflicts and only forwards the fixed note endpoint", async () => {
+    const { api, fetchFn } = setup();
+    const result = (await api.request({ action: "open", review_path: path })) as any;
+    const value = {
+      expected_revision: 0,
+      check_id: "check",
+      decision: "needs_data",
+      note: "Need source",
+    };
+    await expect(
+      api.request({ action: "save", handle: result.handle, value }),
+    ).rejects.toMatchObject({ status: 409 });
+    expect(fetchFn).toHaveBeenLastCalledWith(
+      "http://127.0.0.1:60939/api/decisions",
+      expect.objectContaining({
+        body: JSON.stringify(value),
+        headers: { "Content-Type": "application/json", "X-Reader-Request": "1" },
+      }),
+    );
+  });
+  it("rejects revision mismatches before issuing a handle", async () => {
+    const { api, fetchFn } = setup();
+    fetchFn.mockImplementation(async (url) =>
+      Response.json(
+        String(url).endsWith("/api/health")
+          ? { app: "financebuddy-review-reader", review_sha256: "b".repeat(64) }
+          : String(url).endsWith("/api/review")
+            ? review
+            : notes,
+      ),
+    );
+    await expect(api.request({ action: "open", review_path: path })).rejects.toThrow(
+      "revision mismatch",
+    );
+  });
+  it("does not substitute a same-named review from a different attachment workspace", async () => {
+    const { api, fetchFn } = setup();
+    await expect(
+      api.request({
+        action: "open",
+        review_path: path,
+        artifact_path: "/another-workspace/" + path,
+      }),
+    ).rejects.toMatchObject({ status: 409 });
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+  it("verifies that page responses are PNG bytes", async () => {
+    const { api, fetchFn } = setup();
+    const result = (await api.request({ action: "open", review_path: path })) as any;
+    fetchFn.mockResolvedValue(
+      new Response("<script>evil</script>", { headers: { "Content-Type": "image/png" } }),
+    );
+    await expect(api.request({ action: "page", handle: result.handle, page: 1 })).rejects.toThrow(
+      "Invalid PDF page",
+    );
+  });
+});

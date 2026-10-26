@@ -1110,12 +1110,15 @@ export async function gateway({
   host = null,
   workspace = null,
   config = null,
+  sessionDir = null,
   verbose = false,
 }: {
   port?: string | number | null;
   host?: string | null;
   workspace?: string | null;
   config?: string | null;
+  /** Optional isolated session store for programmatic development hosts. */
+  sessionDir?: string | null;
   verbose?: boolean;
 } = {}): Promise<GatewayRuntime> {
   const loaded = loadRuntimeConfig(config, workspace);
@@ -1130,6 +1133,7 @@ export async function gateway({
   const loop = AgentLoop.fromConfig(loaded, bus, {
     cronService: cron,
     projectStore,
+    ...(sessionDir ? { sessionDir: path.resolve(sessionDir) } : {}),
   });
   if (loop.sessions instanceof SessionManager) {
     loop.guiTranscriptMirror = new GuiTranscriptMirror(loop.sessions, canonicalWorkspace);
@@ -1185,6 +1189,11 @@ export async function gateway({
   const webuiChannel = manager.getChannel("websocket");
   let transcriptMonitor: GatewayTranscriptMonitor | null = null;
   if (webuiChannel instanceof WebSocketChannel) {
+    webuiChannel.setFinanceReaderTools(async (name, args) => {
+      if (!["mcp_financebuddy_reports_list_c2_reviews", "mcp_financebuddy_reports_open_c2_reader"].includes(name)
+          || !loop.tools?.has(name)) throw new Error("FinanceBuddy reader tools are not enabled.");
+      return loop.tools.execute(name, args);
+    });
     webuiChannel.setSessionTurnBarrier(
       (sessionKey, operation) => loop.withSessionTurnBarrier(sessionKey, operation),
     );
