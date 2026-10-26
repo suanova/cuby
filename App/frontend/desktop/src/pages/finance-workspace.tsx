@@ -320,8 +320,9 @@ export function FinanceWorkspace(props: {
               )}
               {launched && (
                 <p role="status">
-                  已交畀左邊 Cuby 對話處理。核對完成後，點 review.json
-                  可在此閱讀；沒有重新核對的話可直接開啟下面現有底稿。
+                  {selected.id === "peers"
+                    ? "已交畀左邊 Cuby 對話處理。完成後點 CSV 檔案開啟比較表；來源及口徑亦會保留在底稿。"
+                    : "已交畀左邊 Cuby 對話處理。核對完成後，點 review.json 可在此閱讀；沒有重新核對的話可直接開啟下面現有底稿。"}
                 </p>
               )}
             </>

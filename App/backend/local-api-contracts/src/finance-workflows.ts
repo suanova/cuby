@@ -67,9 +67,10 @@ export function buildFinancePrompt(input: {
   return [
     "執行 FinanceBuddy 同行比較。先讀 skills/financebuddy-peer-comparison/SKILL.md。",
     `以億都 FY2025/26 ESG 作基準，上網尋找 ${input.peers.join("、")} 的 2025 年官方報告。`,
-    "比較 Scope 1、Scope 2 及碳密度。以知識庫證據查億都，以 web_search 尋找同行官方來源，再用 read_public_report 核對實際 PDF 頁。",
+    `第一步必須呼叫 mcp_financebuddy_reports_build_peer_comparison，stock_codes: ${JSON.stringify(input.peers.map((p) => (p.includes("00732") ? "00732" : "02878")))}，output_name 使用新名稱。此工具會直接讀 live 知識庫、在線核對已收錄官方 PDF、抽取及驗算 Scope 1、Scope 2、碳密度，完成 CSV 匯出及逐欄讀回。不要重新從網站首頁盲目搜尋已收錄報告。`,
     "保留精確報告期間、原單位、邊界、Scope 2 基礎、密度分母、來源網址及頁碼。口徑不同要明示，不可直接排名或補猜數值。",
-    "用 export_peer_comparison 匯出 CSV 並讀回核對；輸出差異及可參考披露做法，附可點擊 outputs/ 檔案連結。",
+    "成功後直接使用工具的 summary、limits、artifact_links 回覆短表格、口徑差異及 CSV 連結。不可反推製成品產量，亦不可把沒有雙軌排放數值一概當作違規。",
+    "若工具報原件改版／來源不可用，才用 web_search 和 read_public_report 查官方替代版本，完成已核實部分的 export_peer_comparison 並讀回；未完成匯出就不得結束成為正式比較結果或再問是否需要繼續已授權工作。",
   ].join("\n");
 }
 /** Collapse only exact app-generated requests; arbitrary user text remains visible. */

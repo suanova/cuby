@@ -58,6 +58,9 @@ describe("FinanceBuddy guided entry", () => {
     expect(prompt).toContain("read_public_report");
     expect(prompt).toContain("不可直接排名");
     expect(prompt).toContain("export_peer_comparison");
+    expect(prompt).toContain(
+      "第一步必須呼叫 mcp_financebuddy_reports_build_peer_comparison",
+    );
   });
   it("shows a plain-language task summary only for an exact app-generated workflow", () => {
     const prompt = buildFinancePrompt({
