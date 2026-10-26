@@ -158,6 +158,24 @@ export async function consumeSdkStream(
   let usage: Record<string, any> = {};
   let reasoning: string | null = null;
   const toolItems = new Map<string, any>();
+  const toolAliases = new Map<string, string>();
+  let nextTool = 0;
+  const toolItem = (event: any, snapshot?: any) => {
+    const aliases = [
+      snapshot?.call_id || event.call_id ? `call:${snapshot?.call_id || event.call_id}` : null,
+      snapshot?.id || event.item_id ? `item:${snapshot?.id || event.item_id}` : null,
+      Number.isInteger(event.output_index) ? `index:${event.output_index}` : null,
+    ].filter((value): value is string => Boolean(value));
+    if (!aliases.length) throw new RuntimeError("Response tool event is missing its identity.");
+    const key = aliases.map(alias => toolAliases.get(alias)).find(Boolean) ?? `tool:${nextTool++}`;
+    for (const alias of aliases) toolAliases.set(alias, key);
+    const item = toolItems.get(key) ?? { arguments: "" };
+    if (snapshot?.call_id || event.call_id) item.call_id = snapshot?.call_id || event.call_id;
+    if (snapshot?.id || event.item_id) item.id = snapshot?.id || event.item_id;
+    if (snapshot?.name) item.name = snapshot.name;
+    toolItems.set(key, item);
+    return item;
+  };
   const contentCb = callbacks.onContentDelta;
   const toolCb = callbacks.onToolCallDelta;
   const signal = callbacks.signal ?? null;
@@ -172,30 +190,23 @@ export async function consumeSdkStream(
       text += event.delta ?? "";
       if (contentCb && !signal?.aborted) await contentCb(event.delta ?? "");
     } else if (type === "response.output_item.added" && event.item?.type === "function_call") {
-      toolItems.set(event.item.call_id, {
-        call_id: event.item.call_id,
-        id: event.item.id,
-        name: event.item.name,
-        arguments: event.item.arguments ?? "",
-      });
-      if (toolCb && !signal?.aborted) await toolCb({ call_id: event.item.call_id, name: event.item.name, arguments_delta: "" });
+      const item = toolItem(event, event.item);
+      if (event.item.arguments) item.arguments = event.item.arguments;
+      if (toolCb && !signal?.aborted) await toolCb({ call_id: item.call_id, name: item.name, arguments_delta: "" });
     } else if (type === "response.function_call_arguments.delta") {
-      const item = toolItems.get(event.call_id) ?? { call_id: event.call_id, id: "fc_0", name: "" };
+      const item = toolItem(event);
       item.arguments = `${item.arguments ?? ""}${event.delta ?? ""}`;
-      toolItems.set(event.call_id, item);
-      if (toolCb && !signal?.aborted) await toolCb({ call_id: event.call_id, name: item.name, arguments_delta: event.delta ?? "" });
+      if (toolCb && item.call_id && item.name && !signal?.aborted) await toolCb({ call_id: item.call_id, name: item.name, arguments_delta: event.delta ?? "" });
     } else if (type === "response.function_call_arguments.done") {
-      const item = toolItems.get(event.call_id) ?? { call_id: event.call_id, id: "fc_0", name: "" };
+      const item = toolItem(event);
       item.arguments = event.arguments ?? item.arguments ?? "";
-      toolItems.set(event.call_id, item);
     } else if (type === "response.output_item.done" && event.item?.type === "function_call") {
-      toolItems.set(event.item.call_id, {
-        call_id: event.item.call_id,
-        id: event.item.id,
-        name: event.item.name,
-        arguments: event.item.arguments ?? toolItems.get(event.item.call_id)?.arguments ?? "",
-      });
+      const item = toolItem(event, event.item);
+      item.arguments = event.item.arguments ?? item.arguments ?? "";
     } else if (type === "response.completed") {
+      for (const [output_index, item] of (event.response?.output ?? []).entries()) {
+        if (item.type === "function_call") toolItem({ output_index }, item).arguments = item.arguments ?? "";
+      }
       finish = mapFinishReason(event.response?.status);
       const u = event.response?.usage;
       if (u) {
@@ -217,6 +228,7 @@ export async function consumeSdkStream(
     }
   }
   const calls = [...toolItems.values()].map((item) => {
+    if (!item.name?.trim() || !item.call_id) throw new RuntimeError("Response tool call is missing its name or call ID.");
     const args = parseToolArguments(item.arguments);
     return new ToolCallRequest({ id: `${item.call_id ?? "call_0"}|${item.id ?? "fc_0"}`, name: item.name, arguments: args });
   });

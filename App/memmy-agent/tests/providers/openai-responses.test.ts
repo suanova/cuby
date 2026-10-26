@@ -18,6 +18,32 @@ async function* streamFrom(events: any[]): AsyncGenerator<any> {
 }
 
 describe("OpenAI Responses splitToolCallId", () => {
+  it("keeps official item_id argument deltas attached to one named call", async () => {
+    const [, calls] = await consumeSdkStream(streamFrom([
+      {type:"response.output_item.added",output_index:1,item:{type:"function_call",call_id:"call_read",id:"fc_read",name:"read_file",arguments:""}},
+      {type:"response.function_call_arguments.delta",output_index:1,item_id:"fc_read",delta:'{"path":"report.pdf"}'},
+      {type:"response.function_call_arguments.done",output_index:1,item_id:"fc_read",arguments:'{"path":"report.pdf"}'},
+      {type:"response.output_item.done",output_index:1,item:{type:"function_call",call_id:"call_read",id:"fc_read",name:"read_file",arguments:'{"path":"report.pdf"}'}},
+    ]));
+    expect(calls).toHaveLength(1);expect(calls[0]!.name).toBe("read_file");
+    expect(calls[0]!.id).toBe("call_read|fc_read");expect(calls[0]!.arguments).toEqual({path:"report.pdf"});
+  });
+  it("does not mix interleaved function arguments and accepts a completion snapshot", async () => {
+    const [, calls] = await consumeSdkStream(streamFrom([
+      {type:"response.output_item.added",output_index:0,item:{type:"function_call",call_id:"c1",id:"f1",name:"first",arguments:""}},
+      {type:"response.output_item.added",output_index:1,item:{type:"function_call",call_id:"c2",id:"f2",name:"second",arguments:""}},
+      {type:"response.function_call_arguments.delta",item_id:"f2",delta:'{"b":2}'},
+      {type:"response.function_call_arguments.delta",item_id:"f1",delta:'{"a":1}'},
+      {type:"response.completed",response:{status:"completed",output:[
+        {type:"function_call",call_id:"c1",id:"f1",name:"first",arguments:'{"a":1}'},
+        {type:"function_call",call_id:"c2",id:"f2",name:"second",arguments:'{"b":2}'},
+      ]}},
+    ]));
+    expect(calls.map(c=>[c.name,c.arguments])).toEqual([["first",{a:1}],["second",{b:2}]]);
+  });
+  it("rejects an unidentified orphan instead of replaying an empty function name", async () => {
+    await expect(consumeSdkStream(streamFrom([{type:"response.function_call_arguments.done",item_id:"orphan",arguments:"{}"}]))).rejects.toThrow(/missing its name/);
+  });
   it("returns a plain call id", () => {
     expect(splitToolCallId("call_abc")).toEqual(["call_abc", null]);
   });
