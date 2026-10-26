@@ -73,7 +73,7 @@ import { AgentThreadMessages, ChatImageLightbox } from "./agent-thread-messages.
 import { AgentWorkspaceContext } from "./agent-workspace-context.js";
 import { AppFrame } from "./app-frame.js";
 import { FinanceWorkspace, FinanceWorkflowCards, FINANCE_REVIEW_LINK } from "./finance-workspace.js";
-import { financeWorkflowDisplayText, type FinanceWorkflowId } from "./finance-workflows.js";
+import { completedFinanceReviewPath, financeWorkflowDisplayText, type FinanceWorkflowId } from "./finance-workflows.js";
 import {
   MicrophonePermissionError,
   mergeVoiceTranscript,
@@ -852,6 +852,8 @@ export function HomePage() {
   const [financeWorkflow, setFinanceWorkflow] = useState<FinanceWorkflowId | null>(null);
   const [financeReviewPath, setFinanceReviewPath] = useState<string | null>(null);
   const [financeArtifactPath, setFinanceArtifactPath] = useState<string | null>(null);
+  const [financePendingReview, setFinancePendingReview] = useState<{ chatId: string; requestId: string; startedAt: number } | null>(null);
+  const [financeResultNotice, setFinanceResultNotice] = useState("");
   useEffect(() => {
     let active = true;
     void clients?.memmyAgent.bootstrap().then((boot) => {
@@ -1003,6 +1005,7 @@ export function HomePage() {
       openArtifact: (path: string) => client.openArtifact(path, sessionKey),
       openReview: async (path: string, resolvedPath: string) => {
         if (financeEnabled && FINANCE_REVIEW_LINK.test(path)) {
+          setFinancePendingReview(null);
           setFinanceReviewPath(path.replace(/\/review\.html$/, "/review.json"));
           setFinanceArtifactPath(resolvedPath.replace(/([\\/])review\.html$/, "$1review.json"));
           setFinanceWorkflow(null); setFinanceOpen(true); setEnvironmentPanelOpen(false);
@@ -1021,6 +1024,25 @@ export function HomePage() {
       state.agent.optimisticSendingByChatId[state.agent.currentChatId]
     )
   );
+  useEffect(() => {
+    const pending = financePendingReview;
+    const completed = state.agent.lastTaskCompletion;
+    const client = clients?.memmyAgent;
+    const sessionKey = state.agent.currentSessionKey;
+    if (!pending || !client || !sessionKey || isCurrentAgentRunning ||
+        pending.chatId !== state.agent.currentChatId || completed?.chatId !== pending.chatId ||
+        completed.at < pending.startedAt) return;
+    const path = completedFinanceReviewPath(state.agent.messages, pending.requestId);
+    if (!path) { setFinancePendingReview(null); return; }
+    let active = true;
+    void client.resolveArtifact(path, sessionKey).then(resolved => {
+      if (!active) return;
+      setFinancePendingReview(null);
+      setFinanceReviewPath(path); setFinanceArtifactPath(resolved.path);
+      setFinanceWorkflow(null); setFinanceOpen(true); setEnvironmentPanelOpen(false);
+    }).catch(() => { if (active) { setFinancePendingReview(null); setFinanceResultNotice("結果已完成；請點對話內 review.json 開啟閱讀器。"); } });
+    return () => { active = false; };
+  }, [financePendingReview, state.agent.currentChatId, state.agent.currentSessionKey, state.agent.lastTaskCompletion, state.agent.messages, isCurrentAgentRunning, clients?.memmyAgent]);
   const workspaceEnvironment = useWorkspaceEnvironment(
     clients?.memmyAgent ?? null,
     environmentScope,
@@ -1768,6 +1790,11 @@ export function HomePage() {
     const sendScopeKey = chatScopeKey;
     if (messageSendLocksRef.current.has(sendScopeKey)) return;
     const clientRequestId = crypto.randomUUID();
+    const reviewing = Boolean(workflowContent && financeWorkflow === "review");
+    const watchReview = (chatId: string) => {
+      if (reviewing) { setFinancePendingReview({ chatId, requestId: clientRequestId, startedAt: Date.now() }); setFinanceResultNotice(""); }
+    };
+    if (state.agent.currentChatId) watchReview(state.agent.currentChatId);
     messageSendLocksRef.current.add(sendScopeKey);
     dispatch(agentActions.messageSendLockUpdated(sendScopeKey, clientRequestId));
     dispatch(agentActions.modelSelectionRequestStarted(
@@ -1798,12 +1825,10 @@ export function HomePage() {
         getChatSelectionEpoch: () => chatSelectionEpochRef.current,
         scopeKey: sendScopeKey,
         modelPreset: resolvedConversationModel.candidateId ?? undefined,
-        onChatResolved: (chatId) => dispatch(agentActions.modelSelectionRequestStarted(
-          sendScopeKey,
-          chatId,
-          clientRequestId,
-          resolvedConversationModel.candidateId
-        )),
+        onChatResolved: (chatId) => {
+          watchReview(chatId);
+          dispatch(agentActions.modelSelectionRequestStarted(sendScopeKey, chatId, clientRequestId, resolvedConversationModel.candidateId));
+        },
         onNewChatMessageSent: clients?.memmyAgent
           ? (chatId) => {
             rememberFirstEncounterRelayChatIfArmed(chatId);
@@ -1816,10 +1841,12 @@ export function HomePage() {
           : undefined
       });
       if (!submitted) {
+        if (reviewing) setFinancePendingReview(null);
         dispatch(agentActions.modelSelectionRequestCancelled(clientRequestId));
         if (workflowContent) throw new Error("未能啟動此工作；請確認對話連線及模型可用後再試。");
       }
     } catch (error) {
+      if (reviewing) setFinancePendingReview(null);
       dispatch(agentActions.modelSelectionRequestCancelled(clientRequestId));
       throw error;
     } finally {
@@ -2695,7 +2722,7 @@ export function HomePage() {
         </h1>
       ) : null}
       topBarEnd={<>
-        {financeEnabled && <button className="finance-launch-button" aria-pressed={financeOpen} onClick={() => { setFinanceOpen(!financeOpen); setEnvironmentPanelOpen(false); }}>報告工作台</button>}
+        {financeEnabled && <button className="finance-launch-button" aria-pressed={financeOpen && !financeWorkflow} onClick={() => { setFinanceWorkflow(null); setFinanceOpen(!financeOpen); setEnvironmentPanelOpen(false); }}>報告工作台</button>}
         {hasActiveConversation || environmentScope ? (
         <button
           type="button"
@@ -2713,7 +2740,8 @@ export function HomePage() {
       topBarBorder={Boolean(hasActiveConversation || environmentScope)}
       windowsTitlebarSafe={Boolean(hasActiveConversation || environmentScope)}
     >
-      <div className={`agent-workspace-layout${environmentPanelOpen ? " agent-workspace-layout--environment-open" : ""}${financeOpen ? " agent-workspace-layout--finance-open" : ""}`}>
+      {financeResultNotice && <p role="status" className="finance-result-notice">{financeResultNotice}</p>}
+      <div className={`agent-workspace-layout${environmentPanelOpen ? " agent-workspace-layout--environment-open" : ""}${financeOpen && !financeWorkflow ? " agent-workspace-layout--finance-open" : ""}`}>
         {!hasActiveConversation ? (
         <section className="app-frame-page-content home-empty-screen flex flex-col items-center justify-center h-full">
           <div className="text-center mb-8">
@@ -3042,7 +3070,7 @@ export function HomePage() {
         )}
         {environmentPanel}
         {financeEnabled && clients?.memmyAgent && <FinanceWorkspace visible={financeOpen} client={clients.memmyAgent} initialPath={financeReviewPath} artifactPath={financeArtifactPath} workflow={financeWorkflow}
-          busy={isCurrentAgentRunning || isCreatingChat || messageSendInFlight || state.agent.connectionStatus !== "connected" || resolvedConversationModel.unavailable} onChoose={setFinanceWorkflow} onLaunch={sendMessage} onClose={() => setFinanceOpen(false)} />}
+          busy={isCurrentAgentRunning || isCreatingChat || messageSendInFlight || state.agent.connectionStatus !== "connected" || resolvedConversationModel.unavailable} onChoose={setFinanceWorkflow} onLaunch={sendMessage} onClose={() => { setFinanceOpen(false); setFinanceWorkflow(null); }} />}
       </div>
     </AppFrame>
   );

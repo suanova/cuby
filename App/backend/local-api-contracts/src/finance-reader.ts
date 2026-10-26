@@ -16,6 +16,7 @@ const SourceSchema = z.object({
   report_fiscal_year: z.string(),
   sha256: ShaSchema,
   language: z.string(),
+  synthetic: z.boolean().optional(),
 });
 export const FinanceCatalogSchema = z.object({
   reviews: z.array(

@@ -10,6 +10,7 @@ import {
 import {
   buildFinancePrompt,
   financeWorkflowDisplayText,
+  completedFinanceReviewPath,
 } from "../finance-workflows.js";
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 let root: Root;
@@ -76,6 +77,7 @@ describe("FinanceBuddy guided entry", () => {
   });
   it("starts the review with defaults without requiring text entry", async () => {
     const launch = vi.fn(async (_prompt: string) => {});
+    const close = vi.fn();
     const client = {
       getFinanceCatalog: vi.fn(async () => ({
         reviews: [],
@@ -93,7 +95,7 @@ describe("FinanceBuddy guided entry", () => {
           busy={false}
           onChoose={() => {}}
           onLaunch={launch}
-          onClose={() => {}}
+          onClose={close}
         />,
       ),
     );
@@ -104,6 +106,70 @@ describe("FinanceBuddy guided entry", () => {
     );
     expect(launch).toHaveBeenCalledOnce();
     expect(launch.mock.calls[0]![0]).toContain("same_year");
+    expect(container.querySelector('[role="dialog"]')).not.toBeNull();
+    expect(close).toHaveBeenCalledOnce();
+  });
+  it("recognizes only a completed review belonging to the submitted request", () => {
+    const user = {
+      id: "u",
+      role: "user",
+      content: "review",
+      clientRequestId: "request-a",
+      turnId: "turn-a",
+    };
+    const answer = {
+      id: "a",
+      role: "assistant",
+      content: "[review](outputs/c2-reviews/new-run/review.json)",
+      turnId: "turn-a",
+    };
+    expect(completedFinanceReviewPath([user, answer], "request-a")).toBe(
+      "outputs/c2-reviews/new-run/review.json",
+    );
+    expect(completedFinanceReviewPath([user, answer], "request-b")).toBeNull();
+    expect(
+      completedFinanceReviewPath(
+        [user, { ...answer, isStreaming: true }],
+        "request-a",
+      ),
+    ).toBeNull();
+    expect(
+      completedFinanceReviewPath(
+        [user, { ...answer, stoppedByUser: true }],
+        "request-a",
+      ),
+    ).toBeNull();
+    expect(
+      completedFinanceReviewPath(
+        [user, { ...answer, turnId: "other-turn" }],
+        "request-a",
+      ),
+    ).toBeNull();
+    expect(completedFinanceReviewPath([answer, user], "request-a")).toBeNull();
+    expect(
+      completedFinanceReviewPath(
+        [user, { ...answer, content: "outputs/c2-reviews/../review.json" }],
+        "request-a",
+      ),
+    ).toBeNull();
+  });
+  it("keeps synthetic source instructions labelled and bounded", () => {
+    const prompt = buildFinancePrompt({
+      workflow: "review",
+      mode: "same_year",
+      peers: [],
+      sourceVariant: "deliberate_errors",
+    });
+    expect(prompt).toContain("source_variant=deliberate_errors");
+    expect(financeWorkflowDisplayText(prompt)).toContain("TEST ONLY");
+    expect(() =>
+      buildFinancePrompt({
+        workflow: "review",
+        mode: "next_year_readiness",
+        peers: [],
+        sourceVariant: "deliberate_errors",
+      }),
+    ).toThrow();
   });
   it("does not offer an unimplemented source integration action", async () => {
     const launch = vi.fn(async (_prompt: string) => {});
