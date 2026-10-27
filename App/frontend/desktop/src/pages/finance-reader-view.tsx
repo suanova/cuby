@@ -349,7 +349,10 @@ export function NativeFinanceReader(props: {
             {review.mode === "next_year_readiness"
               ? ` → ${review.target_period.fiscal_year} 準備度`
               : " · ESG 核對"}{" "}
-            · {review.checks.length}項
+            · {review.checks.filter((c) => c.kind !== "document_consistency").length}
+            項規則
+            {review.checks.some((c) => c.kind === "document_consistency") &&
+              ` · ${review.checks.filter((c) => c.kind === "document_consistency").length}項加總`}
           </small>
         </div>
         <button onClick={() => setScope(!scope)} aria-expanded={scope}>
@@ -372,6 +375,7 @@ export function NativeFinanceReader(props: {
             {review.rules.checked_at} · {review.rules.scope}
           </p>
           <p>{review.source.file_name}</p>
+          <p>以待審稿及選定規則核對；沒有本年標準答案。全文敘述一致性及去年承諾銜接仍未完成。</p>
           <p>{review.human_review_notice}</p>
           <ul>
             {review.exclusions.map((s) => (
@@ -391,7 +395,7 @@ export function NativeFinanceReader(props: {
                 setPage(anchor?.page ?? 1);
               }}
             >
-              原件
+              待審稿
             </button>
             <button
               aria-pressed={draftPreview}
@@ -401,10 +405,11 @@ export function NativeFinanceReader(props: {
                 setKind("page");
               }}
             >
-              草稿{applied.length ? ` · ${applied.length}` : ""}
+              修訂稿{applied.length ? ` · ${applied.length}` : ""}
             </button>
             <button
               aria-pressed={!draftPreview && kind === "rule"}
+              disabled={check.kind === "document_consistency"}
               onClick={() => {
                 setDraftPreview(false);
                 setKind("rule");
@@ -630,7 +635,10 @@ export function NativeFinanceReader(props: {
                     <strong>
                       {f.title}
                       <small>
-                        {FINDING_LABELS[f.level]} · C2 {c.clause}
+                        {FINDING_LABELS[f.level]} ·{" "}
+                        {c.kind === "document_consistency"
+                          ? "內文一致性"
+                          : `C2 ${c.clause}`}
                       </small>
                     </strong>
                     {applied.some((e) => e.check_id === c.id) && (
@@ -662,15 +670,17 @@ export function NativeFinanceReader(props: {
                               報告 p.{a.page}
                             </button>
                           ))}
-                          <button
-                            onClick={() => {
-                              setDraftPreview(false);
-                              setKind("rule");
-                              setPage(c.actual_pdf_page);
-                            }}
-                          >
-                            C2 {c.clause} ↗
-                          </button>
+                          {c.kind !== "document_consistency" && (
+                            <button
+                              onClick={() => {
+                                setDraftPreview(false);
+                                setKind("rule");
+                                setPage(c.actual_pdf_page);
+                              }}
+                            >
+                              C2 {c.clause} ↗
+                            </button>
+                          )}
                         </div>
                       </div>
                       {!accepted && f.edit && (
@@ -849,7 +859,7 @@ export function NativeFinanceReader(props: {
             修訂記錄
           </button>
           <button onClick={() => void exportFile("checklist-export")}>
-            清單
+            C2清單
           </button>
           <button onClick={() => void exportFile("notes-export")}>備註</button>
         </div>

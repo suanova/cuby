@@ -72,7 +72,7 @@ function fixture(): FinanceOpen {
           finding: {
             level: "error",
             title: "Scope 1 單位不符",
-            summary: "原表使用 kgCO2e。",
+            summary: "本稿使用 kgCO2e。",
             marks: [],
             edit: {
               kind: "replace",
@@ -102,6 +102,26 @@ function fixture(): FinanceOpen {
   };
 }
 describe("Concise finance review", () => {
+  it("labels a candidate-only arithmetic conflict separately from a legal rule", async () => {
+    const opened = fixture();
+    opened.review.checks = [{
+      ...opened.review.checks[0]!, kind: "document_consistency", clause: "本稿加總",
+      finding: { level: "error", title: "排放加總不一致", summary: "本稿分項與總量不一致。", marks: [], edit: null },
+    }];
+    const div = document.createElement("div");
+    const root = createRoot(div);
+    const request = vi.fn(async (r: any) => r.action === "page"
+      ? { data_url: "data:image/png;base64,AA==" }
+      : { review_sha256: sha, revision: 0, edits: [], history: [] });
+    try {
+      await act(async () => root.render(<NativeFinanceReader opened={opened} request={request} draftKey="arithmetic" draftStore={{}} />));
+      expect(div.querySelector("article.selected")?.textContent).toContain("內文一致性");
+      expect(div.querySelector("article.selected")?.textContent).not.toContain("C2 本稿加總");
+      expect(Array.from(div.querySelectorAll("button")).find((b) => b.textContent === "規則")?.disabled).toBe(true);
+      expect(div.textContent).toContain("1項加總");
+      expect(div.querySelector(".finance-rewrite-toggle")).toBeNull();
+    } finally { act(() => root.unmount()); }
+  });
   it("never interprets a missing search result as a proven error", () => {
     const c = {
       ...fixture().review.checks[0]!,
