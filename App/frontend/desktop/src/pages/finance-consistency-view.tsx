@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ConsistencyReportSchema, buildConsistencyQuestion, type ConsistencyReport, type ConsistencySlot, type ConsistencySourceSlot, type ConsistencyComparison, type FinanceRequest } from "@memmy/local-api-contracts";
+import { ConsistencyReportSchema, buildConsistencyQuestion, consistencyCheckState, type ConsistencyReport, type ConsistencySlot, type ConsistencySourceSlot, type ConsistencyComparison, type FinanceRequest } from "@memmy/local-api-contracts";
 export { buildConsistencyQuestion } from "@memmy/local-api-contracts";
 import type { MemmyAgentClient } from "../api/memmy-agent-client.js";
 
@@ -49,7 +49,7 @@ export function ConsistencySetup(props:{client:MemmyAgentClient;request:Request;
   </div>;
 }
 
-const LABELS={matched:"列報數值一致",difference:"發現差異",pending:"待核對"};
+const LABELS={matched:"已核對一致",difference:"發現差異",needs_confirmation:"待確認",not_checked:"未檢查",candidate:"頁面候選"};
 function download(text:string,name:string,type:string) {
   const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
@@ -58,47 +58,53 @@ export function ConsistencyReader(props:{report:ConsistencyReport;request:Reques
   const [selected,setSelected]=useState(()=>report.checks.find(c=>c.status==="difference")?.id??report.checks[0]?.id??"");
   const [filter,setFilter]=useState("issues"),[query,setQuery]=useState("");
   const [references,setReferences]=useState<[number,number]>([0,1]);
-  const check=report.checks.find(c=>c.id===selected);
-  const visible=report.checks.filter(c=>(filter==="all" || (filter==="issues"?c.status!=="matched"&&c.category!=="page_numbers":c.category===filter)) && (c.title+c.reason).includes(query));
-  const unresolved=report.checks.filter(c=>c.status==="pending"&&c.category!=="page_numbers").length;
+  const visible=report.checks.filter(c=>{
+    const state=consistencyCheckState(c);
+    return (filter==="all" || (filter==="issues"?["difference","needs_confirmation"].includes(state):["difference","needs_confirmation","not_checked","matched"].includes(filter)?state===filter:c.category===filter)) && (c.title+c.reason).includes(query);
+  });
+  const check=visible.find(c=>c.id===selected)??visible[0];
+  const state=check?consistencyCheckState(check):undefined;
+  const unresolved=report.checks.filter(c=>consistencyCheckState(c)==="needs_confirmation").length;
+  const unchecked=report.checks.filter(c=>consistencyCheckState(c)==="not_checked").length;
+  useEffect(()=>{setReferences([0,1]);},[check?.id]);
   const [details,setDetails]=useState(false);
   const [question,setQuestion]=useState(""),[asking,setAsking]=useState(false),[askStatus,setAskStatus]=useState("");
   async function ask() {
     if(!check||!props.onAsk)return;setAsking(true);setAskStatus("");
-    try {await props.onAsk(buildConsistencyQuestion(report.run_id,check.id,question));setQuestion("");setAskStatus("已交畀 Cuby 對話；建議仍需覆核。");}
+    try {await props.onAsk(buildConsistencyQuestion(report.run_id,check.id,question));setQuestion("");setAskStatus("已送到對話。");}
     catch(e){setAskStatus(e instanceof Error?e.message:"未能送出追問。");}finally{setAsking(false);}
   }
   function csv() {
     const cell=(s:unknown)=>'"'+String(s??"").replaceAll('"','""')+'"';
-    download('\uFEFF'+[["項目","分類","結果","原因","原文與頁碼"],...report.checks.map(c=>[c.title,c.category,LABELS[c.status],c.reason,JSON.stringify(c.refs)])].map(row=>row.map(cell).join(',')).join('\r\n'),`consistency-${report.fiscal_year.replace('/','-')}.csv`,"text/csv;charset=utf-8");
+    download('\uFEFF'+[["項目","分類","結果","原因","原文與頁碼"],...report.checks.map(c=>[c.title,c.category,LABELS[consistencyCheckState(c)],c.reason,JSON.stringify(c.refs)])].map(row=>row.map(cell).join(',')).join('\r\n'),`consistency-${report.fiscal_year.replace('/','-')}.csv`,"text/csv;charset=utf-8");
   }
   return <div className="consistency-reader">
     <div className="consistency-summary"><strong>四份報告一致性 · FY{report.fiscal_year}</strong>
       <span>{report.coverage.scanned_pages}頁已掃描 · {report.coverage.metric_checks}組指標核對</span>
       <button onClick={csv}>匯出表格</button><button onClick={()=>download(JSON.stringify(report,null,2),"consistency-review.json","application/json")}>核對記錄</button>
     </div>
-    <div className="consistency-counts"><span className="difference">差異 {report.coverage.differences}</span><span>數值一致 {report.checks.filter(c=>c.category==="metric"&&c.status==="matched").length}</span><span>指標／口徑待核 {unresolved}</span><button onClick={()=>setDetails(!details)} aria-expanded={details}>覆蓋範圍</button></div>
+    <div className="consistency-counts"><button className="difference" onClick={()=>setFilter("difference")}>差異 {report.checks.filter(c=>consistencyCheckState(c)==="difference").length}</button><button onClick={()=>setFilter("needs_confirmation")}>待確認 {unresolved}</button><button className="not-checked" onClick={()=>setFilter("not_checked")}>未檢查 {unchecked}</button><span>數值一致 {report.checks.filter(c=>c.category==="metric"&&c.status==="matched").length}</span><button onClick={()=>setDetails(!details)} aria-expanded={details}>覆蓋範圍</button></div>
     <div className="consistency-history-status">歷史基準：{report.history.source} · FY{report.history.fiscal_year} · {report.history.status==="ready"?`已核實（${report.coverage.historical_pages}頁）`:report.history.status==="not_requested"?"本次未選跨年核對":"未能取得，跨年仍未核對"} · 內部 {report.coverage.internal_checks}項 · 跨年 {report.coverage.restatement_checks}項</div>
     {details&&<div className="finance-scope"><p>已掃描全文 ≠ 全部數字及口徑已確認。</p><ul>{report.limits.map(t=><li key={t}>{t}</li>)}</ul><p>{report.coverage.page_pairs}組同頁序候選，其中{report.coverage.same_numeric_inventory_pages}組數字集合相同；均未代替語義配對。</p>{report.documents.map(d=><p key={d.slot}>{d.label} · {d.file_name} · {d.page_count}頁{!d.cover_year_found?" · 財年待核":""}{d.textless_pages.length?` · ${d.textless_pages.length}頁未取到文字`:""}</p>)}</div>}
     <div className="consistency-body">
       <section className="consistency-checks" aria-label="一致性核對項目">
         <input aria-label="搜尋一致性項目" placeholder="搜尋指標" value={query} onChange={e=>setQuery(e.target.value)}/>
-        <select aria-label="一致性項目分類" value={filter} onChange={e=>setFilter(e.target.value)}><option value="issues">差異與待核</option><option value="metric">中英指標</option><option value="basis">方法與口徑</option><option value="cross_report">ESG ↔ 年報</option><option value="internal">報告內部</option><option value="restatement">跨年重述</option><option value="page_numbers">全文頁面候選</option><option value="all">全部</option></select>
-        <div className="consistency-check-list">{visible.map(c=><button key={c.id} className={`consistency-check ${c.status}${selected===c.id?" selected":""}`} onClick={()=>{setSelected(c.id);setReferences([0,1]);setAskStatus("");}}><strong>{c.title}</strong><small>{LABELS[c.status]}{c.category==="page_numbers"?" · 僅候選":""}</small></button>)}{!visible.length&&<p>此分類沒有項目。</p>}</div>
+        <select aria-label="一致性項目分類" value={filter} onChange={e=>setFilter(e.target.value)}><option value="issues">具體差異與待確認</option><option value="difference">具體差異</option><option value="needs_confirmation">待確認</option><option value="not_checked">未檢查</option><option value="metric">中英指標</option><option value="basis">方法與口徑</option><option value="cross_report">ESG ↔ 年報</option><option value="internal">報告內部</option><option value="restatement">跨年重述</option><option value="page_numbers">全文頁面候選</option><option value="all">全部</option></select>
+        <div className="consistency-check-list">{visible.map(c=><button key={c.id} className={`consistency-check ${consistencyCheckState(c)}${check?.id===c.id?" selected":""}`} onClick={()=>{setSelected(c.id);setReferences([0,1]);setAskStatus("");}}><strong>{c.title}</strong><small>{LABELS[consistencyCheckState(c)]}</small></button>)}{!visible.length&&<p>此分類沒有項目。</p>}</div>
       </section>
       <section className="consistency-evidence" aria-label="雙文件原文核對">
-        {check&&<><div className={`consistency-reason ${check.status}`}><strong>{check.title}</strong><p>{check.reason}</p><div className="consistency-values">{check.refs.map((r,i)=><button key={i} aria-pressed={references.includes(i)} title="查看引用原頁" onClick={()=>setReferences(v=>i===0?[0,v[1]]:[v[0],i])}>{report.documents.find(d=>d.slot===r.slot)?.label} p.{r.page}{r.value!==undefined?`：${r.value} ${r.unit??""}`:""}</button>)}</div>{check.left_only&&<details><summary>候選數字差異</summary><p>左側獨有：{check.left_only.join('、')||'無'}</p><p>右側獨有：{check.right_only?.join('、')||'無'}</p></details>}
-        {props.onAsk&&<div className="consistency-ask"><input aria-label="追問此項" maxLength={600} placeholder="追問此項，或直接請 Cuby 建議改法" value={question} onChange={e=>setQuestion(e.target.value)}/><button disabled={asking||props.busy} onClick={()=>void ask()}>{asking?"送出中…":"請 Cuby 建議"}</button><small role="status">{askStatus}</small></div>}</div>
-        <div className="consistency-papers">{check.refs.length?<ConsistencyPaper key={check.id+"left"+references[0]} report={report} request={props.request} checkId={check.id} initial={check.refs[references[0]]??check.refs[0]}/>:<p className="finance-empty">尚未取得對應原頁；此項未能核對。</p>}{check.refs.length>1?<ConsistencyPaper key={check.id+"right"+references[1]} report={report} request={props.request} checkId={check.id} initial={check.refs[references[1]]??check.refs[0]}/>:check.refs.length===1?<p className="finance-empty">另一份文件未取得可對應依據。</p>:null}</div></>}
+        {check&&<><div className={`consistency-reason ${state}`}><strong>{check.title}{state==="not_checked"?" · 未檢查":""}</strong><p>{check.reason}</p><div className="consistency-values">{check.refs.map((r,i)=><button key={i} aria-pressed={references.includes(i)} title="查看引用原頁" onClick={()=>setReferences(v=>i===0?[0,v[1]]:[v[0],i])}>{report.documents.find(d=>d.slot===r.slot)?.label} p.{r.page}{r.value!==undefined?`：${r.value} ${r.unit_label??r.unit??""}`:""}</button>)}</div>{check.left_only&&<details><summary>候選數字差異</summary><p>左側獨有：{check.left_only.join('、')||'無'}</p><p>右側獨有：{check.right_only?.join('、')||'無'}</p></details>}
+        {props.onAsk&&state!=="not_checked"&&state!=="candidate"&&<div className="consistency-ask"><input aria-label="追問此項" maxLength={600} placeholder="追問此項，或直接請 Cuby 建議改法" value={question} onChange={e=>setQuestion(e.target.value)}/><button disabled={asking||props.busy} onClick={()=>void ask()}>{asking?"送出中…":"請 Cuby 建議"}</button><small role="status">{askStatus}</small></div>}</div>
+        <div className="consistency-papers">{check.refs.length?<ConsistencyPaper key={check.id+"left"+references[0]} report={report} request={props.request} checkId={check.id} highlight={state!=="not_checked"&&state!=="candidate"} initial={check.refs[references[0]]??check.refs[0]}/>:<p className="finance-empty">尚未取得可比較的原文。</p>}{check.refs.length>1?<ConsistencyPaper key={check.id+"right"+references[1]} report={report} request={props.request} checkId={check.id} highlight={state!=="not_checked"&&state!=="candidate"} initial={check.refs[references[1]]??check.refs[0]}/>:check.refs.length===1?<p className="finance-empty">另一份文件未取得可對應依據。</p>:null}</div></>}
       </section>
     </div>
-    <p className="consistency-footer">黃色為引用依據 · 數值相同不等於口徑一致 · 原始數據及完整合規未審核</p>
+    <p className="consistency-footer">黃色標示引用位置。</p>
   </div>;
 }
-function ConsistencyPaper(props:{report:ConsistencyReport;request:Request;checkId:string;initial?:ConsistencyReport['checks'][number]['refs'][number]}) {
+function ConsistencyPaper(props:{report:ConsistencyReport;request:Request;checkId:string;highlight:boolean;initial?:ConsistencyReport['checks'][number]['refs'][number]}) {
   const [slot,setSlot]=useState<ConsistencySourceSlot>(props.initial?.slot??"esg_zh"),[page,setPage]=useState(props.initial?.page??1);
   const [image,setImage]=useState(""),[error,setError]=useState("");
   const doc=props.report.documents.find(d=>d.slot===slot)!;
-  useEffect(()=>{let active=true;setImage("");setError("");void props.request({action:"consistency-page",run_id:props.report.run_id,slot,page,check_id:props.checkId}).then((v)=>{if(active)setImage((v as {data_url:string}).data_url);}).catch(e=>{if(active)setError(e instanceof Error?e.message:"未能載入原頁");});return()=>{active=false;};},[props.report.run_id,slot,page,props.checkId]);
+  useEffect(()=>{let active=true;setImage("");setError("");void props.request({action:"consistency-page",run_id:props.report.run_id,slot,page,...(props.highlight?{check_id:props.checkId}:{})}).then((v)=>{if(active)setImage((v as {data_url:string}).data_url);}).catch(e=>{if(active)setError(e instanceof Error?e.message:"未能載入原頁");});return()=>{active=false;};},[props.report.run_id,slot,page,props.checkId,props.highlight]);
   return <div className="consistency-paper-pane"><div className="consistency-paper-controls"><select aria-label="引用文件" value={slot} onChange={e=>{setSlot(e.target.value as ConsistencySourceSlot);setPage(1);}}>{props.report.documents.map(d=><option key={d.slot} value={d.slot}>{d.label}</option>)}</select><button aria-label="引用上一頁" disabled={page<=1} onClick={()=>setPage(page-1)}>‹</button><input aria-label="引用 PDF 頁碼" type="number" min={1} max={doc.page_count} value={page} onChange={e=>{const n=+e.target.value;if(Number.isInteger(n)&&n>=1&&n<=doc.page_count)setPage(n);}}/><span>/{doc.page_count}</span><button aria-label="引用下一頁" disabled={page>=doc.page_count} onClick={()=>setPage(page+1)}>›</button></div><div className="consistency-paper-scroll">{image?<img src={image} alt={`${doc.label} PDF ${page}`}/>:<p role="status">{error||"載入原頁…"}</p>}</div></div>;
 }

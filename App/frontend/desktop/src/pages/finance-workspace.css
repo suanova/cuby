@@ -1138,6 +1138,22 @@
   border: 1px solid #dce7e4;
   padding: 10px;
 }
+.consistency-check.not_checked {
+  border-left-color: #a3afb4;
+  background: #f7f9fa;
+}
+.consistency-counts .not-checked {
+  color: #68767e;
+  background: #f1f4f6;
+}
+.consistency-counts .difference {
+  color: #bf3232;
+  background: #fff0ef;
+}
+.consistency-reason.not_checked {
+  background: #f7f9fa;
+  color: #5c6b74;
+}
 .consistency-setup .consistency-comparison-choices label {
   display: flex;
   margin: 0;

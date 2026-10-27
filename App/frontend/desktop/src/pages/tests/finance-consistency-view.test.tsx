@@ -55,7 +55,7 @@ describe("Four report consistency",()=>{
       expect(div.querySelector('.consistency-check')?.textContent).toContain("因子題名年份");
       expect(div.querySelectorAll('img')).toHaveLength(2);
       expect(request).toHaveBeenCalledWith({action:"consistency-page",run_id:"20310101T000000-aabbccdd",slot:"esg_zh",page:3,check_id:"basis"});
-      expect(div.textContent).toContain("數值相同不等於口徑一致");
+      expect(div.textContent).toContain("黃色標示引用位置");
     } finally{act(()=>root.unmount());}
   });
   it("hands one selected issue to Cuby with source priority and bounded context instructions",async()=>{
@@ -69,6 +69,21 @@ describe("Four report consistency",()=>{
       await act(async()=>root.render(<ConsistencyReader report={fixture()} request={request} onAsk={ask}/>));
       await act(async()=>Array.from(div.querySelectorAll('button')).find(b=>b.textContent==='請 Cuby 建議')!.click());
       expect(ask).toHaveBeenCalledWith(expect.stringContaining('check_id="basis"'));
+    } finally {act(()=>root.unmount());}
+  });
+  it("keeps unfinished checks out of findings and opens them without evidence highlighting or a rewrite action",async()=>{
+    const report=fixture();
+    report.checks.push({id:'basis-esg_zh',category:'basis',status:'pending',title:'涵蓋業務尚未比較',reason:'尚未比較。',refs:[{slot:'esg_en',page:2,quote:'A whole paragraph of context.'}]});
+    const div=document.createElement('div'),root=createRoot(div),request=vi.fn(async()=>({data_url:'data:image/png;base64,AA=='}));
+    try {
+      await act(async()=>root.render(<ConsistencyReader report={report} request={request} onAsk={async()=>{}}/>));
+      expect(div.querySelectorAll('.consistency-check')).toHaveLength(1);
+      expect(div.querySelector('.consistency-check-list')?.textContent).not.toContain('涵蓋業務');
+      request.mockClear();
+      await act(async()=>{const select=div.querySelector<HTMLSelectElement>('[aria-label="一致性項目分類"]')!;select.value='not_checked';select.dispatchEvent(new Event('change',{bubbles:true}));});
+      expect(div.querySelector('.consistency-check-list')?.textContent).toContain('未檢查');
+      expect(request).toHaveBeenCalledWith({action:'consistency-page',run_id:report.run_id,slot:'esg_en',page:2});
+      expect(Array.from(div.querySelectorAll('button')).some(b=>b.textContent==='請 Cuby 建議')).toBe(false);
     } finally {act(()=>root.unmount());}
   });
 });
