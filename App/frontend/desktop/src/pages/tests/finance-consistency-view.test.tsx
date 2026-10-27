@@ -5,6 +5,7 @@ import { describe, it, expect, vi } from "vitest";
 import type { ConsistencyReport } from "@memmy/local-api-contracts";
 import type { MemmyAgentClient } from "../../api/memmy-agent-client.js";
 import { ConsistencySetup, ConsistencyReader, buildConsistencyQuestion } from "../finance-consistency-view.js";
+import { financeWorkflowDisplayText } from "@memmy/local-api-contracts";
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT=true;
 function fixture():ConsistencyReport {
   const slots=["esg_zh","esg_en","annual_zh","annual_en"] as const;
@@ -61,6 +62,8 @@ describe("Four report consistency",()=>{
     const prompt=buildConsistencyQuestion("20310101T000000-aabbccdd","basis","可以怎樣改？");
     expect(prompt).toContain('read_consistency_issue');expect(prompt).toContain('check_id="basis"');
     expect(prompt).toContain('不得查找本年乾淨版');expect(prompt).toContain('不能猜今年數字');
+    expect(financeWorkflowDisplayText(prompt)).toBe('就選中的一致性項目：可以怎樣改？');
+    expect(financeWorkflowDisplayText(prompt+'\n額外指示不可隱藏')).toBeNull();
     const div=document.createElement('div'),root=createRoot(div),ask=vi.fn(async()=>{}),request=vi.fn(async()=>({data_url:'data:image/png;base64,AA=='}));
     try {
       await act(async()=>root.render(<ConsistencyReader report={fixture()} request={request} onAsk={ask}/>));

@@ -1,3 +1,5 @@
+import { consistencyQuestionDisplayText } from "./finance-consistency.js";
+
 export type FinanceWorkflowId =
   | "sources"
   | "report"
@@ -84,6 +86,8 @@ export function buildFinancePrompt(input: {
 }
 /** Collapse only exact app-generated requests; arbitrary user text remains visible. */
 export function financeWorkflowDisplayText(content: string): string | null {
+  const consistency = consistencyQuestionDisplayText(content);
+  if (consistency) return consistency;
   if (
     content.trim() ===
     buildFinancePrompt({
