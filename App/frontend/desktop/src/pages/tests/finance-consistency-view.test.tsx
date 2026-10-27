@@ -57,6 +57,12 @@ describe("Four report consistency",()=>{
       expect(div.querySelectorAll('img')).toHaveLength(2);
       expect(request).toHaveBeenCalledWith({action:"consistency-page",run_id:"20310101T000000-aabbccdd",slot:"esg_zh",page:3,check_id:"basis"});
       expect(div.textContent).toContain("黃色標示引用位置");
+      await act(async()=>{const select=div.querySelector<HTMLSelectElement>('[aria-label="一致性項目分類"]')!;select.value='all';select.dispatchEvent(new Event('change',{bubbles:true}));});
+      expect(div.querySelectorAll('.consistency-check')).toHaveLength(2);
+      expect(div.querySelector('.consistency-check.candidate')).toBeNull();
+      await act(async()=>{const select=div.querySelector<HTMLSelectElement>('[aria-label="一致性項目分類"]')!;select.value='page_numbers';select.dispatchEvent(new Event('change',{bubbles:true}));});
+      expect(div.querySelectorAll('.consistency-check')).toHaveLength(1);
+      expect(div.textContent).toContain('初篩紀錄不算報告問題');
     } finally{act(()=>root.unmount());}
   });
   it("hands one selected issue to Cuby with source priority and bounded context instructions",async()=>{
@@ -88,8 +94,8 @@ describe("Four report consistency",()=>{
     } finally {act(()=>root.unmount());}
   });
   it("runs narrative checks in the background and updates the reader without a chat prompt",async()=>{
-    vi.useFakeTimers();const div=document.createElement('div'),root=createRoot(div);
-    const running={...fixture(),semantic:{status:'running' as const,job_id:'job',model:'test-model',reasoning_effort:'xhigh',context_tokens:1000000,completed_tasks:0,total_tasks:2,updated_at:'2031-01-01',gaps:[],findings_count:0,matched_count:0,tasks:[{id:'bilingual' as const,label:'中英文意思',status:'running' as const,submitted_pages:12}]}};
+    vi.useFakeTimers();vi.setSystemTime(new Date('2031-01-01T00:03:00Z'));const div=document.createElement('div'),root=createRoot(div);
+    const running={...fixture(),semantic:{status:'running' as const,job_id:'job',model:'test-model',reasoning_effort:'xhigh',context_tokens:1000000,completed_tasks:0,total_tasks:2,started_at:'2031-01-01T00:00:00Z',updated_at:'2031-01-01',gaps:[],findings_count:0,matched_count:0,tasks:[{id:'bilingual' as const,label:'中英文意思',status:'running' as const,submitted_pages:12}]}};
     const done={...running,semantic:{...running.semantic,status:'completed' as const,completed_tasks:2,matched_count:1}};
     const request=vi.fn(async(input:any)=>input.action==='consistency-semantic-start'?running:input.action==='consistency-read'?done:{data_url:'data:image/png;base64,AA=='});
     try {
@@ -97,6 +103,7 @@ describe("Four report consistency",()=>{
       expect(div.textContent).toContain('內文意思尚未核對');
       await act(async()=>Array.from(div.querySelectorAll('button')).find(b=>b.textContent==='核對內文')!.click());
       expect(div.textContent).toContain('正在核對內文');
+      expect(div.textContent).toContain('步驟進度 0%');expect(div.textContent).toContain('已用 3分鐘');
       expect(div.querySelector('progress')?.value).toBe(0);
       expect(div.querySelector('progress')?.max).toBe(2);
       expect(div.querySelector('[aria-label="中英意思：核對中"]')).not.toBeNull();
@@ -104,6 +111,7 @@ describe("Four report consistency",()=>{
       expect(request).toHaveBeenCalledWith({action:'consistency-read',run_id:fixture().run_id});
       expect(div.textContent).toContain('內文核對完成');expect(div.textContent).toContain('1項一致');
       expect(div.querySelector('progress')?.value).toBe(2);
+      expect(div.textContent).toContain('步驟進度 100%');
     } finally{act(()=>root.unmount());vi.useRealTimers();}
   });
 });

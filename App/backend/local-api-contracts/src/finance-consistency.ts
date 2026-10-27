@@ -32,7 +32,7 @@ export const ConsistencyReportSchema = z.object({
     historical_pages:z.number(),internal_checks:z.number(),restatement_checks:z.number(),not_checked:z.number().optional(),needs_confirmation:z.number().optional()}),
   all_numbers_confirmed: z.literal(false), all_basis_confirmed: z.literal(false), limits: z.array(z.string()),
   semantic:z.object({status:z.enum(["running","completed","partial","failed"]),job_id:z.string(),model:z.string(),
-    reasoning_effort:z.string(),context_tokens:z.number(),completed_tasks:z.number(),total_tasks:z.number(),updated_at:z.string(),
+    reasoning_effort:z.string(),context_tokens:z.number(),completed_tasks:z.number(),total_tasks:z.number(),started_at:z.string().optional(),updated_at:z.string(),
     findings_count:z.number(),matched_count:z.number(),phase:z.string().optional(),error:z.string().optional(),gaps:z.array(z.string()),
     tasks:z.array(z.object({id:ConsistencyComparisonSchema,label:z.string(),status:z.enum(["pending","running","completed","failed"]),submitted_pages:z.number(),check_count:z.number().optional(),error:z.string().optional()})),
   }).optional(),
