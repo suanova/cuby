@@ -97,9 +97,13 @@ describe("Four report consistency",()=>{
       expect(div.textContent).toContain('內文意思尚未核對');
       await act(async()=>Array.from(div.querySelectorAll('button')).find(b=>b.textContent==='核對內文')!.click());
       expect(div.textContent).toContain('正在核對內文');
+      expect(div.querySelector('progress')?.value).toBe(0);
+      expect(div.querySelector('progress')?.max).toBe(2);
+      expect(div.querySelector('[aria-label="中英意思：核對中"]')).not.toBeNull();
       await act(async()=>{await vi.advanceTimersByTimeAsync(5000);});
       expect(request).toHaveBeenCalledWith({action:'consistency-read',run_id:fixture().run_id});
       expect(div.textContent).toContain('內文核對完成');expect(div.textContent).toContain('1項一致');
+      expect(div.querySelector('progress')?.value).toBe(2);
     } finally{act(()=>root.unmount());vi.useRealTimers();}
   });
 });

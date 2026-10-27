@@ -57,6 +57,15 @@ const LABELS={matched:"已核對一致",difference:"發現差異",needs_confirma
 function download(text:string,name:string,type:string) {
   const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
+function SemanticProgress({review}:{review:NonNullable<ConsistencyReport['semantic']>}) {
+  const labels:Record<ConsistencyComparison,string>={bilingual:"中英意思",cross_report:"ESG／年報",internal:"內文前後",restatement:"跨年說法"};
+  const steps=[...review.tasks.map(t=>({label:labels[t.id],status:t.status})),{label:"覆核差異",status:["completed","partial"].includes(review.status)?"completed":review.phase?.includes("覆核")?"running":review.status==="failed"&&review.tasks.every(t=>t.status==="completed")?"failed":"pending"}];
+  const states:Record<string,string>={completed:"已完成",running:"核對中",pending:"待進行",failed:"未完成"};
+  return <div className={`consistency-semantic-progress ${review.status}`}>
+    <progress aria-label="內文核對步驟進度" aria-valuetext={`已完成 ${review.completed_tasks}/${review.total_tasks} 步`} value={Math.min(review.completed_tasks,review.total_tasks)} max={review.total_tasks} title="按已完成步驟更新；每步所需時間不同。"/>
+    <ol aria-label="內文核對步驟">{steps.map((step,i)=><li key={i} className={step.status} aria-label={`${step.label}：${states[step.status]}`}><span aria-hidden="true">{step.status==="completed"?"✓":step.status==="failed"?"!":"●"}</span>{step.label}{step.status==="running"&&<small>核對中</small>}</li>)}</ol>
+  </div>;
+}
 export function ConsistencyReader(props:{report:ConsistencyReport;request:Request;onAsk?:(prompt:string)=>Promise<void>;busy?:boolean}) {
   const [report,setReport]=useState(props.report);
   useEffect(()=>{setReport(props.report);},[props.report]);
@@ -108,6 +117,7 @@ export function ConsistencyReader(props:{report:ConsistencyReport;request:Reques
       {!!report.semantic?.matched_count&&<button onClick={()=>setFilter("semantic")}>查看內容核對</button>}
       {semanticError&&<span className="finance-error">{semanticError}</span>}
       {report.semantic?.error&&<span className="finance-error">{report.semantic.error}</span>}
+      {report.semantic&&<SemanticProgress review={report.semantic}/>}
     </div>
     {details&&<div className="finance-scope"><p>已掃描全文 ≠ 全部數字及口徑已確認。</p><ul>{report.limits.map(t=><li key={t}>{t}</li>)}</ul>{report.semantic&&<><p>內文模型：{report.semantic.model} · {report.semantic.reasoning_effort}。各項一致只指所列主題。</p>{report.semantic.tasks.map(t=><p key={t.id}>{t.label}：{t.status==="completed"?"已核對":t.status==="running"?"核對中":"未完成"} · 提交{t.submitted_pages}頁原文{t.error?` · ${t.error}`:""}</p>)}<ul>{report.semantic.gaps.map((g,i)=><li key={i}>{g}</li>)}</ul></>}<p>{report.coverage.page_pairs}組同頁序候選，其中{report.coverage.same_numeric_inventory_pages}組數字集合相同；均未代替語義配對。</p>{report.documents.map(d=><p key={d.slot}>{d.label} · {d.file_name} · {d.page_count}頁{!d.cover_year_found?" · 財年待核":""}{d.textless_pages.length?` · ${d.textless_pages.length}頁未取到文字`:""}</p>)}</div>}
     <div className="consistency-body">
