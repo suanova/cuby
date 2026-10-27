@@ -1190,7 +1190,7 @@ export async function gateway({
   let transcriptMonitor: GatewayTranscriptMonitor | null = null;
   if (webuiChannel instanceof WebSocketChannel) {
     webuiChannel.setFinanceReaderTools(async (name, args) => {
-      if (!["mcp_financebuddy_reports_list_c2_reviews", "mcp_financebuddy_reports_open_c2_reader", "mcp_financebuddy_reports_build_consistency_review", "mcp_financebuddy_reports_read_consistency_review", "mcp_financebuddy_reports_read_consistency_page"].includes(name)
+      if (!["mcp_financebuddy_reports_list_c2_reviews", "mcp_financebuddy_reports_open_c2_reader", "mcp_financebuddy_reports_build_consistency_review", "mcp_financebuddy_reports_start_consistency_semantic", "mcp_financebuddy_reports_read_consistency_review", "mcp_financebuddy_reports_read_consistency_page"].includes(name)
           || !loop.tools?.has(name)) throw new Error("FinanceBuddy reader tools are not enabled.");
       return loop.tools.execute(name, args);
     });

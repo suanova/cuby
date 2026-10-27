@@ -21,7 +21,7 @@ function fixture():ConsistencyReport {
 describe("Four report consistency",()=>{
   it("starts with four existing documents without asking for a prompt or exposing an unfinished reader",async()=>{
     localStorage.clear();const div=document.createElement("div"),root=createRoot(div);let finish!:(v:unknown)=>void;
-    const request=vi.fn(()=>new Promise(resolve=>{finish=resolve;})),complete=vi.fn();
+    const request=vi.fn((input:any)=>input.action==="consistency-semantic-start"?Promise.resolve(fixture()):new Promise(resolve=>{finish=resolve;})),complete=vi.fn();
     try {
       await act(async()=>root.render(<ConsistencySetup client={{} as MemmyAgentClient} request={request} onComplete={complete}/>));
       expect(Array.from(div.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')).every(c=>c.checked)).toBe(true);
@@ -30,6 +30,7 @@ describe("Four report consistency",()=>{
       expect(request).toHaveBeenCalledWith({action:"consistency-build",fiscal_year:"2025/26",comparisons:["bilingual","cross_report","internal","restatement"]});
       expect(complete).not.toHaveBeenCalled();expect(div.querySelector(".consistency-reader")).toBeNull();
       await act(async()=>finish(fixture()));expect(complete).toHaveBeenCalledWith(fixture());
+      expect(request).toHaveBeenCalledWith({action:"consistency-semantic-start",run_id:fixture().run_id});
     } finally{act(()=>root.unmount());}
   });
   it("requires all four role assignments and uploads only files selected for this workflow",async()=>{
@@ -85,5 +86,20 @@ describe("Four report consistency",()=>{
       expect(request).toHaveBeenCalledWith({action:'consistency-page',run_id:report.run_id,slot:'esg_en',page:2});
       expect(Array.from(div.querySelectorAll('button')).some(b=>b.textContent==='請 Cuby 建議')).toBe(false);
     } finally {act(()=>root.unmount());}
+  });
+  it("runs narrative checks in the background and updates the reader without a chat prompt",async()=>{
+    vi.useFakeTimers();const div=document.createElement('div'),root=createRoot(div);
+    const running={...fixture(),semantic:{status:'running' as const,job_id:'job',model:'test-model',reasoning_effort:'xhigh',context_tokens:1000000,completed_tasks:0,total_tasks:2,updated_at:'2031-01-01',gaps:[],findings_count:0,matched_count:0,tasks:[{id:'bilingual' as const,label:'中英文意思',status:'running' as const,submitted_pages:12}]}};
+    const done={...running,semantic:{...running.semantic,status:'completed' as const,completed_tasks:2,matched_count:1}};
+    const request=vi.fn(async(input:any)=>input.action==='consistency-semantic-start'?running:input.action==='consistency-read'?done:{data_url:'data:image/png;base64,AA=='});
+    try {
+      await act(async()=>root.render(<ConsistencyReader report={fixture()} request={request}/>));
+      expect(div.textContent).toContain('內文意思尚未核對');
+      await act(async()=>Array.from(div.querySelectorAll('button')).find(b=>b.textContent==='核對內文')!.click());
+      expect(div.textContent).toContain('正在核對內文');
+      await act(async()=>{await vi.advanceTimersByTimeAsync(5000);});
+      expect(request).toHaveBeenCalledWith({action:'consistency-read',run_id:fixture().run_id});
+      expect(div.textContent).toContain('內文核對完成');expect(div.textContent).toContain('1項一致');
+    } finally{act(()=>root.unmount());vi.useRealTimers();}
   });
 });

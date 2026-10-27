@@ -29,7 +29,11 @@ export function ConsistencySetup(props:{client:MemmyAgentClient;request:Request;
         result=await props.request({action:"consistency-build",fiscal_year:year,comparisons,...(documents?{documents}:{})});
       }
       const report=ConsistencyReportSchema.parse(result);
-      localStorage.setItem("financebuddy.consistency.lastRun",report.run_id);props.onComplete(report);
+      localStorage.setItem("financebuddy.consistency.lastRun",report.run_id);
+      if(!previous) {
+        try {props.onComplete(ConsistencyReportSchema.parse(await props.request({action:"consistency-semantic-start",run_id:report.run_id})));}
+        catch(e) {props.onComplete(report);}
+      } else props.onComplete(report);
     } catch(e) {setError(e instanceof Error?e.message:"核對未能完成。");} finally {setBusy(false);}
   }
   return <div className="finance-setup consistency-setup">
@@ -54,13 +58,26 @@ function download(text:string,name:string,type:string) {
   const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
 export function ConsistencyReader(props:{report:ConsistencyReport;request:Request;onAsk?:(prompt:string)=>Promise<void>;busy?:boolean}) {
-  const {report}=props;
+  const [report,setReport]=useState(props.report);
+  useEffect(()=>{setReport(props.report);},[props.report]);
+  const [semanticBusy,setSemanticBusy]=useState(false),[semanticError,setSemanticError]=useState("");
+  async function startSemantic() {
+    setSemanticBusy(true);setSemanticError("");
+    try {setReport(ConsistencyReportSchema.parse(await props.request({action:"consistency-semantic-start",run_id:report.run_id})));}
+    catch(e){setSemanticError(e instanceof Error?e.message:"內容核對未能開始。");}finally{setSemanticBusy(false);}
+  }
+  useEffect(()=>{
+    if(report.semantic && report.semantic.status!=="running")return;
+    let active=true,inFlight=false;
+    const timer=setInterval(()=>{if(inFlight)return;inFlight=true;void props.request({action:"consistency-read",run_id:report.run_id}).then(value=>{if(active){setReport(ConsistencyReportSchema.parse(value));setSemanticError("");}}).catch(()=>{if(active)setSemanticError("暫時未能更新進度，正在重試。");}).finally(()=>{inFlight=false;});},5000);
+    return()=>{active=false;clearInterval(timer);};
+  },[report.run_id,report.semantic?.status,props.request]);
   const [selected,setSelected]=useState(()=>report.checks.find(c=>c.status==="difference")?.id??report.checks[0]?.id??"");
   const [filter,setFilter]=useState("issues"),[query,setQuery]=useState("");
   const [references,setReferences]=useState<[number,number]>([0,1]);
   const visible=report.checks.filter(c=>{
     const state=consistencyCheckState(c);
-    return (filter==="all" || (filter==="issues"?["difference","needs_confirmation"].includes(state):["difference","needs_confirmation","not_checked","matched"].includes(filter)?state===filter:c.category===filter)) && (c.title+c.reason).includes(query);
+    return (filter==="all" || (filter==="semantic"?!!c.semantic_kind:filter==="issues"?["difference","needs_confirmation"].includes(state):["difference","needs_confirmation","not_checked","matched"].includes(filter)?state===filter:c.category===filter)) && (c.title+c.reason).includes(query);
   });
   const check=visible.find(c=>c.id===selected)??visible[0];
   const state=check?consistencyCheckState(check):undefined;
@@ -85,11 +102,18 @@ export function ConsistencyReader(props:{report:ConsistencyReport;request:Reques
     </div>
     <div className="consistency-counts"><button className="difference" onClick={()=>setFilter("difference")}>差異 {report.checks.filter(c=>consistencyCheckState(c)==="difference").length}</button><button onClick={()=>setFilter("needs_confirmation")}>待確認 {unresolved}</button><button className="not-checked" onClick={()=>setFilter("not_checked")}>未檢查 {unchecked}</button><span>數值一致 {report.checks.filter(c=>c.category==="metric"&&c.status==="matched").length}</span><button onClick={()=>setDetails(!details)} aria-expanded={details}>覆蓋範圍</button></div>
     <div className="consistency-history-status">歷史基準：{report.history.source} · FY{report.history.fiscal_year} · {report.history.status==="ready"?`已核實（${report.coverage.historical_pages}頁）`:report.history.status==="not_requested"?"本次未選跨年核對":"未能取得，跨年仍未核對"} · 內部 {report.coverage.internal_checks}項 · 跨年 {report.coverage.restatement_checks}項</div>
-    {details&&<div className="finance-scope"><p>已掃描全文 ≠ 全部數字及口徑已確認。</p><ul>{report.limits.map(t=><li key={t}>{t}</li>)}</ul><p>{report.coverage.page_pairs}組同頁序候選，其中{report.coverage.same_numeric_inventory_pages}組數字集合相同；均未代替語義配對。</p>{report.documents.map(d=><p key={d.slot}>{d.label} · {d.file_name} · {d.page_count}頁{!d.cover_year_found?" · 財年待核":""}{d.textless_pages.length?` · ${d.textless_pages.length}頁未取到文字`:""}</p>)}</div>}
+    <div className="consistency-semantic-status" role="status">
+      <strong>{!report.semantic?"內文意思尚未核對":report.semantic.status==="running"?`正在核對內文 · ${report.semantic.completed_tasks}/${report.semantic.total_tasks}步${report.semantic.phase?` · ${report.semantic.phase}`:""}`:report.semantic.status==="completed"?`內文核對完成 · ${report.semantic.findings_count}項需處理 · ${report.semantic.matched_count}項一致`:report.semantic.status==="partial"?`內文核對部分完成 · ${report.semantic.findings_count}項需處理`:"內文核對中斷，已完成結果保留"}</strong>
+      {(!report.semantic||["failed","partial"].includes(report.semantic.status))&&<button disabled={semanticBusy} onClick={()=>void startSemantic()}>{semanticBusy?"啟動中…":report.semantic?"重新核對內文":"核對內文"}</button>}
+      {!!report.semantic?.matched_count&&<button onClick={()=>setFilter("semantic")}>查看內容核對</button>}
+      {semanticError&&<span className="finance-error">{semanticError}</span>}
+      {report.semantic?.error&&<span className="finance-error">{report.semantic.error}</span>}
+    </div>
+    {details&&<div className="finance-scope"><p>已掃描全文 ≠ 全部數字及口徑已確認。</p><ul>{report.limits.map(t=><li key={t}>{t}</li>)}</ul>{report.semantic&&<><p>內文模型：{report.semantic.model} · {report.semantic.reasoning_effort}。各項一致只指所列主題。</p>{report.semantic.tasks.map(t=><p key={t.id}>{t.label}：{t.status==="completed"?"已核對":t.status==="running"?"核對中":"未完成"} · 提交{t.submitted_pages}頁原文{t.error?` · ${t.error}`:""}</p>)}<ul>{report.semantic.gaps.map((g,i)=><li key={i}>{g}</li>)}</ul></>}<p>{report.coverage.page_pairs}組同頁序候選，其中{report.coverage.same_numeric_inventory_pages}組數字集合相同；均未代替語義配對。</p>{report.documents.map(d=><p key={d.slot}>{d.label} · {d.file_name} · {d.page_count}頁{!d.cover_year_found?" · 財年待核":""}{d.textless_pages.length?` · ${d.textless_pages.length}頁未取到文字`:""}</p>)}</div>}
     <div className="consistency-body">
       <section className="consistency-checks" aria-label="一致性核對項目">
         <input aria-label="搜尋一致性項目" placeholder="搜尋指標" value={query} onChange={e=>setQuery(e.target.value)}/>
-        <select aria-label="一致性項目分類" value={filter} onChange={e=>setFilter(e.target.value)}><option value="issues">具體差異與待確認</option><option value="difference">具體差異</option><option value="needs_confirmation">待確認</option><option value="not_checked">未檢查</option><option value="metric">中英指標</option><option value="basis">方法與口徑</option><option value="cross_report">ESG ↔ 年報</option><option value="internal">報告內部</option><option value="restatement">跨年重述</option><option value="page_numbers">全文頁面候選</option><option value="all">全部</option></select>
+        <select aria-label="一致性項目分類" value={filter} onChange={e=>setFilter(e.target.value)}><option value="issues">具體差異與待確認</option><option value="difference">具體差異</option><option value="needs_confirmation">待確認</option><option value="not_checked">未檢查</option><option value="semantic">內容核對結果</option><option value="metric">中英指標</option><option value="basis">方法與口徑</option><option value="cross_report">ESG ↔ 年報</option><option value="internal">報告內部</option><option value="restatement">跨年重述</option><option value="page_numbers">全文頁面候選</option><option value="all">全部</option></select>
         <div className="consistency-check-list">{visible.map(c=>{
           const cardState=consistencyCheckState(c);
           const [current,previous]=c.refs;

@@ -30,7 +30,7 @@ export class FinanceReaderApi {
     private mediaRoot?: string,
   ) {}
 
-  private async tool(name: "list_c2_reviews" | "open_c2_reader" | "build_consistency_review" | "read_consistency_review" | "read_consistency_page", args: Record<string, unknown>) {
+  private async tool(name: "list_c2_reviews" | "open_c2_reader" | "build_consistency_review" | "start_consistency_semantic" | "read_consistency_review" | "read_consistency_page", args: Record<string, unknown>) {
     const raw = await this.callTool(`mcp_financebuddy_reports_${name}`, args);
     try {
       return typeof raw === "string" ? JSON.parse(raw) : raw;
@@ -91,6 +91,8 @@ export class FinanceReaderApi {
     const parsed = FinanceRequestSchema.safeParse(raw);
     if (!parsed.success) throw new FinanceReaderError("Invalid report reader request.");
     const input = parsed.data;
+    if (input.action === "consistency-semantic-start")
+      return ConsistencyReportSchema.parse(await this.tool("start_consistency_semantic", {run_id:input.run_id}));
     if (input.action === "consistency-build") {
       if (input.documents) {
         if (!this.mediaRoot || new Set(input.documents.map(d => d.slot)).size !== 4)

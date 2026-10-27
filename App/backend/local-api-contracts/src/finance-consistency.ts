@@ -21,6 +21,7 @@ export const ConsistencyReportSchema = z.object({
     id: z.string(), category: z.enum(["metric", "page_numbers", "basis", "cross_report", "internal", "restatement"]),
     status: z.enum(["matched", "difference", "pending"]), title: z.string(), reason: z.string(),
     review_state: ConsistencyReviewStateSchema.optional(),
+    semantic_kind: ConsistencyComparisonSchema.optional(),
     refs: z.array(z.object({slot: ConsistencySourceSlotSchema, page: z.number().int().positive(),
       quote: z.string(), value: z.string().optional(), unit: z.string().optional(),unit_basis:z.string().optional(),
       unit_label:z.string().optional(),highlight_texts:z.array(z.string().max(220)).max(8).optional()})),
@@ -30,6 +31,11 @@ export const ConsistencyReportSchema = z.object({
     metric_checks:z.number(),numeric_facts:z.number(),matched:z.number(),differences:z.number(),pending:z.number(),
     historical_pages:z.number(),internal_checks:z.number(),restatement_checks:z.number(),not_checked:z.number().optional(),needs_confirmation:z.number().optional()}),
   all_numbers_confirmed: z.literal(false), all_basis_confirmed: z.literal(false), limits: z.array(z.string()),
+  semantic:z.object({status:z.enum(["running","completed","partial","failed"]),job_id:z.string(),model:z.string(),
+    reasoning_effort:z.string(),context_tokens:z.number(),completed_tasks:z.number(),total_tasks:z.number(),updated_at:z.string(),
+    findings_count:z.number(),matched_count:z.number(),phase:z.string().optional(),error:z.string().optional(),gaps:z.array(z.string()),
+    tasks:z.array(z.object({id:ConsistencyComparisonSchema,label:z.string(),status:z.enum(["pending","running","completed","failed"]),submitted_pages:z.number(),check_count:z.number().optional(),error:z.string().optional()})),
+  }).optional(),
 });
 export type ConsistencyReport = z.infer<typeof ConsistencyReportSchema>;
 export type ConsistencySlot = z.infer<typeof ConsistencySlotSchema>;

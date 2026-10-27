@@ -52,6 +52,13 @@ function setup(url = "http://127.0.0.1:60939") {
 }
 
 describe("Native Cuby FinanceBuddy adapter", () => {
+  it("allows only the fixed semantic tool and refuses renderer-supplied model credentials", async () => {
+    const tool=vi.fn(async()=>JSON.stringify({})),api=new FinanceReaderApi(tool);
+    await expect(api.request({action:"consistency-semantic-start",run_id:"20310101T000000-aabbccdd",config_path:"C:/private/key"})).rejects.toThrow("Invalid report reader request");
+    expect(tool).not.toHaveBeenCalled();
+    await expect(api.request({action:"consistency-semantic-start",run_id:"20310101T000000-aabbccdd"})).rejects.toThrow();
+    expect(tool).toHaveBeenCalledWith("mcp_financebuddy_reports_start_consistency_semantic",{run_id:"20310101T000000-aabbccdd"});
+  });
   it("routes four-report workflows through enabled fixed tools and rejects arbitrary PDF image URLs", async () => {
     const tool = vi.fn(async () => JSON.stringify({data_url:"https://attacker.example/page.png"}));
     const api = new FinanceReaderApi(tool);

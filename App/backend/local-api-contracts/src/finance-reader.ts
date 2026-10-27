@@ -184,6 +184,7 @@ export const FinanceRequestSchema = z.discriminatedUnion("action", [
     comparisons:z.array(ConsistencyComparisonSchema).min(1).max(4).optional(),
     documents:z.array(z.object({slot:ConsistencySlotSchema,path:z.string().max(4096)}).strict()).length(4).optional()}).strict(),
   z.object({action:z.literal("consistency-read"),run_id:ConsistencyRunSchema}).strict(),
+  z.object({action:z.literal("consistency-semantic-start"),run_id:ConsistencyRunSchema}).strict(),
   z.object({action:z.literal("consistency-page"),run_id:ConsistencyRunSchema,slot:ConsistencySourceSlotSchema,
     page:z.number().int().min(1).max(300),check_id:z.string().max(180).optional()}).strict(),
   z
