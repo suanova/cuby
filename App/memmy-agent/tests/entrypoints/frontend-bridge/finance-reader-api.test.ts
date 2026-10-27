@@ -31,6 +31,15 @@ function setup(url = "http://127.0.0.1:60939") {
     if (route.endsWith("/api/health"))
       return Response.json({ app: "financebuddy-review-reader", review_sha256: sha });
     if (route.endsWith("/api/review")) return Response.json(review);
+    if (route.endsWith("/api/drafts"))
+      return Response.json({ review_sha256: sha, revision: 0, edits: [], history: [] });
+    if (route.endsWith("/api/draft-export"))
+      return Response.json({
+        review_sha256: sha,
+        draft: { review_sha256: sha, revision: 0, edits: [], history: [] },
+        text: "Draft text",
+        pages: [{ number: 1, text: "Draft text" }],
+      });
     if (route.endsWith("/api/decisions"))
       return Response.json(notes, { status: init?.method === "POST" ? 409 : 200 });
     if (route.endsWith("/1.png"))
@@ -43,6 +52,33 @@ function setup(url = "http://127.0.0.1:60939") {
 }
 
 describe("Native Cuby FinanceBuddy adapter", () => {
+  it("routes reversible drafts through fixed authenticated resources", async () => {
+    const { api, fetchFn } = setup();
+    const opened = (await api.request({ action: "open", review_path: path })) as any;
+    const value = {
+      expected_revision: 0,
+      check_id: "BASIS",
+      operation: "accept",
+      replacement: "Verified wording.",
+      facts_confirmed: true,
+    };
+    await api.request({ action: "draft-save", handle: opened.handle, value });
+    expect(fetchFn).toHaveBeenLastCalledWith(
+      "http://127.0.0.1:60939/api/drafts",
+      expect.objectContaining({ method: "POST", body: JSON.stringify(value) }),
+    );
+    expect(await api.request({ action: "draft-export", handle: opened.handle })).toHaveProperty(
+      "text",
+      "Draft text",
+    );
+    await expect(
+      api.request({
+        action: "draft-save",
+        handle: opened.handle,
+        value: { ...value, source_path: "secrets" },
+      }),
+    ).rejects.toThrow();
+  });
   it("opens only through the installed MCP tool and returns opaque handles, not upstream URLs", async () => {
     const { api, tool, fetchFn } = setup();
     const result = (await api.request({ action: "open", review_path: path })) as any;

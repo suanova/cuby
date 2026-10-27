@@ -5,6 +5,8 @@ import {
   FinanceReaderSchema,
   FinanceNotesSchema,
   FinanceRequestSchema,
+  FinanceDraftSchema,
+  FinanceDraftExportSchema,
 } from "@memmy/local-api-contracts";
 
 export type FinanceToolCall = (name: string, args: Record<string, unknown>) => Promise<unknown>;
@@ -146,13 +148,15 @@ export class FinanceReaderApi {
     const route =
       input.action === "page" || input.action === "rule"
         ? `/api/${input.action}/${input.page}.png`
-        : input.action === "save"
-          ? "/api/decisions"
-          : `/api/${input.action}`;
+        : input.action === "draft-save"
+          ? "/api/drafts"
+          : input.action === "save"
+            ? "/api/decisions"
+            : `/api/${input.action}`;
     const { data, type } = await this.upstream(
       handle.base,
       route,
-      input.action === "save" ? input.value : undefined,
+      input.action === "save" || input.action === "draft-save" ? input.value : undefined,
     );
     if (input.action === "page" || input.action === "rule") {
       if (
@@ -162,11 +166,19 @@ export class FinanceReaderApi {
         throw new FinanceReaderError("Invalid PDF page response.", 502);
       return { data_url: `data:image/png;base64,${data.toString("base64")}` };
     }
+    if (input.action === "draft-export") {
+      const result = FinanceDraftExportSchema.parse(JSON.parse(data.toString("utf8")));
+      if (result.review_sha256 !== handle.sha || result.draft.review_sha256 !== handle.sha)
+        throw new FinanceReaderError("Draft revision changed.", 409);
+      return result;
+    }
     if (input.action.endsWith("export")) return { text: data.toString("utf8") };
     const result =
       input.action === "review"
         ? FinanceReaderSchema.parse(JSON.parse(data.toString("utf8")))
-        : FinanceNotesSchema.parse(JSON.parse(data.toString("utf8")));
+        : input.action === "drafts" || input.action === "draft-save"
+          ? FinanceDraftSchema.parse(JSON.parse(data.toString("utf8")))
+          : FinanceNotesSchema.parse(JSON.parse(data.toString("utf8")));
     if (result.review_sha256 !== handle.sha)
       throw new FinanceReaderError("Reader revision changed. Reopen the workpaper.", 409);
     return result;

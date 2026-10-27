@@ -56,6 +56,32 @@ export const FinanceReaderSchema = z.object({
       rule_quote: z.string(),
       actual_pdf_page: z.number().int().positive(),
       kind: z.string(),
+      finding: z
+        .object({
+          level: z.enum(["error", "review", "suggestion", "evidence"]),
+          title: z.string(),
+          summary: z.string(),
+          marks: z.array(
+            z.object({
+              page: z.number().int().positive(),
+              rects: z.array(
+                z.tuple([z.number(), z.number(), z.number(), z.number()]),
+              ),
+              empty: z.boolean().optional(),
+            }),
+          ),
+          edit: z
+            .object({
+              kind: z.enum(["replace", "insert"]),
+              page: z.number().int().positive(),
+              evidence_id: z.string(),
+              original: z.string(),
+              suggested: z.string(),
+              requires_confirmation: z.boolean(),
+            })
+            .nullable(),
+        })
+        .optional(),
     }),
   ),
   anchors: z.record(
@@ -115,6 +141,43 @@ export const FinanceNoteWriteSchema = z
     note: z.string().max(2000),
   })
   .strict();
+export const FinanceDraftSchema = z.object({
+  review_sha256: ShaSchema,
+  revision: z.number().int().nonnegative(),
+  edits: z.array(
+    z.object({
+      id: z.string(),
+      check_id: z.string(),
+      kind: z.enum(["replace", "insert"]),
+      page: z.number().int().positive(),
+      original: z.string(),
+      replacement: z.string(),
+      active: z.boolean(),
+      facts_confirmed: z.boolean(),
+      accepted_at: z.string(),
+      evidence_id: z.string(),
+      rule: z.string(),
+      review_sha256: ShaSchema,
+      source_sha256: ShaSchema,
+    }),
+  ),
+  history: z.array(
+    z.object({
+      revision: z.number().int().positive(),
+      operation: z.enum(["accept", "undo"]),
+      check_id: z.string(),
+      at: z.string(),
+    }),
+  ),
+});
+export const FinanceDraftExportSchema = z.object({
+  review_sha256: ShaSchema,
+  draft: FinanceDraftSchema,
+  text: z.string(),
+  pages: z.array(
+    z.object({ number: z.number().int().positive(), text: z.string() }),
+  ),
+});
 export const FinanceRequestSchema = z.discriminatedUnion("action", [
   z
     .object({
@@ -131,8 +194,25 @@ export const FinanceRequestSchema = z.discriminatedUnion("action", [
         "notes-export",
         "checklist-export",
         "requests-export",
+        "drafts",
+        "draft-export",
       ]),
       handle: z.string().uuid(),
+    })
+    .strict(),
+  z
+    .object({
+      action: z.literal("draft-save"),
+      handle: z.string().uuid(),
+      value: z
+        .object({
+          expected_revision: z.number().int().nonnegative(),
+          check_id: z.string().max(100),
+          operation: z.enum(["accept", "undo"]),
+          replacement: z.string().max(3000).optional(),
+          facts_confirmed: z.boolean().optional(),
+        })
+        .strict(),
     })
     .strict(),
   z
@@ -161,3 +241,4 @@ export type FinanceNotes = z.infer<typeof FinanceNotesSchema>;
 export type FinanceRequest = z.infer<typeof FinanceRequestSchema>;
 export type FinanceNoteWrite = z.infer<typeof FinanceNoteWriteSchema>;
 export type FinanceOpen = z.infer<typeof FinanceOpenSchema>;
+export type FinanceDraft = z.infer<typeof FinanceDraftSchema>;

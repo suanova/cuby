@@ -18,6 +18,14 @@ The catalog opens existing workpapers without a model call. Clicking a relative 
 
 The reader supports report/rule paging, zoom, findings search/filtering, citation navigation and downloads of checklist, data requests and saved notes. Unsaved drafts survive citation changes, workpaper switches and closing/reopening the panel within the mounted chat page. Refreshing/exiting Cuby can discard unsaved drafts; the footer indicates unsaved work. Saved notes survive reopening. Conflicts return 409 and retain the user's draft for review. Notes are local owner annotations, not verified multi-user signatures, business approval or legal certification.
 
+## Concise findings and revision drafts
+
+With FinanceBuddy adapter 0.7.0, the reader sorts verified document problems (red), unresolved questions (amber), and wording suggestions (blue); existing evidence is hidden by default. A short title, reason and source/rule buttons remain visible. Full reasoning and annotations are disclosed on demand. Classification is separate from the immutable audit status: an absent search result alone never becomes a proven error, and accepting wording never marks a requirement passed. Red page marks are backed by source text or an explicitly verified blank table cell. Reference highlights remain pale yellow. Clicking a problem mark selects its card.
+
+`NativeFinanceReader` consumes optional typed finding metadata from the adapter; old adapters fall back to unresolved/evidence categories without inventing errors. For supported checks the adapter supplies editable disclosure templates, not independently verified new facts or an unrestricted AI rewrite service. Unknown values remain placeholders. Draft adoption requires completed wording and explicit confirmation of its facts. Exact source replacements require one whitespace-normalized match on the cited page; unlocatable missing content uses an insertion. Duplicate, overlapping and stale edits are rejected. No original PDF bytes or finalized review conclusions are overwritten.
+
+The fixed `drafts`, `draft-save` and `draft-export` actions proxy the local renderer's dedicated draft endpoints through the existing authenticated handle. Optimistic revisions, immutable source/review hashes and atomic sidecar writes preserve accepted/undone changes independently of reviewer notes. A separate page-text draft view and TXT/JSON exports show the result and provenance; this does not recreate PDF layout or edit a Word source in place. The adapter package is required alongside this core change.
+
 ## Local API and trust boundary
 
 The existing gateway bearer authentication protects both routes:
