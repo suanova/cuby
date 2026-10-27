@@ -1,5 +1,7 @@
 import crypto from "node:crypto";
 import path from "node:path";
+import fs from "node:fs";
+import { ConsistencyReportSchema } from "@memmy/local-api-contracts";
 import {
   FinanceCatalogSchema,
   FinanceReaderSchema,
@@ -19,15 +21,16 @@ export class FinanceReaderError extends Error {
   }
 }
 
-/** Only two installed, explicitly enabled MCP tools can be invoked by this adapter. */
+/** Only fixed, explicitly enabled FinanceBuddy MCP tools can be invoked here. */
 export class FinanceReaderApi {
   private handles = new Map<string, { base: string; sha: string; expires: number }>();
   constructor(
     private callTool: FinanceToolCall,
     private fetchFn: typeof fetch = fetch,
+    private mediaRoot?: string,
   ) {}
 
-  private async tool(name: "list_c2_reviews" | "open_c2_reader", args: Record<string, unknown>) {
+  private async tool(name: "list_c2_reviews" | "open_c2_reader" | "build_consistency_review" | "read_consistency_review" | "read_consistency_page", args: Record<string, unknown>) {
     const raw = await this.callTool(`mcp_financebuddy_reports_${name}`, args);
     try {
       return typeof raw === "string" ? JSON.parse(raw) : raw;
@@ -88,6 +91,31 @@ export class FinanceReaderApi {
     const parsed = FinanceRequestSchema.safeParse(raw);
     if (!parsed.success) throw new FinanceReaderError("Invalid report reader request.");
     const input = parsed.data;
+    if (input.action === "consistency-build") {
+      if (input.documents) {
+        if (!this.mediaRoot || new Set(input.documents.map(d => d.slot)).size !== 4)
+          throw new FinanceReaderError("請為四個位置各選一份已上載的 PDF。");
+        const root = fs.realpathSync(this.mediaRoot);
+        for (const doc of input.documents) {
+          const real = fs.realpathSync(doc.path);
+          const relative = path.relative(root, real);
+          if (!relative || relative.startsWith("..") || path.isAbsolute(relative) || path.extname(real).toLowerCase() !== ".pdf")
+            throw new FinanceReaderError("只能使用 Cuby 本次上載的 PDF。");
+        }
+      }
+      return ConsistencyReportSchema.parse(await this.tool("build_consistency_review", {
+        fiscal_year: input.fiscal_year, ...(input.comparisons ? {comparisons:input.comparisons} : {}), ...(input.documents ? {documents:input.documents} : {}),
+      }));
+    }
+    if (input.action === "consistency-read")
+      return ConsistencyReportSchema.parse(await this.tool("read_consistency_review", {run_id:input.run_id,full:true}));
+    if (input.action === "consistency-page") {
+      const {action, ...args} = input;
+      const image = await this.tool("read_consistency_page", args) as {data_url?:unknown};
+      if (typeof image.data_url !== "string" || image.data_url.length > 8*1024*1024 || !image.data_url.startsWith("data:image/png;base64,iVBORw0KGgo"))
+        throw new FinanceReaderError("Invalid consistency PDF page.",502);
+      return {data_url:image.data_url};
+    }
     if (input.action === "open") {
       const receipt = (await this.tool("open_c2_reader", {
         review_path: input.review_path,

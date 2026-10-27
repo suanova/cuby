@@ -52,6 +52,18 @@ function setup(url = "http://127.0.0.1:60939") {
 }
 
 describe("Native Cuby FinanceBuddy adapter", () => {
+  it("routes four-report workflows through enabled fixed tools and rejects arbitrary PDF image URLs", async () => {
+    const tool = vi.fn(async () => JSON.stringify({data_url:"https://attacker.example/page.png"}));
+    const api = new FinanceReaderApi(tool);
+    await expect(api.request({action:"consistency-page",run_id:"20310101T000000-aabbccdd",slot:"esg_en",page:1})).rejects.toThrow("Invalid consistency PDF");
+    expect(tool).toHaveBeenCalledWith("mcp_financebuddy_reports_read_consistency_page",{run_id:"20310101T000000-aabbccdd",slot:"esg_en",page:1});
+    await expect(api.request({action:"consistency-read",run_id:"../escape"})).rejects.toThrow("Invalid report reader request");
+  });
+  it("refuses untrusted upload paths before invoking the business tool", async () => {
+    const tool=vi.fn();const api=new FinanceReaderApi(tool);
+    await expect(api.request({action:"consistency-build",fiscal_year:"2031/32",documents:["esg_zh","esg_en","annual_zh","annual_en"].map(slot=>({slot,path:"C:/private/report.pdf"}))})).rejects.toThrow("已上載");
+    expect(tool).not.toHaveBeenCalled();
+  });
   it("routes reversible drafts through fixed authenticated resources", async () => {
     const { api, fetchFn } = setup();
     const opened = (await api.request({ action: "open", review_path: path })) as any;

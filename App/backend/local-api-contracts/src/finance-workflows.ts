@@ -3,6 +3,7 @@ export type FinanceWorkflowId =
   | "report"
   | "review"
   | "peers"
+  | "consistency"
   | "commitments";
 export const FINANCE_WORKFLOWS: {
   id: FinanceWorkflowId;
@@ -35,10 +36,10 @@ export const FINANCE_WORKFLOWS: {
     stage: "可用 · 排放指標",
   },
   {
-    id: "commitments",
-    title: "追蹤上年承諾",
-    detail: "逐項對照目標、今年成果及依據",
-    stage: "待建立專用核對流程",
+    id: "consistency",
+    title: "報告一致性核對",
+    detail: "中英／跨報告／內部／跨年重述四類初核",
+    stage: "可用 · 新稿＋歷史基準",
   },
 ];
 

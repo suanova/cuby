@@ -716,7 +716,7 @@ export class WebSocketChannel extends BaseChannel {
   private financeReader: FinanceReaderApi | null = null;
 
   setFinanceReaderTools(callTool: FinanceToolCall): void {
-    this.financeReader = new FinanceReaderApi(callTool);
+    this.financeReader = new FinanceReaderApi(callTool, fetch, getMediaDir("websocket"));
   }
 
   async handleFinanceReader(request: HttpRequestLike, catalog = false): Promise<HttpLikeResponse> {

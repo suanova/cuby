@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ConsistencySlotSchema, ConsistencySourceSlotSchema, ConsistencyComparisonSchema, ConsistencyRunSchema } from "./finance-consistency.js";
 
 export const FinanceReviewPathSchema = z
   .string()
@@ -179,6 +180,12 @@ export const FinanceDraftExportSchema = z.object({
   ),
 });
 export const FinanceRequestSchema = z.discriminatedUnion("action", [
+  z.object({action:z.literal("consistency-build"),fiscal_year:z.string().regex(/^20\d{2}\/\d{2}$/),
+    comparisons:z.array(ConsistencyComparisonSchema).min(1).max(4).optional(),
+    documents:z.array(z.object({slot:ConsistencySlotSchema,path:z.string().max(4096)}).strict()).length(4).optional()}).strict(),
+  z.object({action:z.literal("consistency-read"),run_id:ConsistencyRunSchema}).strict(),
+  z.object({action:z.literal("consistency-page"),run_id:ConsistencyRunSchema,slot:ConsistencySourceSlotSchema,
+    page:z.number().int().min(1).max(300),check_id:z.string().max(180).optional()}).strict(),
   z
     .object({
       action: z.literal("open"),

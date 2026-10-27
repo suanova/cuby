@@ -10,6 +10,16 @@ Setup uses a compact focus-trapped modal with Escape dismissal. Submitting close
 
 With FinanceBuddy adapter 0.6.0, the review source selector also offers a bounded TEST ONLY negative control. It requests a separately watermarked English same-year PDF; it does not alter the official source or pass an answer key to the model. Synthetic-source receipts display an explicit reader warning. This validates only the selected checks, not all ESG clauses or financial data accuracy. Workflow buttons do not hard-code a model; the user's configured model and reasoning effort remain authoritative.
 
+## Four-category consistency review (adapter 0.8.0)
+
+The fifth guided choice is now report consistency; commitments remain a future workflow. Setup defaults to uploading the current-year ESG Chinese/English and annual report Chinese/English PDFs, with bilingual, cross-report, internal and restatement checks all selected. The existing authenticated multipart upload stages four distinct PDFs inside the gateway media root. The adapter snapshots their hashes; the native reader opens only after a successful build. A local FY2025/26 example option remains available.
+
+For restatement checks the adapter verifies the exact prior fiscal year's four completed WeKnora sources, authorization and identical local-mirror SHA before using them. Current-year uploaded snapshots remain authoritative drafts; a clean current-year KB copy is never an answer key. Supported table mappings cover Yeebo GHG, energy and consolidated income statements, selected internal sums and current comparative versus prior actual columns. Unit dimensions, rounding precision, missing facts and unsupported semantic/boundary checks remain pending. Full-page number inventories are only alignment candidates, hidden by default.
+
+The native dual-source reader offers category filters, source-page navigation, evidence highlights and CSV/JSON downloads. Selected-item follow-up uses the ordinary composer and current model/thinking selection. `read_consistency_issue` returns the item and at most four immutable source pages / 24,000 characters with explicit truncation metadata. No model credentials reach this interface and no original PDF is changed. Suggestions are unapproved drafts, not new verified figures or automatic legal approval.
+
+Three additional fixed UI calls (`build_consistency_review`, `read_consistency_review`, `read_consistency_page`) join the existing two C2 calls. The model registry separately exposes `read_consistency_issue`; upload paths must canonicalize under the gateway media directory. This requires matching core and adapter versions; installing skills alone does not update the desktop UI.
+
 ## Reader integration
 
 The reader is a React component inside `HomePage`, with a split conversation/document layout and an expand option. It is not an iframe or external browser wrapper. It shows verified raster pages, exact PDF-coordinate evidence highlights, the 12 findings, reasons, follow-ups, original rule pages, source IDs, reviewer labels and notes. Evidence highlights are not automatically error locations; missing disclosure has no fabricated sentence highlight. Search filters findings, not full PDF text. Original PDFs and checklist findings are not edited.

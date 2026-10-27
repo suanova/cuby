@@ -1,4 +1,5 @@
 import { NativeFinanceReader } from "./finance-reader-view.js";
+import { ConsistencySetup, ConsistencyReader } from "./finance-consistency-view.js";
 import { useEffect, useRef, useState } from "react";
 import {
   BookOpen,
@@ -15,6 +16,7 @@ import {
   type FinanceOpen,
   type FinanceNoteWrite,
   type FinanceRequest,
+  type ConsistencyReport,
 } from "@memmy/local-api-contracts";
 import type { MemmyAgentClient } from "../api/memmy-agent-client.js";
 import {
@@ -74,6 +76,7 @@ export function FinanceWorkspace(props: {
 }) {
   const [catalog, setCatalog] = useState<FinanceCatalog | null>(null);
   const [opened, setOpened] = useState<FinanceOpen | null>(null);
+  const [consistency, setConsistency] = useState<ConsistencyReport | null>(null);
   const [openedPath, setOpenedPath] = useState("");
   const draftStore = useRef<Record<string, Drafts>>({});
   const [loading, setLoading] = useState(false);
@@ -119,6 +122,7 @@ export function FinanceWorkspace(props: {
         }),
       );
       if (sequence === openSequence.current) {
+        setConsistency(null);
         setOpened(result);
         setOpenedPath(path);
         props.onChoose(null);
@@ -246,6 +250,7 @@ export function FinanceWorkspace(props: {
                 onClick={() => {
                   props.onChoose(null);
                   setOpened(null);
+                  setConsistency(null);
                 }}
               >
                 <Files size={17} />
@@ -279,7 +284,11 @@ export function FinanceWorkspace(props: {
             正在驗證原件版本及載入底稿…
           </div>
         )}
-        {!loading && selected ? (
+        {!loading && selected?.id === "consistency" ? (
+          <ConsistencySetup client={client} request={request} onComplete={(report) => {
+            setConsistency(report);setOpened(null);setExpanded(true);props.onChoose(null);
+          }}/>
+        ) : !loading && selected ? (
           <div className="finance-setup">
             <span className="finance-badge">{selected.stage}</span>
             <h3>{selected.title}</h3>
@@ -423,6 +432,10 @@ export function FinanceWorkspace(props: {
               <ReviewList catalog={catalog} onOpen={(p) => void open(p)} />
             )}
           </div>
+        ) : !loading && consistency ? (
+          <ConsistencyReader key={consistency.run_id} report={consistency} request={request} busy={props.busy} onAsk={async(prompt)=>{
+            await props.onLaunch(prompt);setExpanded(false);
+          }}/>
         ) : !loading && opened ? (
           <NativeFinanceReader
             key={opened.handle}
