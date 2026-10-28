@@ -56,6 +56,21 @@ afterEach(async () => {
 });
 
 describe("WebSocket HTTP route helpers", () => {
+  it("serves revised PDF bytes only through the authenticated download route",async()=>{
+    const channel=makeChannel({config:{token:"finance-download-token"}});
+    const download=vi.fn(()=>({data:Buffer.from("%PDF-1.7"),file_name:"esg_en-revised.pdf",mime:"application/pdf"}));
+    (channel as any).financeReader={download};
+    const route="/api/webui/finance/exports/1b49956c-2a04-4e4a-998f-aaf3846d9f76";
+    expect((await channel.dispatchHttp({}, {path:route,method:"GET",headers:{}}))?.status).toBe(401);
+    expect(download).not.toHaveBeenCalled();
+    channel.apiTokens.set("finance-download-token",Date.now()/1000+60);
+    const headers={authorization:"Bearer finance-download-token"};
+    const response=await channel.dispatchHttp({}, {path:route,method:"GET",headers});
+    expect(response?.status).toBe(200);expect(response?.body.toString()).toBe("%PDF-1.7");
+    expect(response?.headers["content-type"]).toBe("application/pdf");
+    expect(response?.headers["Content-Disposition"]).toContain('filename="esg_en-revised.pdf"');
+    expect((await channel.dispatchHttp({}, {path:route,method:"POST",headers}))?.status).toBe(405);
+  });
   function tmpRoot(prefix = "memmy-ws-http-"): string {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
     tmpDirs.push(root);

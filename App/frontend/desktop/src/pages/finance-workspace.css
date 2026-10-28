@@ -1244,3 +1244,5 @@
 .consistency-checks{padding:9px;gap:6px}
 .consistency-body{flex:1 0 420px;height:calc(100dvh - 250px);min-height:420px}
 .consistency-check-preview{margin-top:1px;font-size:10px;line-height:1.45}
+
+.consistency-pdf-notice {display:block;padding:6px 10px;color:var(--finance-muted, #617b78);font-size:11px;border-bottom:1px solid #d9e7e5;flex:none;}

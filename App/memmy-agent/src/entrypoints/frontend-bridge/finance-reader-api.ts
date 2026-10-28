@@ -26,11 +26,13 @@ export class FinanceReaderError extends Error {
 /** Only fixed, explicitly enabled FinanceBuddy MCP tools can be invoked here. */
 export class FinanceReaderApi {
   private handles = new Map<string, { base: string; sha: string; expires: number }>();
+  private downloads = new Map<string,{file:string;root:string;sha:string;bytes:number;file_name:string;mime:string;expires:number}>();
   constructor(
     private callTool: FinanceToolCall,
     private fetchFn: typeof fetch = fetch,
     private mediaRoot?: string,
     private history?: FinanceHistory,
+    private workspaceRoot?: string,
   ) {}
 
   private async connectProject(project:FinanceProject) {
@@ -149,13 +151,17 @@ export class FinanceReaderApi {
     }
     if (input.action === "consistency-draft-page") {
       const {action,...args}=input;
-      const result=await this.tool("edit_consistency_draft",{operation:"preview",...args}) as {text?:unknown};
-      if (typeof result.text!=="string" || result.text.length>200000) throw new FinanceReaderError("修訂稿頁面無效。",502);
-      return result;
+      const result=await this.tool("edit_consistency_draft",{operation:"render",...args}) as Record<string,unknown>;
+      this.checkLayout(result);
+      if (typeof result.data_url!=="string" || result.data_url.length>8*1024*1024 || !result.data_url.startsWith("data:image/png;base64,iVBORw0KGgo"))
+        throw new FinanceReaderError("修訂PDF頁面無效。",502);
+      return {data_url:result.data_url,revision:result.revision,layout_notice:result.layout_notice};
     }
     if (input.action === "consistency-draft-export") {
       const {action,...args}=input;
-      return ConsistencyExportSchema.parse(await this.tool("edit_consistency_draft",{operation:"export",...args}));
+      const result=await this.tool("edit_consistency_draft",{operation:"export",...args}) as Record<string,unknown>;
+      this.checkLayout(result);
+      return this.grantDownload(input.run_id,result);
     }
     if (input.action === "consistency-semantic-start")
       return ConsistencyReportSchema.parse(await this.tool("start_consistency_semantic", {run_id:input.run_id}));
@@ -278,6 +284,55 @@ export class FinanceReaderApi {
     if (result.review_sha256 !== handle.sha)
       throw new FinanceReaderError("Reader revision changed. Reopen the workpaper.", 409);
     return result;
+  }
+
+  private checkLayout(result:Record<string,unknown>) {
+    if(result.status!=="blocked") return;
+    const issues=Array.isArray(result.issues)?result.issues:[];
+    const issue=issues[0] as {slot?:string;page?:number;reason?:string}|undefined;
+    const labels:Record<string,string>={esg_en:"ESG英文",esg_zh:"ESG中文",annual_en:"年報英文",annual_zh:"年報中文"};
+    throw new FinanceReaderError((labels[issue?.slot??""]??"PDF")+(issue?.page?"第"+issue.page+"頁":"")+"："+(issue?.reason??"未能保留原版面，請調整新寫法。"),409);
+  }
+
+  private readDownload(value:{file:string;root:string;sha:string;bytes:number;mime:string}) {
+    try {
+      const root=fs.realpathSync(value.root),real=fs.realpathSync(value.file),relative=path.relative(root,real);
+      if(!relative || relative.startsWith("..") || path.isAbsolute(relative) || path.resolve(value.file)!==real)
+        throw new Error("path");
+      const stat=fs.statSync(real);
+      if(!stat.isFile() || stat.size!==value.bytes || stat.size>128*1024*1024) throw new Error("size");
+      const data=fs.readFileSync(real);
+      if(crypto.createHash("sha256").update(data).digest("hex")!==value.sha) throw new Error("hash");
+      if(value.mime==="application/pdf"?data.subarray(0,5).toString()!=="%PDF-":data.subarray(0,4).toString("hex")!=="504b0304") throw new Error("type");
+      return data;
+    } catch {throw new FinanceReaderError("匯出檔案已變更，請重新匯出。",409);}
+  }
+
+  private grantDownload(run:string,result:Record<string,unknown>) {
+    if(!this.workspaceRoot || typeof result.file_path!=="string" || typeof result.file_name!=="string" ||
+       !/^[A-Za-z0-9_.-]+$/.test(result.file_name) || !Number.isInteger(result.revision) ||
+       (result.revision as number)<0 || typeof result.bytes!=="number" || !Number.isInteger(result.bytes) ||
+       result.bytes<=0 || result.bytes>128*1024*1024 || typeof result.sha256!=="string" ||
+       !/^[a-f0-9]{64}$/.test(result.sha256) || !["application/pdf","application/zip"].includes(String(result.mime)) ||
+       !result.file_name.endsWith(result.mime==="application/pdf"?".pdf":".zip"))
+      throw new FinanceReaderError("匯出PDF資料無效。",502);
+    const root=fs.realpathSync(this.workspaceRoot);
+    const expected=path.join(root,"outputs","consistency",run,"exports","r"+result.revision,result.file_name);
+    if(path.resolve(result.file_path)!==expected) throw new FinanceReaderError("匯出文件位置不符。",502);
+    const grant={file:expected,root,sha:result.sha256,bytes:result.bytes,file_name:result.file_name,mime:String(result.mime),expires:Date.now()+10*60_000};
+    this.readDownload(grant);
+    for(const [id,value] of this.downloads) if(value.expires<Date.now()) this.downloads.delete(id);
+    if(this.downloads.size>=16) this.downloads.delete(this.downloads.keys().next().value!);
+    const id=crypto.randomUUID();
+    const receipt=ConsistencyExportSchema.parse({...result,download_id:id});
+    this.downloads.set(id,grant);
+    return receipt;
+  }
+
+  download(id:string) {
+    const value=this.downloads.get(id);
+    if(!value || value.expires<Date.now()) {this.downloads.delete(id);throw new FinanceReaderError("下載已過期，請重新匯出。",410);}
+    return {data:this.readDownload(value),file_name:value.file_name,mime:value.mime};
   }
 
   private validateUploads(documents:{slot:string;path:string}[]) {

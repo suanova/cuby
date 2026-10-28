@@ -718,7 +718,20 @@ export class WebSocketChannel extends BaseChannel {
 
   setFinanceReaderTools(callTool: FinanceToolCall): void {
     const history=this.projectStore && this.sessionManager ? new FinanceHistory(this.projectStore,this.sessionManager,(id,record)=>this.tryAppendWebuiTranscript(id,record)) : undefined;
-    this.financeReader = new FinanceReaderApi(callTool, fetch, getMediaDir("websocket"),history);
+    this.financeReader = new FinanceReaderApi(callTool, fetch, getMediaDir("websocket"),history,this.workspacePath);
+  }
+
+  async handleFinanceDownload(request:HttpRequestLike,id:string):Promise<HttpLikeResponse> {
+    if(!this.checkApiToken(request)) return httpError(401,"Unauthorized");
+    if((request.method??"GET").toUpperCase()!=="GET") return httpError(405,"method not allowed");
+    if(!this.financeReader) return httpError(503,"FinanceBuddy MCP service is unavailable.");
+    try {
+      const file=this.financeReader.download(id);
+      return httpResponse(file.data,{contentType:file.mime,extraHeaders:{"Content-Disposition":'attachment; filename="'+file.file_name+'"',"Cache-Control":"no-store"}});
+    } catch(error) {
+      if(error instanceof FinanceReaderError) return httpError(error.status,error.message);
+      return httpError(502,"PDF下載未完成，請重新匯出。");
+    }
   }
 
   async handleFinanceReader(request: HttpRequestLike, catalog = false): Promise<HttpLikeResponse> {
@@ -2792,6 +2805,8 @@ export class WebSocketChannel extends BaseChannel {
     if (got === "/api/webui/artifacts/open") return this.handleArtifactOpen(request);
     if (got === "/api/webui/finance/catalog") return this.handleFinanceReader(request, true);
     if (got === "/api/webui/finance/request") return this.handleFinanceReader(request);
+    const financeDownload=got.match(/^\/api\/webui\/finance\/exports\/([a-f0-9-]{36})$/);
+    if(financeDownload) return this.handleFinanceDownload(request,financeDownload[1]);
     if (got === "/api/webui/media/upload") return this.handleWebuiMediaUpload(request);
     if (got === "/api/settings/update") return this.handleSettingsUpdate(request);
     if (got === "/api/settings/model-configurations/create") return this.handleSettingsModelConfigurationCreate(request);

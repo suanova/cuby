@@ -17,8 +17,9 @@ export const ConsistencyEditorSchema=z.object({run_id:z.string(),base_sha256:z.s
     requires_confirmation:z.boolean().optional(),confirmation_prompt:z.string().optional(),edits:z.array(ConsistencyEditSchema).optional(),error:z.string().optional(),model:z.string().optional(),reasoning_effort:z.string().optional()})),
   decisions:z.record(z.string(),z.object({status:z.enum(["accepted","dismissed"]),edits:z.array(ConsistencyEditSchema),at:z.string(),proposal_id:z.string().optional(),facts_confirmed:z.boolean().optional()})),
   history:z.array(z.unknown())});
-export const ConsistencyExportSchema=z.object({file_name:z.string().regex(/^[A-Za-z0-9_.-]+$/),mime:z.enum(["application/zip","application/vnd.openxmlformats-officedocument.wordprocessingml.document"]),
-  data_base64:z.string().max(8*1024*1024),sha256:z.string(),revision:z.number(),accepted:z.number(),layout_notice:z.string()});
+export const ConsistencyExportSchema=z.object({file_name:z.string().regex(/^[A-Za-z0-9_.-]+$/),
+  mime:z.enum(["application/zip","application/pdf"]),download_id:z.string().uuid(),bytes:z.number().int().positive().max(128*1024*1024),
+  sha256:z.string().regex(/^[a-f0-9]{64}$/),revision:z.number().int().nonnegative(),accepted:z.number().int().nonnegative(),layout_notice:z.string().max(500)});
 export type FinanceProject=z.infer<typeof FinanceProjectSchema>;
 export type ConsistencyEditor=z.infer<typeof ConsistencyEditorSchema>;
 export type ConsistencyEdit=z.infer<typeof ConsistencyEditSchema>;

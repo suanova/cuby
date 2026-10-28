@@ -58,3 +58,13 @@ Build the frontend and agent using the repository scripts. Focused verification 
 The installed Cuby desktop must be rebuilt/updated to display these core UI changes. Installing a skill/MCP package alone cannot update its React interface. The FinanceBuddy project also includes a local source-development launcher for review before a desktop release.
 
 The development launcher uses a separate gateway session store via the optional programmatic `gateway({ sessionDir })` argument, while retaining the authorized workspace for report artifacts. No existing installed-app history is shared for writes. Initial-message retries are coalesced before existing-session retarget rejection: a binding may have been persisted while the first user-message acknowledgment is still pending. Equal request IDs/digests remain one inbound request; unrelated requests still cannot retarget an existing chat. A focused regression covers this ordering.
+
+## Original-layout PDF revisions (adapter 0.12.0)
+
+Accepted edits now preview and export as revised PDFs using the uploaded PDF as the layout source. The dual reader shows actual rendered revised pages, with independent zoom and an original-PDF toggle. The export menu offers one PDF or a ZIP of four PDFs plus accepted-change and layout-check records; it no longer rebuilds plain-text Word documents.
+
+The local adapter reuses original fonts and artwork, preserves short corrections in place, and allows a growing uniform paragraph to move simple following text/table rules within the same page at the original font size. It verifies text, vector rules, page geometry and pixels outside the permitted edit regions. Unsupported fonts, overflow or complex layouts stop with the document/page and a concrete reason. Existing original snapshots and human decisions remain unchanged. This does not promise arbitrary scanned-PDF editing or unrestricted page reflow.
+
+The authenticated gateway grants a bounded ten-minute download ID only for the exact current run/revision output inside its configured workspace, verifies the real path, PDF/ZIP signature, size and SHA-256, and rechecks on download. Binary downloads support up to 128MiB without the previous inline 8MiB limit. The renderer never sends a filesystem path. Preview failures and layout-blocked exports remain visible; no partial bundle is offered.
+
+Targeted verification covers PDF preview/export UI, token-refresh download, route authentication, fixed-path and symlink escape refusal, changed-byte rejection, large downloads, CJK fonts, original backgrounds, table movement, unchanged footers and page count, and overflow refusal. Install the matching local Python adapter and its requirements as well as these core changes.

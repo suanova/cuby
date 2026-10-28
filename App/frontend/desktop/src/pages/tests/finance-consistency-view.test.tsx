@@ -5,6 +5,7 @@ import { describe, it, expect, vi } from "vitest";
 import type { ConsistencyReport } from "@memmy/local-api-contracts";
 import type { MemmyAgentClient } from "../../api/memmy-agent-client.js";
 import { ConsistencySetup, ConsistencyReader, buildConsistencyQuestion } from "../finance-consistency-view.js";
+import { ConsistencyDraftExport } from "../consistency-edit-controls.js";
 import { FinanceWorkspace } from "../finance-workspace.js";
 import { financeWorkflowDisplayText } from "@memmy/local-api-contracts";
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT=true;
@@ -20,6 +21,33 @@ function fixture():ConsistencyReport {
     all_numbers_confirmed:false,all_basis_confirmed:false,limits:["只覆蓋指定表格；全文語義待核。"]};
 }
 describe("Four report consistency",()=>{
+  it("previews the actual revised PDF rather than rebuilding it as plain text",async()=>{
+    const div=document.createElement("div"),root=createRoot(div);
+    const state={run_id:fixture().run_id,base_sha256:"a".repeat(64),revision:2,proposals:{},decisions:{},history:[]};
+    const request=vi.fn(async(input:any)=>input.action==="consistency-editor"?state:{data_url:input.action==="consistency-draft-page"?"data:image/png;base64,REVISED":"data:image/png;base64,ORIGINAL",layout_notice:"保留原PDF樣式。"});
+    try {
+      await act(async()=>root.render(<ConsistencyReader report={fixture()} request={request}/>));
+      await act(async()=>Array.from(div.querySelectorAll("button")).find(b=>b.textContent==="修訂PDF預覽")!.click());
+      expect(request).toHaveBeenCalledWith({action:"consistency-draft-page",run_id:fixture().run_id,slot:"esg_zh",page:3});
+      expect(div.querySelector('img[alt="esg_zh 修訂PDF 3"]')?.getAttribute("src")).toBe("data:image/png;base64,REVISED");
+      expect(div.querySelector("pre")).toBeNull();expect(div.textContent).toContain("保留原PDF樣式");
+    }finally{act(()=>root.unmount());}
+  });
+  it("exports PDF through the authenticated download client and keeps layout failures visible",async()=>{
+    const div=document.createElement("div"),root=createRoot(div),id="1b49956c-2a04-4e4a-998f-aaf3846d9f76";
+    const request=vi.fn(async()=>({file_name:"esg_en-revised.pdf",mime:"application/pdf",download_id:id,bytes:100,sha256:"a".repeat(64),revision:1,accepted:1,layout_notice:"保留原PDF樣式。"}));
+    const download=vi.fn(async()=>new Blob(["%PDF-1.7"],{type:"application/pdf"}));
+    const create=vi.spyOn(URL,"createObjectURL").mockReturnValue("blob:revised-pdf"),click=vi.spyOn(HTMLAnchorElement.prototype,"click").mockImplementation(()=>{});
+    try {
+      await act(async()=>root.render(<ConsistencyDraftExport report={fixture()} editor={{run_id:fixture().run_id,base_sha256:"a".repeat(64),revision:1,proposals:{},decisions:{},history:[]}} request={request} download={download}/>));
+      expect(div.textContent).toContain("全部四份PDF");expect(div.textContent).not.toContain("Word");
+      await act(async()=>div.querySelector("button")!.click());
+      expect(download).toHaveBeenCalledWith(id);expect(create).toHaveBeenCalledWith(expect.any(Blob));expect(click).toHaveBeenCalledOnce();
+      request.mockRejectedValueOnce(new Error("ESG英文第12頁：新增文字放不進同一頁。"));
+      await act(async()=>div.querySelector("button")!.click());
+      expect(div.querySelector('[role="alert"]')?.textContent).toContain("第12頁");expect(download).toHaveBeenCalledTimes(1);
+    }finally{act(()=>root.unmount());create.mockRestore();click.mockRestore();}
+  });
   it("starts with four existing documents without asking for a prompt or exposing an unfinished reader",async()=>{
     localStorage.clear();const div=document.createElement("div"),root=createRoot(div);let finish!:(v:unknown)=>void;
     const request=vi.fn((input:any)=>input.action==="consistency-semantic-start"?Promise.resolve(fixture()):new Promise(resolve=>{finish=resolve;})),complete=vi.fn();

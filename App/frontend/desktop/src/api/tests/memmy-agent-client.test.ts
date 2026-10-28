@@ -81,6 +81,23 @@ afterEach(() => {
 });
 
 describe("memmy-agent client", () => {
+  it("downloads revised PDFs with bearer authentication and refreshes an expired token",async()=>{
+    let boots=0,downloads=0;
+    const id="1b49956c-2a04-4e4a-998f-aaf3846d9f76";
+    const fetchMock=vi.fn(async(input:RequestInfo|URL,init?:RequestInit)=>{
+      const url=new URL(String(input));
+      if(url.pathname==="/webui/bootstrap") {boots++;return json({...bootstrap,token:"token-"+boots});}
+      expect(url.pathname).toBe("/api/webui/finance/exports/"+id);
+      downloads++;expect(init?.headers).toEqual({Authorization:"Bearer token-"+downloads});
+      if(downloads===1)return new Response("Unauthorized",{status:401});
+      return new Response("%PDF-1.7",{headers:{"Content-Type":"application/pdf"}});
+    });
+    const client=createMemmyAgentClient({baseUrl:"http://127.0.0.1:28980",fetchFn:fetchMock as typeof fetch});
+    const file=await client.downloadFinanceExport!(id);
+    expect(file.type).toBe("application/pdf");expect(file.size).toBe(8);expect(boots).toBe(2);
+    await expect(client.downloadFinanceExport!("../../etc")).rejects.toThrow("編號");
+    expect(downloads).toBe(2);
+  });
   it("syncs the history model and retains its actual model source in the response", async () => {
     const snapshot = {
       observation: { state: "running", startedAt: null, segmentId: null, segmentStartedAt: null, error: null, narrationError: null, modelSource: "byok" },

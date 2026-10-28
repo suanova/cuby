@@ -44,16 +44,17 @@ export function ConsistencyEditCard(props:{report:ConsistencyReport;check:Consis
     </>}{error&&<p role="alert" className="finance-error">{error}</p>}
   </section>;
 }
-export function ConsistencyDraftExport(props:{report:ConsistencyReport;editor:ConsistencyEditor|null;request:Request}) {
+export function ConsistencyDraftExport(props:{report:ConsistencyReport;editor:ConsistencyEditor|null;request:Request;download?:(id:string)=>Promise<Blob>}) {
   const [slot,setSlot]=useState("all"),[busy,setBusy]=useState(false),[error,setError]=useState("");
   async function exportDraft() {
     setBusy(true);setError("");
     try {
       const result=ConsistencyExportSchema.parse(await props.request({action:"consistency-draft-export",run_id:props.report.run_id,...(slot!=="all"?{slot:slot as ConsistencySlot}:{})}));
-      const bytes=Uint8Array.from(atob(result.data_base64),c=>c.charCodeAt(0)),url=URL.createObjectURL(new Blob([bytes],{type:result.mime}));
+      if(!props.download)throw new Error("請更新Cuby以啟用PDF下載。");
+      const blob=await props.download(result.download_id),url=URL.createObjectURL(blob);
       const link=document.createElement("a");link.href=url;link.download=result.file_name;link.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
     }catch(e){setError(e instanceof Error?e.message:"匯出未完成。");}finally{setBusy(false);}
   }
   const accepted=Object.values(props.editor?.decisions??{}).filter(d=>d.status==="accepted").length;
-  return <details className="consistency-export-menu"><summary>修訂稿 · 已接受{accepted}項 · 匯出</summary><div className="consistency-draft-export"><select aria-label="匯出修訂文件" value={slot} onChange={e=>setSlot(e.target.value)}><option value="all">全部四份 Word＋修改記錄</option>{props.report.documents.filter(d=>!d.slot.startsWith("prior_")).map(d=><option key={d.slot} value={d.slot}>{d.label} · Word</option>)}</select><button disabled={busy||!props.editor} onClick={()=>void exportDraft()}>{busy?"匯出中…":"匯出修訂稿"}</button><small>PDF文字重建，版面須另排。</small>{error&&<span role="alert">{error}</span>}</div></details>;
+  return <details className="consistency-export-menu"><summary>修訂稿 · 已接受{accepted}項 · 匯出</summary><div className="consistency-draft-export"><select aria-label="匯出修訂文件" value={slot} onChange={e=>setSlot(e.target.value)}><option value="all">全部四份PDF＋修改記錄</option>{props.report.documents.filter(d=>!d.slot.startsWith("prior_")).map(d=><option key={d.slot} value={d.slot}>{d.label} · PDF</option>)}</select><button disabled={busy||!props.editor} onClick={()=>void exportDraft()}>{busy?"正在核對版面…":"匯出PDF"}</button><small>保留原PDF樣式；只套用已接受修改。</small>{error&&<span role="alert">{error}</span>}</div></details>;
 }

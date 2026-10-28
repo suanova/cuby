@@ -804,6 +804,7 @@ export type MemmyAgentRunLifecycleEvent = MemmyAgentWsEvent & {
 export interface MemmyAgentClient {
   getFinanceCatalog?(): Promise<FinanceCatalog>;
   financeReaderRequest?(input: FinanceRequest): Promise<unknown>;
+  downloadFinanceExport?(downloadId:string):Promise<Blob>;
   bootstrap(options?: { force?: boolean }): Promise<MemmyAgentBootstrap>;
   getSettings(): Promise<MemmyAgentSettings>;
   listMcpPresets(): Promise<McpPresetsPayload>;
@@ -1443,6 +1444,23 @@ class HttpMemmyAgentClient implements MemmyAgentClient {
     if (input.action === "open") return FinanceOpenSchema.parse(result) satisfies FinanceOpen;
     if (input.action === "decisions" || input.action === "save") return FinanceNotesSchema.parse(result) satisfies FinanceNotes;
     return result;
+  }
+
+  async downloadFinanceExport(downloadId:string):Promise<Blob> {
+    if(!/^[a-f0-9-]{36}$/.test(downloadId)) throw new Error("下載編號無效。");
+    const send=(boot:MemmyAgentBootstrap)=>this.fetchFn(new URL("/api/webui/finance/exports/"+downloadId,this.baseUrl),
+      {method:"GET",headers:{Authorization:"Bearer "+boot.token}});
+    let response=await send(await this.bootstrap());
+    if(response.status===401) {
+      this.boot=null;this.bootExpiresAtMs=0;
+      response=await send(await this.bootstrap({force:true}));
+    }
+    if(!response.ok) throw new MemmyAgentRequestError(await errorMessage(response),response.status);
+    const type=response.headers.get("content-type")?.split(";")[0];
+    if(type!=="application/pdf"&&type!=="application/zip") throw new Error("下載不是PDF或ZIP。");
+    const blob=await response.blob();
+    if(!blob.size||blob.size>128*1024*1024) throw new Error("下載檔案大小無效。");
+    return blob;
   }
 
   async revealArtifact(path: string, sessionKey: string): Promise<void> {

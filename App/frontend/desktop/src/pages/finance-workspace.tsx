@@ -452,7 +452,7 @@ export function FinanceWorkspace(props: {
             )}
           </div>
         ) : !loading && consistency ? (
-          <ConsistencyReader key={consistency.run_id} report={consistency} request={request} busy={props.busy} onAsk={async(prompt)=>{
+          <ConsistencyReader key={consistency.run_id} report={consistency} request={request} download={props.client.downloadFinanceExport?.bind(props.client)} busy={props.busy} onAsk={async(prompt)=>{
             if(!reviewBinding)throw new Error("請先重新開啟此項目的審閱紀錄。");await props.onLaunch(prompt,reviewBinding);setExpanded(false);
           }}/>
         ) : !loading && opened ? (
