@@ -182,6 +182,8 @@ export const FinanceDraftExportSchema = z.object({
 });
 export const FinanceRequestSchema = z.discriminatedUnion("action", [
   z.object({action:z.literal("project-list")}).strict(),
+  z.object({action:z.literal("project-open"),project_id:FinanceProjectIdSchema,run_id:ConsistencyRunSchema}).strict(),
+  z.object({action:z.literal("project-session"),session_key:z.string().min(1).max(240)}).strict(),
   z.object({action:z.literal("project-create"),title:z.string().min(1).max(100),external_id:z.string().max(180).optional()}).strict(),
   z.object({action:z.literal("project-save"),project_id:FinanceProjectIdSchema,expected_revision:z.number().int().nonnegative(),fiscal_year:z.string().regex(/^20\d{2}\/\d{2}$/),
     documents:z.array(z.object({slot:ConsistencySlotSchema,path:z.string().max(4096),file_name:z.string().max(200).optional()}).strict()).length(4).optional(),run_id:ConsistencyRunSchema.optional()}).strict(),

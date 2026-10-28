@@ -2,7 +2,8 @@ import crypto from "node:crypto";
 import path from "node:path";
 import fs from "node:fs";
 import { ConsistencyReportSchema } from "@memmy/local-api-contracts";
-import { FinanceProjectSchema, FinanceProjectListSchema, FinanceProjectBuildSchema, ConsistencyEditorSchema, ConsistencyExportSchema } from "@memmy/local-api-contracts";
+import { FinanceProjectSchema, FinanceProjectListSchema, FinanceProjectBuildSchema, ConsistencyEditorSchema, ConsistencyExportSchema, type FinanceProject } from "@memmy/local-api-contracts";
+import type { FinanceHistory } from "./finance-history.js";
 import {
   FinanceCatalogSchema,
   FinanceReaderSchema,
@@ -29,7 +30,18 @@ export class FinanceReaderApi {
     private callTool: FinanceToolCall,
     private fetchFn: typeof fetch = fetch,
     private mediaRoot?: string,
+    private history?: FinanceHistory,
   ) {}
+
+  private async connectProject(project:FinanceProject) {
+    if(!this.history) return project;
+    const receipt=await this.tool("manage_finance_project",{operation:"workspace",project_id:project.id}) as {root_path?:unknown};
+    if(typeof receipt.root_path!=="string") throw new FinanceReaderError("未能連結項目資料夾。",502);
+    const id=this.history.project(project,receipt.root_path);
+    if(project.external_id!==id) project=FinanceProjectSchema.parse(await this.tool("manage_finance_project",{operation:"bind",project_id:project.id,external_id:id}));
+    for(const version of project.versions) for(const run of version.runs) this.history.review(project,run);
+    return project;
+  }
 
   private async tool(name: "manage_finance_project" | "edit_consistency_draft" | "list_c2_reviews" | "open_c2_reader" | "build_consistency_review" | "start_consistency_semantic" | "read_consistency_review" | "read_consistency_page", args: Record<string, unknown>) {
     const raw = await this.callTool(`mcp_financebuddy_reports_${name}`, args);
@@ -92,20 +104,40 @@ export class FinanceReaderApi {
     const parsed = FinanceRequestSchema.safeParse(raw);
     if (!parsed.success) throw new FinanceReaderError("Invalid report reader request.");
     const input = parsed.data;
-    if (input.action === "project-list") return FinanceProjectListSchema.parse(await this.tool("manage_finance_project",{operation:"list"}));
+    if (input.action === "project-list") {
+      const result=FinanceProjectListSchema.parse(await this.tool("manage_finance_project",{operation:"list"}));
+      for(let i=0;i<result.projects.length;i++) result.projects[i]=await this.connectProject(result.projects[i]);
+      return result;
+    }
+    if (input.action === "project-session") {
+      const binding=this.history?.lookup(input.session_key)??null;
+      if(binding) {
+        const project=FinanceProjectSchema.parse(await this.tool("manage_finance_project",{operation:"read",project_id:binding.project_id}));
+        if(project.external_id!==binding.native_project_id || !project.versions.some(v=>v.runs.includes(binding.run_id)))
+          throw new FinanceReaderError("審閱紀錄已變更，請重新開啟項目。",409);
+      }
+      return {binding};
+    }
+    if (input.action === "project-open") {
+      if(!this.history) throw new FinanceReaderError("請更新 Cuby 項目紀錄支援。",503);
+      const project=await this.connectProject(FinanceProjectSchema.parse(await this.tool("manage_finance_project",{operation:"read",project_id:input.project_id})));
+      return {binding:this.history.review(project,input.run_id)};
+    }
     if (input.action === "project-create") {
       const {action,...args}=input;
-      return FinanceProjectSchema.parse(await this.tool("manage_finance_project",{operation:"create",...args}));
+      return this.connectProject(FinanceProjectSchema.parse(await this.tool("manage_finance_project",{operation:"create",...args})));
     }
     if (input.action === "project-save") {
       if (input.documents) this.validateUploads(input.documents);
       if (input.documents && input.run_id) throw new FinanceReaderError("請選上載或沿用底稿其中一種來源。");
       const {action,...args}=input;
-      return FinanceProjectSchema.parse(await this.tool("manage_finance_project",{operation:"save",...args}));
+      return this.connectProject(FinanceProjectSchema.parse(await this.tool("manage_finance_project",{operation:"save",...args})));
     }
     if (input.action === "project-build") {
       const {action,...args}=input;
-      return FinanceProjectBuildSchema.parse(await this.tool("manage_finance_project",{operation:"build",...args}));
+      const result=FinanceProjectBuildSchema.parse(await this.tool("manage_finance_project",{operation:"build",...args}));
+      result.project=await this.connectProject(result.project);
+      return result;
     }
     if (input.action === "consistency-editor" || input.action === "consistency-suggest") {
       const {action,...args}=input;

@@ -5,7 +5,7 @@ import type { MemmyAgentClient } from "../api/memmy-agent-client.js";
 const SLOTS:[ConsistencySlot,string][]=[["esg_zh","ESG 中文"],["esg_en","ESG English"],["annual_zh","年報 中文"],["annual_en","年報 English"]];
 const COMPARISONS:[ConsistencyComparison,string][]=[["bilingual","中英文"],["cross_report","ESG／年報"],["internal","內文前後"],["restatement","跨年重述"]];
 type Request=(input:FinanceRequest)=>Promise<unknown>;
-export function FinanceProjectSetup(props:{client:MemmyAgentClient;request:Request;context?:{id:string;name:string}|null;onComplete:(report:ConsistencyReport,project:FinanceProject)=>void}) {
+export function FinanceProjectSetup(props:{client:MemmyAgentClient;request:Request;context?:{id:string;name:string}|null;onComplete:(report:ConsistencyReport,project:FinanceProject)=>void|Promise<void>}) {
   const [projects,setProjects]=useState<FinanceProject[]>([]),[id,setId]=useState("");
   const [title,setTitle]=useState(props.context?.name??"億都報告"),[year,setYear]=useState("2025/26");
   const [files,setFiles]=useState<Partial<Record<ConsistencySlot,File>>>({});
@@ -55,7 +55,7 @@ export function FinanceProjectSetup(props:{client:MemmyAgentClient;request:Reque
         remember(result.project);report=result.report;
         try{report=ConsistencyReportSchema.parse(await props.request({action:"consistency-semantic-start",run_id:report.run_id}));}catch{/* Reader keeps numeric results and exposes retry. */}
       }
-      props.onComplete(report,project);
+      await props.onComplete(report,project);
     }catch(e){setError(e instanceof Error?e.message:"未能開始核對。");}finally{setBusy(false);}
   }
   return <div className="finance-setup finance-project-setup">

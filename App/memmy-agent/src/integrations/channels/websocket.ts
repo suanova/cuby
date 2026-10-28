@@ -51,6 +51,7 @@ import {
 import { websocketTurnWallStartedAt, websocketTurnWallStartTimes } from "../../core/session/webui-turns.js";
 import type { WebuiTitleService } from "../../core/session/webui-title.js";
 import { visibleWebuiUserContent } from "../../core/session/webui-user-content.js";
+import { FinanceHistory } from "../../entrypoints/frontend-bridge/finance-history.js";
 import { TerminalRunControl } from "../../core/session/terminal-session-control.js";
 import {
   createOrCheckoutWorkspaceBranch,
@@ -716,7 +717,8 @@ export class WebSocketChannel extends BaseChannel {
   private financeReader: FinanceReaderApi | null = null;
 
   setFinanceReaderTools(callTool: FinanceToolCall): void {
-    this.financeReader = new FinanceReaderApi(callTool, fetch, getMediaDir("websocket"));
+    const history=this.projectStore && this.sessionManager ? new FinanceHistory(this.projectStore,this.sessionManager,(id,record)=>this.tryAppendWebuiTranscript(id,record)) : undefined;
+    this.financeReader = new FinanceReaderApi(callTool, fetch, getMediaDir("websocket"),history);
   }
 
   async handleFinanceReader(request: HttpRequestLike, catalog = false): Promise<HttpLikeResponse> {

@@ -1,4 +1,5 @@
 /** Home page module. */
+import { FinanceSessionReviewSchema, type FinanceReviewBinding } from "@memmy/local-api-contracts";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent, type ClipboardEvent, type DragEvent, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type SetStateAction, type UIEvent } from "react";
 import type { AgentGatewayStartupIssue } from "@memmy/local-api-contracts";
 import { hydrateAgentThreadInBackground, refreshAgentTaskList, useAgentRuntimeBridge, type AgentTaskStateCoordinator } from "../app/agent-runtime-bridge.js";
@@ -853,6 +854,7 @@ export function HomePage() {
   const [financeReviewPath, setFinanceReviewPath] = useState<string | null>(null);
   const [financeArtifactPath, setFinanceArtifactPath] = useState<string | null>(null);
   const [financePendingReview, setFinancePendingReview] = useState<{ chatId: string; requestId: string; startedAt: number } | null>(null);
+  const [financeSessionReview,setFinanceSessionReview]=useState<FinanceReviewBinding|null>(null);
   const [financeResultNotice, setFinanceResultNotice] = useState("");
   useEffect(() => {
     let active = true;
@@ -861,6 +863,33 @@ export function HomePage() {
     }).catch(() => { if (active) setFinanceEnabled(false); });
     return () => { active = false; };
   }, [clients?.memmyAgent, state.agent.connectionStatus]);
+  useEffect(()=>{
+    if(!financeEnabled || !clients?.memmyAgent.financeReaderRequest)return;
+    let active=true;
+    // Restore the existing local report library into native folders on startup.
+    void clients.memmyAgent.financeReaderRequest({action:"project-list"}).then(()=>{
+      if(active)taskStateCoordinator.refreshTaskState({reason:"manual",state:state.agent});
+    }).catch(()=>{});
+    return()=>{active=false;};
+  },[financeEnabled,clients?.memmyAgent,state.agent.connectionStatus]);
+  useEffect(()=>{
+    const key=state.agent.currentSessionKey;
+    if(!financeEnabled || !clients?.memmyAgent.financeReaderRequest)return;
+    let active=true;
+    if(!key){setFinanceSessionReview(null);setFinanceOpen(false);return;}
+    void clients.memmyAgent.financeReaderRequest({action:"project-session",session_key:key}).then(raw=>{
+      if(!active)return;
+      const {binding}=FinanceSessionReviewSchema.parse(raw);
+      setFinanceSessionReview(binding);setFinanceOpen(!!binding);
+      if(binding){setFinanceWorkflow(null);setFinanceReviewPath(null);setFinanceArtifactPath(null);}
+    }).catch(()=>{if(active){setFinanceSessionReview(null);setFinanceOpen(false);}});
+    return()=>{active=false;};
+  },[financeEnabled,clients?.memmyAgent,state.agent.currentSessionKey]);
+  function openFinanceReview(binding:FinanceReviewBinding) {
+    setFinanceSessionReview(binding);
+    if(!clients?.memmyAgent)return;
+    loadAgentThread(clients.memmyAgent,dispatch,binding.chat_id,binding.session_key,{taskState:state.agent,taskStateCoordinator});
+  }
   function chooseFinanceWorkflow(id: FinanceWorkflowId) {
     setFinanceWorkflow(id); setFinanceReviewPath(null); setFinanceArtifactPath(null); setFinanceOpen(true); setEnvironmentPanelOpen(false);
   }
@@ -1764,7 +1793,8 @@ export function HomePage() {
   /**
    * Sends one round of a live Agent conversation.
    */
-  async function sendMessage(workflowContent?: string) {
+  async function sendMessage(workflowContent?: string, review?:FinanceReviewBinding) {
+    const sendChatId=review?.chat_id??state.agent.currentChatId;
     if (!workflowContent && runExactLocalSlashCommand(input)) {
       return;
     }
@@ -1772,8 +1802,9 @@ export function HomePage() {
       dispatch(agentActions.operationFailed("chat", createAgentOperationError({
         source: "send",
         message: "home.modelSelector.unavailable",
-        ...(state.agent.currentChatId ? { chatId: state.agent.currentChatId } : { scopeKey: chatScopeKey })
+        ...(sendChatId ? { chatId: sendChatId } : { scopeKey: chatScopeKey })
       })));
+      if(review)throw new Error("此對話的模型暫時不可用，請先選可用模型。");
       return;
     }
     if (
@@ -1783,30 +1814,35 @@ export function HomePage() {
       dispatch(agentActions.operationFailed("chat", createAgentOperationError({
         source: "send",
         message: "agent.error.quotaExceeded",
-        ...(state.agent.currentChatId ? { chatId: state.agent.currentChatId } : { scopeKey: chatScopeKey })
+        ...(sendChatId ? { chatId: sendChatId } : { scopeKey: chatScopeKey })
       })));
+      if(review)throw new Error("模型額度已用完，追問未送出。");
       return;
     }
-    const sendScopeKey = chatScopeKey;
-    if (messageSendLocksRef.current.has(sendScopeKey)) return;
+    const sendScopeKey = review ? agentChatScopeKey(review.chat_id,state.agent.newChatRequestId) : chatScopeKey;
+    if (messageSendLocksRef.current.has(sendScopeKey)) {
+      if(review)throw new Error("此對話正在送出訊息，請稍後再試。");
+      return;
+    }
+    if(review && sendChatId!==state.agent.currentChatId)openFinanceReview(review);
     const clientRequestId = crypto.randomUUID();
     const reviewing = Boolean(workflowContent && financeWorkflow === "review");
     const watchReview = (chatId: string) => {
       if (reviewing) { setFinancePendingReview({ chatId, requestId: clientRequestId, startedAt: Date.now() }); setFinanceResultNotice(""); }
     };
-    if (state.agent.currentChatId) watchReview(state.agent.currentChatId);
+    if (sendChatId) watchReview(sendChatId);
     messageSendLocksRef.current.add(sendScopeKey);
     dispatch(agentActions.messageSendLockUpdated(sendScopeKey, clientRequestId));
     dispatch(agentActions.modelSelectionRequestStarted(
       sendScopeKey,
-      state.agent.currentChatId,
+      sendChatId,
       clientRequestId,
       resolvedConversationModel.candidateId
     ));
-    const target: WebuiSessionTarget | null = state.agent.currentChatId ? null : draftTarget;
+    const target: WebuiSessionTarget | null = sendChatId ? null : draftTarget;
     try {
       const submitted = await submitAgentComposerMessage({
-        chatId: state.agent.currentChatId,
+        chatId: sendChatId,
         target,
         clientRequestId,
         connection,
@@ -3069,7 +3105,7 @@ export function HomePage() {
         </section>
         )}
         {environmentPanel}
-        {financeEnabled && clients?.memmyAgent && <FinanceWorkspace visible={financeOpen} client={clients.memmyAgent} initialPath={financeReviewPath} artifactPath={financeArtifactPath} workflow={financeWorkflow}
+        {financeEnabled && clients?.memmyAgent && <FinanceWorkspace visible={financeOpen} client={clients.memmyAgent} initialPath={financeReviewPath} artifactPath={financeArtifactPath} workflow={financeWorkflow} initialReview={financeSessionReview} onReviewOpened={openFinanceReview}
           projectContext={state.agent.projects.find(p=>p.id===(state.agent.sessions.find(s=>s.key===state.agent.currentSessionKey)?.projectId??selectedDraftProject?.id))??null}
           busy={isCurrentAgentRunning || isCreatingChat || messageSendInFlight || state.agent.connectionStatus !== "connected" || resolvedConversationModel.unavailable} onChoose={setFinanceWorkflow} onLaunch={sendMessage} onClose={() => { setFinanceOpen(false); setFinanceWorkflow(null); }} />}
       </div>

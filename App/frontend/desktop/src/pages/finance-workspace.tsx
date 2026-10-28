@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import {
   FinanceOpenSchema,
+  ConsistencyReportSchema, FinanceSessionReviewSchema, type FinanceReviewBinding,
   type FinanceCatalog,
   type FinanceOpen,
   type FinanceNoteWrite,
@@ -69,16 +70,19 @@ export function FinanceWorkspace(props: {
   projectContext?: {id:string;name:string}|null;
   client: MemmyAgentClient;
   initialPath: string | null;
+  initialReview?:FinanceReviewBinding|null;
+  onReviewOpened?:(binding:FinanceReviewBinding)=>void;
   artifactPath?: string | null;
   workflow: FinanceWorkflowId | null;
   busy: boolean;
   onChoose: (id: FinanceWorkflowId | null) => void;
-  onLaunch: (prompt: string) => Promise<void>;
+  onLaunch: (prompt: string, review?:FinanceReviewBinding) => Promise<void>;
   onClose: () => void;
 }) {
   const [catalog, setCatalog] = useState<FinanceCatalog | null>(null);
   const [opened, setOpened] = useState<FinanceOpen | null>(null);
   const [consistency, setConsistency] = useState<ConsistencyReport | null>(null);
+  const [reviewBinding,setReviewBinding]=useState<FinanceReviewBinding|null>(null);
   const [openedPath, setOpenedPath] = useState("");
   const draftStore = useRef<Record<string, Drafts>>({});
   const [loading, setLoading] = useState(false);
@@ -141,6 +145,16 @@ export function FinanceWorkspace(props: {
   useEffect(() => {
     if (props.initialPath) void open(props.initialPath, props.artifactPath);
   }, [props.initialPath, props.artifactPath, client]);
+  useEffect(()=>{
+    const binding=props.initialReview;
+    if(!binding){setConsistency(null);setReviewBinding(null);setLoading(false);return;}
+    let active=true;
+    setLoading(true);setError("");setReviewBinding(binding);setOpened(null);setConsistency(null);
+    void request({action:"consistency-read",run_id:binding.run_id}).then(raw=>{
+      if(active){setConsistency(ConsistencyReportSchema.parse(raw));setExpanded(true);}
+    }).catch(e=>{if(active)setError(errorText(e));}).finally(()=>{if(active)setLoading(false);});
+    return()=>{active=false;};
+  },[props.initialReview?.session_key,client]);
   const selected = FINANCE_WORKFLOWS.find((x) => x.id === props.workflow);
   useEffect(() => {
     if (props.workflow === "review") {
@@ -288,8 +302,10 @@ export function FinanceWorkspace(props: {
           </div>
         )}
         {!loading && selected?.id === "consistency" ? (
-          <FinanceProjectSetup client={client} request={request} context={props.projectContext} onComplete={(report) => {
-            setConsistency(report);setOpened(null);setExpanded(true);props.onChoose(null);
+          <FinanceProjectSetup client={client} request={request} context={props.projectContext} onComplete={async(report,project) => {
+            const result=FinanceSessionReviewSchema.parse(await request({action:"project-open",project_id:project.id,run_id:report.run_id}));
+            if(!result.binding)throw new Error("未能建立審閱紀錄。");
+            setReviewBinding(result.binding);setConsistency(report);setOpened(null);setExpanded(true);props.onChoose(null);props.onReviewOpened?.(result.binding);
           }}/>
         ) : !loading && selected ? (
           <div className="finance-setup">
@@ -437,7 +453,7 @@ export function FinanceWorkspace(props: {
           </div>
         ) : !loading && consistency ? (
           <ConsistencyReader key={consistency.run_id} report={consistency} request={request} busy={props.busy} onAsk={async(prompt)=>{
-            await props.onLaunch(prompt);setExpanded(false);
+            if(!reviewBinding)throw new Error("請先重新開啟此項目的審閱紀錄。");await props.onLaunch(prompt,reviewBinding);setExpanded(false);
           }}/>
         ) : !loading && opened ? (
           <NativeFinanceReader

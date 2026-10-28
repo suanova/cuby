@@ -5,6 +5,7 @@ import { describe, it, expect, vi } from "vitest";
 import type { ConsistencyReport } from "@memmy/local-api-contracts";
 import type { MemmyAgentClient } from "../../api/memmy-agent-client.js";
 import { ConsistencySetup, ConsistencyReader, buildConsistencyQuestion } from "../finance-consistency-view.js";
+import { FinanceWorkspace } from "../finance-workspace.js";
 import { financeWorkflowDisplayText } from "@memmy/local-api-contracts";
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT=true;
 function fixture():ConsistencyReport {
@@ -72,6 +73,58 @@ describe("Four report consistency",()=>{
       expect(div.textContent).toContain('初篩紀錄不算報告問題');
     } finally{act(()=>root.unmount());}
   });
+  it("reopens a history session and sends its follow-up to the same bound review chat",async()=>{
+    const report=fixture(),binding={project_id:'a'.repeat(32),native_project_id:'native-project',run_id:report.run_id,session_key:'websocket:fin_'+'c'.repeat(32),chat_id:'fin_'+'c'.repeat(32)};
+    const div=document.createElement('div'),root=createRoot(div),launch=vi.fn(async()=>{});
+    const request=vi.fn(async(input:any)=>input.action==='consistency-read'?report:input.action==='consistency-editor'?{run_id:report.run_id,base_sha256:'a'.repeat(64),revision:0,proposals:{},decisions:{},history:[]}:{data_url:'data:image/png;base64,AA=='});
+    const client={financeReaderRequest:request,getFinanceCatalog:async()=>({reviews:[],unavailable:[],scope:'C2'})} as unknown as MemmyAgentClient;
+    try {
+      await act(async()=>root.render(<FinanceWorkspace visible client={client} initialPath={null} initialReview={binding} workflow={null} busy={false} onChoose={()=>{}} onLaunch={launch} onClose={()=>{}}/>));
+      expect(request).toHaveBeenCalledWith({action:'consistency-read',run_id:report.run_id});
+      expect(div.querySelectorAll('img')).toHaveLength(2);
+      await act(async()=>Array.from(div.querySelectorAll('button')).find(b=>b.textContent==='詳細／建議')!.click());
+      await act(async()=>Array.from(div.querySelectorAll('summary')).find(b=>b.textContent==='追問 Cuby')!.click());
+      await act(async()=>Array.from(div.querySelectorAll('button')).find(b=>b.textContent==='送出')!.click());
+      expect(launch).toHaveBeenCalledWith(expect.stringContaining(report.run_id),binding);
+      expect(div.querySelector('[role="dialog"]')).toBeNull();
+      // Switching to a chat with no review must not retain the previous project's PDF.
+      await act(async()=>root.render(<FinanceWorkspace visible client={client} initialPath={null} initialReview={null} workflow={null} busy={false} onChoose={()=>{}} onLaunch={launch} onClose={()=>{}}/>));
+      expect(div.querySelector('.consistency-reader')).toBeNull();
+    }finally{act(()=>root.unmount());}
+  });
+  it("does not reveal a previous report if its load finishes after switching to an unrelated chat",async()=>{
+    const report=fixture(),binding={project_id:'a'.repeat(32),native_project_id:'native-project',run_id:report.run_id,session_key:'websocket:fin_'+'c'.repeat(32),chat_id:'fin_'+'c'.repeat(32)};
+    let resolveReport!:(value:unknown)=>void;
+    const request=vi.fn((input:any)=>input.action==='consistency-read'?new Promise(resolve=>{resolveReport=resolve;}):Promise.resolve({}));
+    const client={financeReaderRequest:request,getFinanceCatalog:async()=>({reviews:[],unavailable:[],scope:'C2'})} as unknown as MemmyAgentClient;
+    const div=document.createElement('div'),root=createRoot(div);
+    const render=(review:typeof binding|null)=><FinanceWorkspace visible client={client} initialPath={null} initialReview={review} workflow={null} busy={false} onChoose={()=>{}} onLaunch={async()=>{}} onClose={()=>{}}/>;
+    try {
+      await act(async()=>root.render(render(binding)));
+      expect(div.textContent).toContain('正在驗證');
+      await act(async()=>root.render(render(null)));
+      await act(async()=>resolveReport(report));
+      expect(div.querySelector('.consistency-reader')).toBeNull();
+      expect(div.textContent).not.toContain('正在驗證');
+    }finally{act(()=>root.unmount());}
+  });
+  it("keeps issue details in a dismissible dialog while the full list and both reports remain mounted",async()=>{
+    const report=fixture();
+    for(let i=0;i<8;i++)report.checks.push({...report.checks[1]!,id:`extra-${i}`,title:`問題 ${i}`});
+    const div=document.createElement('div');document.body.append(div);const root=createRoot(div),request=vi.fn(async()=>({data_url:'data:image/png;base64,AA=='}));
+    try {
+      await act(async()=>root.render(<ConsistencyReader report={report} request={request}/>));
+      expect(div.querySelectorAll('.consistency-check')).toHaveLength(9);
+      expect(div.querySelector('.consistency-reason')).toBeNull();
+      const open=Array.from(div.querySelectorAll('button')).find(b=>b.textContent==='詳細／建議')!;
+      open.focus();await act(async()=>open.click());
+      const dialog=div.querySelector<HTMLElement>('[role="dialog"]')!;
+      expect(dialog).not.toBeNull();expect(div.querySelectorAll('img')).toHaveLength(2);
+      expect(dialog.contains(document.activeElement)).toBe(true);
+      await act(async()=>dialog.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true})));
+      expect(div.querySelector('[role="dialog"]')).toBeNull();expect(document.activeElement).toBe(open);
+    }finally{act(()=>root.unmount());div.remove();}
+  });
   it("hands one selected issue to Cuby with source priority and bounded context instructions",async()=>{
     const prompt=buildConsistencyQuestion("20310101T000000-aabbccdd","basis","可以怎樣改？");
     expect(prompt).toContain('read_consistency_issue');expect(prompt).toContain('check_id="basis"');
@@ -81,6 +134,8 @@ describe("Four report consistency",()=>{
     const div=document.createElement('div'),root=createRoot(div),ask=vi.fn(async()=>{}),request=vi.fn(async()=>({data_url:'data:image/png;base64,AA=='}));
     try {
       await act(async()=>root.render(<ConsistencyReader report={fixture()} request={request} onAsk={ask}/>));
+      await act(async()=>Array.from(div.querySelectorAll('button')).find(b=>b.textContent==='詳細／建議')!.click());
+      await act(async()=>Array.from(div.querySelectorAll('summary')).find(b=>b.textContent==='追問 Cuby')!.click());
       await act(async()=>Array.from(div.querySelectorAll('button')).find(b=>b.textContent==='送出')!.click());
       expect(ask).toHaveBeenCalledWith(expect.stringContaining('check_id="basis"'));
     } finally {act(()=>root.unmount());}

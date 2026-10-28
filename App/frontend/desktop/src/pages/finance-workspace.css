@@ -1192,7 +1192,7 @@
 /* Reading takes priority: outer page, issue details and each PDF scroll independently. */
 .consistency-reader{overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
 .consistency-reader>.consistency-summary,.consistency-reader>.consistency-counts,.consistency-reader>.consistency-semantic-status,.consistency-reader>.consistency-export-menu{flex-shrink:0;padding-top:7px;padding-bottom:7px}
-.consistency-body{display:grid;grid-template-columns:300px minmax(0,1fr);grid-template-rows:minmax(160px,.42fr) minmax(260px,.58fr);grid-template-areas:"checks papers" "reason papers";flex:1 0 500px;height:calc(100dvh - 230px);min-height:500px;overflow:visible}
+.consistency-body{display:grid;grid-template-columns:300px minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"checks papers";flex:1 0 500px;height:calc(100dvh - 230px);min-height:500px;overflow:visible}
 .consistency-evidence{display:contents}.consistency-evidence>.consistency-reason{grid-area:reason;max-height:none;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;border-right:1px solid #dce7e4}
 .consistency-papers{grid-area:papers;min-height:0;height:100%;overflow:hidden}
 .consistency-paper-pane{min-height:0}.consistency-paper-scroll{overflow-y:scroll;overscroll-behavior:contain;scrollbar-gutter:stable;touch-action:pan-y}
@@ -1217,3 +1217,30 @@
     flex-basis: min(1180px, calc(100% - 340px));
   }
 }
+
+/* Compact issue rail: the full explanation only occupies space in its dialog. */
+.consistency-check-item{position:relative;flex-shrink:0}
+.consistency-check-item>.consistency-check{width:100%;padding:8px 10px;text-align:left;gap:3px;margin-bottom:6px;min-height:72px}
+.consistency-check-item>.consistency-check strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:12px}
+.consistency-check-item:has(.consistency-open-issue)>.consistency-check small{padding-right:70px}
+.consistency-check-preview{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:#526a63;font-size:11px;line-height:1.5;margin-top:4px}
+.consistency-open-issue{position:absolute;right:8px;top:27px;height:19px;border:0!important;background:transparent!important;padding:2px 3px!important;color:#167f6b;font-size:11px;cursor:pointer}
+.consistency-issue-backdrop{position:fixed;inset:0;z-index:1300;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(15,40,35,.25);backdrop-filter:blur(2px)}
+.consistency-issue-dialog{display:flex;flex-direction:column;width:min(680px,100%);max-height:85dvh;min-height:0;background:white;border:1px solid #dce7e4;border-radius:12px;box-shadow:0 20px 70px #142f3333;overflow:hidden;color:#173630}
+.consistency-issue-dialog>header{display:flex;align-items:center;gap:16px;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #dce7e4;flex-shrink:0}
+.consistency-issue-dialog h3{margin:0;font-size:15px;line-height:1.5}
+.consistency-issue-dialog>header button{background:transparent;border:0;font-size:17px;cursor:pointer;padding:4px 8px}
+.consistency-issue-dialog>.consistency-reason{overflow:auto;max-height:none;padding:16px 20px;overscroll-behavior:contain}
+.consistency-issue-dialog .consistency-values{flex-wrap:wrap;gap:6px;margin:12px 0}
+.consistency-issue-dialog .consistency-edit-card{margin:14px 0 0}
+.consistency-issue-dialog .consistency-inline-diff{max-height:180px}
+
+.finance-workspace:has(.consistency-reader)>.finance-header{padding:8px 16px;min-height:48px}
+.finance-workspace:has(.consistency-reader)>.finance-header .finance-eyebrow{display:none}
+.finance-workspace:has(.consistency-reader)>.finance-header h2{margin:0;font-size:15px}
+.consistency-check-item .consistency-check-units{flex-direction:row;flex-wrap:wrap;gap:0 10px;font-size:10px}
+.consistency-reader>.consistency-counts,.consistency-reader>.consistency-semantic-status{padding:5px 14px;gap:6px;font-size:11px}
+.consistency-reader>.consistency-counts button,.consistency-reader>.consistency-semantic-status button{padding:4px 7px;font-size:11px}
+.consistency-checks{padding:9px;gap:6px}
+.consistency-body{flex:1 0 420px;height:calc(100dvh - 250px);min-height:420px}
+.consistency-check-preview{margin-top:1px;font-size:10px;line-height:1.45}
