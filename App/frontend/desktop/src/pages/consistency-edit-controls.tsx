@@ -19,6 +19,8 @@ export function useConsistencyEditor(run:string,request:Request) {
 export function ConsistencyEditCard(props:{report:ConsistencyReport;check:ConsistencyReport['checks'][number];editor:ConsistencyEditor|null;request:Request;onChange:(value:ConsistencyEditor)=>void}) {
   const {report,check,editor}=props;
   const proposal=editor?.proposals[check.id],decision=editor?.decisions[check.id];
+  const hasRewrite=proposal?.status==="ready"&&!!proposal.edits?.length;
+  const adviceOnly=proposal?.status==="ready"&&!proposal.edits?.length;
   const [replacements,setReplacements]=useState<string[]>([]),[confirmed,setConfirmed]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");
   useEffect(()=>{setReplacements(proposal?.edits?.map(e=>e.replacement)??[]);setConfirmed(false);setError("");},[check.id,proposal?.id,proposal?.status]);
   async function act(operation:"accept"|"dismiss"|"undo"|"suggest") {
@@ -30,13 +32,15 @@ export function ConsistencyEditCard(props:{report:ConsistencyReport;check:Consis
     }catch(e){setError(e instanceof Error?e.message:"未能儲存修改。");try{props.onChange(ConsistencyEditorSchema.parse(await props.request({action:"consistency-editor",run_id:report.run_id})));}catch{/* Keep last verified state. */}}
     finally{setBusy(false);}
   }
-  return <section className="consistency-edit-card" aria-label="建議修改">
+  return <section className="consistency-edit-card" aria-label={adviceOnly?"核實建議":"建議修改"}>
     {decision?<div className="consistency-edit-actions"><strong>{decision.status==="accepted"?"✓ 已加入修訂稿":"已忽略"}</strong><button disabled={busy} onClick={()=>void act("undo")}>撤回</button></div>:<>
-      {proposal?.status==="generating"?<p role="status">正在產生建議寫法…</p>:proposal?.status==="ready"?<>
-        <p>{proposal.summary}</p>{proposal.edits?.map((edit,i)=><div className="consistency-edit-diff" key={i}><small>{report.documents.find(d=>d.slot===edit.slot)?.label} · p.{edit.page}</small><InlineChange before={edit.original} after={replacements[i]??edit.replacement}/><details><summary>調整寫法</summary><textarea aria-label={`建議寫法 ${i+1}`} value={replacements[i]??edit.replacement} maxLength={3000} rows={3} onChange={e=>setReplacements(v=>v.map((s,n)=>n===i?e.target.value:s))}/></details></div>)}
-        {proposal.requires_confirmation&&<><p className="consistency-confirmation-question">{proposal.confirmation_prompt}</p><label className="consistency-fact-confirm"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>我已核實以上改寫涉及的事實，同意採用</label></>}
+      {proposal?.status==="generating"?<p role="status">正在整理建議…</p>:proposal?.status==="ready"?<>
+        {adviceOnly?<><strong>需要核實</strong><p>{proposal.confirmation_prompt?.trim()||proposal.summary}</p></>:<>
+          <p>{proposal.summary}</p>{proposal.edits?.map((edit,i)=><div className="consistency-edit-diff" key={i}><small>{report.documents.find(d=>d.slot===edit.slot)?.label} · p.{edit.page}</small><InlineChange before={edit.original} after={replacements[i]??edit.replacement}/><details><summary>調整寫法</summary><textarea aria-label={`建議寫法 ${i+1}`} value={replacements[i]??edit.replacement} maxLength={3000} rows={3} onChange={e=>setReplacements(v=>v.map((s,n)=>n===i?e.target.value:s))}/></details></div>)}
+          {proposal.requires_confirmation&&<><p className="consistency-confirmation-question">{proposal.confirmation_prompt}</p><label className="consistency-fact-confirm"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>我已核實以上改寫涉及的事實，同意採用</label></>}
+        </>}
       </>:proposal?.status==="failed"?<p role="alert">{proposal.error}</p>:null}
-      <div className="consistency-edit-actions">{proposal?.status==="ready"&&proposal.edits?.length?<button className="finance-primary" disabled={busy||proposal.requires_confirmation&&!confirmed} onClick={()=>void act("accept")}>接受修改</button>:<button className="finance-primary" disabled={busy||!editor||proposal?.status==="generating"} onClick={()=>void act("suggest")}>{proposal?.status==="failed"?"重試建議":"建議改寫"}</button>}<button disabled={busy||!editor} onClick={()=>void act("dismiss")}>忽略</button><small>接受後加入修訂稿</small></div>
+      <div className="consistency-edit-actions">{hasRewrite?<button className="finance-primary" disabled={busy||proposal.requires_confirmation&&!confirmed} onClick={()=>void act("accept")}>接受修改</button>:!adviceOnly&&<button className="finance-primary" disabled={busy||!editor||proposal?.status==="generating"} onClick={()=>void act("suggest")}>{proposal?.status==="failed"?"重試建議":"取得建議"}</button>}<button disabled={busy||!editor} onClick={()=>void act("dismiss")}>忽略</button>{hasRewrite&&<small>接受後加入修訂稿</small>}</div>
     </>}{error&&<p role="alert" className="finance-error">{error}</p>}
   </section>;
 }
