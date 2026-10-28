@@ -52,6 +52,16 @@ function setup(url = "http://127.0.0.1:60939") {
 }
 
 describe("Native Cuby FinanceBuddy adapter", () => {
+  it("routes persistent projects and review decisions only through their fixed tools", async()=>{
+    const state={run_id:"20310101T000000-aabbccdd",base_sha256:sha,revision:1,proposals:{},decisions:{},history:[]};
+    const tool=vi.fn(async()=>state),api=new FinanceReaderApi(tool);
+    await api.request({action:"consistency-decide",run_id:state.run_id,check_id:"issue",expected_revision:0,operation:"dismiss"});
+    expect(tool).toHaveBeenCalledWith("mcp_financebuddy_reports_edit_consistency_draft",{operation:"update",operation_decision:"dismiss",run_id:state.run_id,check_id:"issue",expected_revision:0});
+    tool.mockClear();
+    await expect(api.request({action:"consistency-draft-export",run_id:state.run_id,output_path:"C:/anything.docx"})).rejects.toThrow("Invalid report reader request");
+    await expect(api.request({action:"project-save",project_id:"a".repeat(32),expected_revision:0,fiscal_year:"2031/32",documents:["esg_zh","esg_en","annual_zh","annual_en"].map(slot=>({slot,path:"C:/private/report.pdf"}))})).rejects.toThrow("已上載");
+    expect(tool).not.toHaveBeenCalled();
+  });
   it("allows only the fixed semantic tool and refuses renderer-supplied model credentials", async () => {
     const tool=vi.fn(async()=>JSON.stringify({})),api=new FinanceReaderApi(tool);
     await expect(api.request({action:"consistency-semantic-start",run_id:"20310101T000000-aabbccdd",config_path:"C:/private/key"})).rejects.toThrow("Invalid report reader request");

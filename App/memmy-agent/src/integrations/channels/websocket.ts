@@ -726,7 +726,7 @@ export class WebSocketChannel extends BaseChannel {
     try {
       if (catalog) return httpJsonResponse(await this.financeReader.catalog());
       const text = String(request.body ?? "");
-      if (Buffer.byteLength(text) > 16384) return httpError(413, "Reader request too large.");
+      if (Buffer.byteLength(text) > 65536) return httpError(413, "Reader request too large.");
       return httpJsonResponse(await this.financeReader.request(JSON.parse(text)) as Record<string, unknown>);
     } catch (error) {
       if (error instanceof FinanceReaderError) return httpError(error.status, error.message);

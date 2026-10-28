@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ConsistencySlotSchema, ConsistencySourceSlotSchema, ConsistencyComparisonSchema, ConsistencyRunSchema } from "./finance-consistency.js";
+import { FinanceProjectIdSchema, ConsistencyEditSchema } from "./finance-projects.js";
 
 export const FinanceReviewPathSchema = z
   .string()
@@ -180,6 +181,17 @@ export const FinanceDraftExportSchema = z.object({
   ),
 });
 export const FinanceRequestSchema = z.discriminatedUnion("action", [
+  z.object({action:z.literal("project-list")}).strict(),
+  z.object({action:z.literal("project-create"),title:z.string().min(1).max(100),external_id:z.string().max(180).optional()}).strict(),
+  z.object({action:z.literal("project-save"),project_id:FinanceProjectIdSchema,expected_revision:z.number().int().nonnegative(),fiscal_year:z.string().regex(/^20\d{2}\/\d{2}$/),
+    documents:z.array(z.object({slot:ConsistencySlotSchema,path:z.string().max(4096),file_name:z.string().max(200).optional()}).strict()).length(4).optional(),run_id:ConsistencyRunSchema.optional()}).strict(),
+  z.object({action:z.literal("project-build"),project_id:FinanceProjectIdSchema,version_id:z.string().regex(/^[a-f0-9]{32}$/),comparisons:z.array(ConsistencyComparisonSchema).min(1).max(4)}).strict(),
+  z.object({action:z.literal("consistency-editor"),run_id:ConsistencyRunSchema}).strict(),
+  z.object({action:z.literal("consistency-suggest"),run_id:ConsistencyRunSchema,check_id:z.string().max(180)}).strict(),
+  z.object({action:z.literal("consistency-decide"),run_id:ConsistencyRunSchema,check_id:z.string().max(180),expected_revision:z.number().int().nonnegative(),
+    operation:z.enum(["accept","dismiss","undo"]),proposal_id:z.string().optional(),facts_confirmed:z.boolean().optional(),edits:z.array(ConsistencyEditSchema).max(4).optional()}).strict(),
+  z.object({action:z.literal("consistency-draft-page"),run_id:ConsistencyRunSchema,slot:ConsistencySlotSchema,page:z.number().int().min(1).max(300)}).strict(),
+  z.object({action:z.literal("consistency-draft-export"),run_id:ConsistencyRunSchema,slot:ConsistencySlotSchema.optional()}).strict(),
   z.object({action:z.literal("consistency-build"),fiscal_year:z.string().regex(/^20\d{2}\/\d{2}$/),
     comparisons:z.array(ConsistencyComparisonSchema).min(1).max(4).optional(),
     documents:z.array(z.object({slot:ConsistencySlotSchema,path:z.string().max(4096)}).strict()).length(4).optional()}).strict(),

@@ -1167,6 +1167,48 @@
 .consistency-comparison-choices input[type="checkbox"] {
   accent-color: #368e80;
 }
+.finance-project-heading,.finance-project-actions,.consistency-edit-actions,.consistency-draft-export {display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.finance-project-heading {justify-content:space-between}.finance-project-heading span{font-size:12px;color:#647b77}
+.finance-project-files {border:1px solid #dce7e4;border-radius:12px;padding:16px;display:grid;gap:12px}
+.finance-project-files>div:not(.finance-project-actions){display:flex;align-items:center;gap:12px;font-size:12px;min-width:0}
+.finance-project-files>div>strong{min-width:90px}.finance-project-files>div>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.finance-project-files small{color:#647b77}.finance-project-upload summary{cursor:pointer;font-weight:600;padding:10px 0}
+.finance-project-upload[open]{display:grid;gap:12px}.finance-project-upload .consistency-upload-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.finance-project-setup .consistency-comparison-choices {display:flex;flex-wrap:wrap;gap:16px;border:0;padding:10px 0}
+.finance-project-setup .consistency-comparison-choices label{display:flex;align-items:center;gap:6px;margin:0;font-size:12px}
+.consistency-edit-card{background:#fff;border:1px solid #d7e6e0;border-radius:10px;padding:14px;margin-top:12px;max-width:1100px}
+.consistency-edit-card p{margin:0 0 10px}.consistency-edit-diff{display:grid;gap:8px;margin:10px 0}
+.consistency-edit-diff small{color:#607b73}.consistency-edit-diff del{color:#9d4949;background:#fff0ee;padding:7px 9px;white-space:pre-wrap;font-size:12px;max-height:95px;overflow:auto}
+.consistency-edit-diff textarea{border:1px solid #b6d6ca;border-radius:6px;background:#eff9f4;color:#163e32;padding:9px;width:100%;resize:vertical;font:inherit;line-height:1.6}
+.consistency-edit-actions .finance-primary{background:#087f72;color:#fff;border-color:#087f72}.consistency-edit-actions small{color:#607b73}
+.consistency-fact-confirm{display:flex;align-items:flex-start;gap:8px;margin:10px 0;font-size:12px}.consistency-fact-confirm input{margin-top:3px}
+.consistency-followup summary{cursor:pointer;color:#467d70;font-size:12px;margin-top:10px}
+.consistency-draft-export{padding:10px 16px;border-bottom:1px solid #d7e6e0;background:#f4faf7;font-size:12px}
+.consistency-draft-export select{max-width:270px;border:1px solid #d7e6e0;border-radius:6px;padding:6px;background:white}
+.consistency-draft-export small{color:#647b77}.consistency-interrupted{color:#a85c16;font-size:12px;margin:5px 0}
+.consistency-draft-text{white-space:pre-wrap;line-height:1.8;background:#fff;padding:22px;font-size:13px;max-width:100%;word-break:break-word}
+.finance-project-actions>button,.consistency-edit-actions>button,.consistency-draft-export>button{border:1px solid #cbded8;border-radius:6px;padding:7px 12px;cursor:pointer}
+.consistency-confirmation-question{color:#926118}.consistency-evidence>.consistency-reason{max-height:50%;overflow:auto;flex-shrink:0}
+/* Reading takes priority: outer page, issue details and each PDF scroll independently. */
+.consistency-reader{overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.consistency-reader>.consistency-summary,.consistency-reader>.consistency-counts,.consistency-reader>.consistency-semantic-status,.consistency-reader>.consistency-export-menu{flex-shrink:0;padding-top:7px;padding-bottom:7px}
+.consistency-body{display:grid;grid-template-columns:300px minmax(0,1fr);grid-template-rows:minmax(160px,.42fr) minmax(260px,.58fr);grid-template-areas:"checks papers" "reason papers";flex:1 0 500px;height:calc(100dvh - 230px);min-height:500px;overflow:visible}
+.consistency-evidence{display:contents}.consistency-evidence>.consistency-reason{grid-area:reason;max-height:none;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;border-right:1px solid #dce7e4}
+.consistency-papers{grid-area:papers;min-height:0;height:100%;overflow:hidden}
+.consistency-paper-pane{min-height:0}.consistency-paper-scroll{overflow-y:scroll;overscroll-behavior:contain;scrollbar-gutter:stable;touch-action:pan-y}
+.consistency-checks{grid-area:checks;width:auto;max-height:none;min-height:0}.consistency-check-list{overscroll-behavior:contain;scrollbar-gutter:stable}
+.consistency-export-menu{border-bottom:1px solid #dce7e4;background:#f4faf7;padding:7px 16px;font-size:12px}
+.consistency-export-menu>summary,.consistency-progress-details>summary{cursor:pointer;color:#327e6c}
+.consistency-progress-details[open]{flex-basis:100%}.consistency-reader>.finance-scope{flex-shrink:0;max-height:220px;overflow:auto}
+.consistency-inline-diff{font-size:13px;line-height:1.7;max-height:100px;overflow:auto}
+.consistency-inline-diff del{padding:1px 3px;background:#ffe7e2;color:#a14d43;white-space:pre-wrap}
+.consistency-inline-diff ins{padding:1px 3px;background:#dbf3e8;color:#096650;text-decoration:none}
+.consistency-edit-diff details>summary{cursor:pointer;color:#5d7a70;font-size:11px}
+.consistency-reader--reading>.consistency-counts,.consistency-reader--reading>.consistency-export-menu,.consistency-reader--reading>.consistency-semantic-status,.consistency-reader--reading>.consistency-history-status,.consistency-reader--reading>.finance-scope,.consistency-reader--reading .consistency-checks,.consistency-reader--reading .consistency-reason{display:none}
+.consistency-reader--reading .consistency-body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"papers";height:calc(100dvh - 150px);min-height:480px}
+.consistency-reader--reading .consistency-papers{min-height:0}
+.consistency-paper-tools{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 8px;border-bottom:1px solid #dce7e4;font-size:11px}
+.consistency-paper-tools>div{display:flex;align-items:center;gap:5px}.consistency-paper-tools button{border:1px solid #dce7e4;border-radius:4px;padding:2px 7px;background:white;cursor:pointer}
 @container agent-workspace (min-width:981px) {
   .finance-workspace:not(.finance-workspace--expanded) {
     position: relative;

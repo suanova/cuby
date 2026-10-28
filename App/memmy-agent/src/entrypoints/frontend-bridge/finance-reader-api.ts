@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import path from "node:path";
 import fs from "node:fs";
 import { ConsistencyReportSchema } from "@memmy/local-api-contracts";
+import { FinanceProjectSchema, FinanceProjectListSchema, FinanceProjectBuildSchema, ConsistencyEditorSchema, ConsistencyExportSchema } from "@memmy/local-api-contracts";
 import {
   FinanceCatalogSchema,
   FinanceReaderSchema,
@@ -30,7 +31,7 @@ export class FinanceReaderApi {
     private mediaRoot?: string,
   ) {}
 
-  private async tool(name: "list_c2_reviews" | "open_c2_reader" | "build_consistency_review" | "start_consistency_semantic" | "read_consistency_review" | "read_consistency_page", args: Record<string, unknown>) {
+  private async tool(name: "manage_finance_project" | "edit_consistency_draft" | "list_c2_reviews" | "open_c2_reader" | "build_consistency_review" | "start_consistency_semantic" | "read_consistency_review" | "read_consistency_page", args: Record<string, unknown>) {
     const raw = await this.callTool(`mcp_financebuddy_reports_${name}`, args);
     try {
       return typeof raw === "string" ? JSON.parse(raw) : raw;
@@ -91,6 +92,39 @@ export class FinanceReaderApi {
     const parsed = FinanceRequestSchema.safeParse(raw);
     if (!parsed.success) throw new FinanceReaderError("Invalid report reader request.");
     const input = parsed.data;
+    if (input.action === "project-list") return FinanceProjectListSchema.parse(await this.tool("manage_finance_project",{operation:"list"}));
+    if (input.action === "project-create") {
+      const {action,...args}=input;
+      return FinanceProjectSchema.parse(await this.tool("manage_finance_project",{operation:"create",...args}));
+    }
+    if (input.action === "project-save") {
+      if (input.documents) this.validateUploads(input.documents);
+      if (input.documents && input.run_id) throw new FinanceReaderError("請選上載或沿用底稿其中一種來源。");
+      const {action,...args}=input;
+      return FinanceProjectSchema.parse(await this.tool("manage_finance_project",{operation:"save",...args}));
+    }
+    if (input.action === "project-build") {
+      const {action,...args}=input;
+      return FinanceProjectBuildSchema.parse(await this.tool("manage_finance_project",{operation:"build",...args}));
+    }
+    if (input.action === "consistency-editor" || input.action === "consistency-suggest") {
+      const {action,...args}=input;
+      return ConsistencyEditorSchema.parse(await this.tool("edit_consistency_draft",{operation:action==="consistency-editor"?"read":"suggest",...args}));
+    }
+    if (input.action === "consistency-decide") {
+      const {action,operation,...args}=input;
+      return ConsistencyEditorSchema.parse(await this.tool("edit_consistency_draft",{operation:"update",operation_decision:operation,...args}));
+    }
+    if (input.action === "consistency-draft-page") {
+      const {action,...args}=input;
+      const result=await this.tool("edit_consistency_draft",{operation:"preview",...args}) as {text?:unknown};
+      if (typeof result.text!=="string" || result.text.length>200000) throw new FinanceReaderError("修訂稿頁面無效。",502);
+      return result;
+    }
+    if (input.action === "consistency-draft-export") {
+      const {action,...args}=input;
+      return ConsistencyExportSchema.parse(await this.tool("edit_consistency_draft",{operation:"export",...args}));
+    }
     if (input.action === "consistency-semantic-start")
       return ConsistencyReportSchema.parse(await this.tool("start_consistency_semantic", {run_id:input.run_id}));
     if (input.action === "consistency-build") {
@@ -212,5 +246,14 @@ export class FinanceReaderApi {
     if (result.review_sha256 !== handle.sha)
       throw new FinanceReaderError("Reader revision changed. Reopen the workpaper.", 409);
     return result;
+  }
+
+  private validateUploads(documents:{slot:string;path:string}[]) {
+    if (!this.mediaRoot || new Set(documents.map(d=>d.slot)).size!==4) throw new FinanceReaderError("請選四份已上載的 PDF。");
+    const root=fs.realpathSync(this.mediaRoot);
+    for (const doc of documents) {
+      const real=fs.realpathSync(doc.path),relative=path.relative(root,real);
+      if (!relative || relative.startsWith("..") || path.isAbsolute(relative) || path.extname(real).toLowerCase()!==".pdf") throw new FinanceReaderError("只能儲存 Cuby 已上載的 PDF。");
+    }
   }
 }

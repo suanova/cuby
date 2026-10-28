@@ -55,8 +55,15 @@ describe("Four report consistency",()=>{
       expect(div.querySelectorAll('.consistency-check')).toHaveLength(1);
       expect(div.querySelector('.consistency-check')?.textContent).toContain("因子題名年份");
       expect(div.querySelectorAll('img')).toHaveLength(2);
+      await act(async()=>div.querySelectorAll<HTMLButtonElement>('[aria-label="放大報告"]')[0]!.click());
+      expect(div.querySelectorAll('img')[0]!.style.width).toBe('125%');
+      expect(div.querySelectorAll('img')[1]!.style.width).toBe('100%');
       expect(request).toHaveBeenCalledWith({action:"consistency-page",run_id:"20310101T000000-aabbccdd",slot:"esg_zh",page:3,check_id:"basis"});
       expect(div.textContent).toContain("黃色標示引用位置");
+      await act(async()=>Array.from(div.querySelectorAll('button')).find(b=>b.textContent==='專注閱讀')!.click());
+      expect(div.querySelector('.consistency-reader--reading')).not.toBeNull();
+      await act(async()=>Array.from(div.querySelectorAll('button')).find(b=>b.textContent==='返回審閱')!.click());
+      expect(div.querySelector('.consistency-reader--reading')).toBeNull();
       await act(async()=>{const select=div.querySelector<HTMLSelectElement>('[aria-label="一致性項目分類"]')!;select.value='all';select.dispatchEvent(new Event('change',{bubbles:true}));});
       expect(div.querySelectorAll('.consistency-check')).toHaveLength(2);
       expect(div.querySelector('.consistency-check.candidate')).toBeNull();
@@ -74,7 +81,7 @@ describe("Four report consistency",()=>{
     const div=document.createElement('div'),root=createRoot(div),ask=vi.fn(async()=>{}),request=vi.fn(async()=>({data_url:'data:image/png;base64,AA=='}));
     try {
       await act(async()=>root.render(<ConsistencyReader report={fixture()} request={request} onAsk={ask}/>));
-      await act(async()=>Array.from(div.querySelectorAll('button')).find(b=>b.textContent==='請 Cuby 建議')!.click());
+      await act(async()=>Array.from(div.querySelectorAll('button')).find(b=>b.textContent==='送出')!.click());
       expect(ask).toHaveBeenCalledWith(expect.stringContaining('check_id="basis"'));
     } finally {act(()=>root.unmount());}
   });
@@ -110,8 +117,8 @@ describe("Four report consistency",()=>{
       await act(async()=>{await vi.advanceTimersByTimeAsync(5000);});
       expect(request).toHaveBeenCalledWith({action:'consistency-read',run_id:fixture().run_id});
       expect(div.textContent).toContain('內文核對完成');expect(div.textContent).toContain('1項一致');
-      expect(div.querySelector('progress')?.value).toBe(2);
-      expect(div.textContent).toContain('步驟進度 100%');
+      expect(div.querySelector('progress')).toBeNull();
+      expect(div.textContent).toContain('核對已結束 · 2/2步成功');
     } finally{act(()=>root.unmount());vi.useRealTimers();}
   });
 });

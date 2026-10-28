@@ -856,11 +856,11 @@ export function HomePage() {
   const [financeResultNotice, setFinanceResultNotice] = useState("");
   useEffect(() => {
     let active = true;
-    void clients?.memmyAgent.bootstrap().then((boot) => {
+    void clients?.memmyAgent.bootstrap({force:state.agent.connectionStatus==="connected"}).then((boot) => {
       if (active) setFinanceEnabled(Boolean(boot.tool_names?.includes("mcp_financebuddy_reports_list_c2_reviews")));
     }).catch(() => { if (active) setFinanceEnabled(false); });
     return () => { active = false; };
-  }, [clients?.memmyAgent]);
+  }, [clients?.memmyAgent, state.agent.connectionStatus]);
   function chooseFinanceWorkflow(id: FinanceWorkflowId) {
     setFinanceWorkflow(id); setFinanceReviewPath(null); setFinanceArtifactPath(null); setFinanceOpen(true); setEnvironmentPanelOpen(false);
   }
@@ -3070,6 +3070,7 @@ export function HomePage() {
         )}
         {environmentPanel}
         {financeEnabled && clients?.memmyAgent && <FinanceWorkspace visible={financeOpen} client={clients.memmyAgent} initialPath={financeReviewPath} artifactPath={financeArtifactPath} workflow={financeWorkflow}
+          projectContext={state.agent.projects.find(p=>p.id===(state.agent.sessions.find(s=>s.key===state.agent.currentSessionKey)?.projectId??selectedDraftProject?.id))??null}
           busy={isCurrentAgentRunning || isCreatingChat || messageSendInFlight || state.agent.connectionStatus !== "connected" || resolvedConversationModel.unavailable} onChoose={setFinanceWorkflow} onLaunch={sendMessage} onClose={() => { setFinanceOpen(false); setFinanceWorkflow(null); }} />}
       </div>
     </AppFrame>

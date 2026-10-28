@@ -1,5 +1,6 @@
 import { NativeFinanceReader } from "./finance-reader-view.js";
-import { ConsistencySetup, ConsistencyReader } from "./finance-consistency-view.js";
+import { ConsistencyReader } from "./finance-consistency-view.js";
+import { FinanceProjectSetup } from "./finance-project-setup.js";
 import { useEffect, useRef, useState } from "react";
 import {
   BookOpen,
@@ -65,6 +66,7 @@ type Drafts = Record<
 >;
 export function FinanceWorkspace(props: {
   visible: boolean;
+  projectContext?: {id:string;name:string}|null;
   client: MemmyAgentClient;
   initialPath: string | null;
   artifactPath?: string | null;
@@ -234,6 +236,7 @@ export function FinanceWorkspace(props: {
             </h2>
           </div>
           <div className="finance-actions">
+            {!selected && consistency && <button onClick={()=>props.onChoose("consistency")}>項目文件</button>}
             {!selected && (
               <button
                 title={expanded ? "並排對話" : "展開工作台"}
@@ -285,7 +288,7 @@ export function FinanceWorkspace(props: {
           </div>
         )}
         {!loading && selected?.id === "consistency" ? (
-          <ConsistencySetup client={client} request={request} onComplete={(report) => {
+          <FinanceProjectSetup client={client} request={request} context={props.projectContext} onComplete={(report) => {
             setConsistency(report);setOpened(null);setExpanded(true);props.onChoose(null);
           }}/>
         ) : !loading && selected ? (
