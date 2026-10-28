@@ -130,6 +130,51 @@ describe("SkillsSection interaction", () => {
     expect(scrollIntoView).toHaveBeenCalledTimes(1);
   });
 
+  it("imports a local SKILL.md into the Skill layer", async () => {
+    const addMemory = vi.fn(async () => ({
+      id: "skill-local",
+      kind: "skill" as const,
+      memoryLayer: "Skill" as const,
+      status: "activated" as const,
+      title: "my-skill",
+      summary: "",
+      tags: ["manual"],
+      createdAt: "2026-10-28T00:00:00.000Z",
+      serverTime: "2026-10-28T00:00:00.000Z"
+    }));
+    const listPanelItems = vi.fn(async () => skillPanelItemsFixture);
+    const client = createMemoryRuntimeClientStub({ listPanelItems, addMemory });
+
+    await act(async () => {
+      root.render(
+        <AppProviders>
+          <I18nProvider language="zh-CN">
+            <SkillsSection client={client} onOpenMemoryReference={vi.fn()} />
+          </I18nProvider>
+        </AppProviders>
+      );
+    });
+
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    const content = "---\nname: my-skill\n---\n# My Skill\n";
+    const file = new File([content], "SKILL.md", { type: "text/markdown" });
+    Object.defineProperty(input, "files", { value: [file], configurable: true });
+
+    await act(async () => {
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+
+    expect(addMemory).toHaveBeenCalledWith(expect.objectContaining({
+      layer: "Skill",
+      source: "manual",
+      sourceAgentId: "manual",
+      title: "my-skill",
+      content
+    }));
+    expect(listPanelItems.mock.calls.length).toBeGreaterThan(1);
+  });
+
   it("routes skill detail references back to the memory page", async () => {
     const client = createMemoryRuntimeClientStub({
       listPanelItems: vi.fn(async () => skillPanelItemsFixture),

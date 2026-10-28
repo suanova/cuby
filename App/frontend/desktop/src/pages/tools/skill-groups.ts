@@ -2,18 +2,18 @@
 import type { PanelItemsOutput } from "@memmy/local-api-contracts";
 
 export type SkillPanelItem = PanelItemsOutput["items"][number];
-export type SkillTabId = "builtin" | "learned" | `source:${string}`;
+export type SkillTabId = "builtin" | "mine" | "learned" | `source:${string}`;
 
 export interface SkillTab {
   id: SkillTabId;
-  group: "builtin" | "learned" | "source";
+  group: "builtin" | "mine" | "learned" | "source";
   source?: string;
   count: number;
 }
 
 export interface SkillCard {
   key: string;
-  group: "builtin" | "learned" | "source";
+  group: "builtin" | "mine" | "learned" | "source";
   source?: string;
   item: SkillPanelItem;
   mergedItems: SkillPanelItem[];
@@ -24,6 +24,9 @@ export interface SkillCard {
  * The memory layer stores one row per agent, so the list merges them by name.
  */
 export const CUBY_BUILTIN_SKILL_NAMES = new Set(["memmy-resume", "memmy-memory", "cuby-memory"]);
+
+/** Sources that mean a user imported the skill from local files. */
+const MINE_SOURCES = new Set(["manual", "local"]);
 
 const SOURCE_LABELS: Record<string, string> = {
   codex: "Codex",
@@ -64,10 +67,11 @@ export function buildSkillTabs(items: SkillPanelItem[]): SkillTab[] {
   const builtinNames = new Set(
     items.filter(isBuiltinSkillItem).map((item) => normalizeSkillName(item.title))
   );
+  const mine = items.filter(isMineSkillItem);
   const learned = items.filter((item) => !isBuiltinSkillItem(item) && skillSourceOf(item) === "memmy");
   const sources = new Map<string, number>();
   for (const item of items) {
-    if (isBuiltinSkillItem(item)) continue;
+    if (isBuiltinSkillItem(item) || isMineSkillItem(item)) continue;
     const source = skillSourceOf(item);
     if (source === "memmy") continue;
     sources.set(source, (sources.get(source) ?? 0) + 1);
@@ -75,6 +79,7 @@ export function buildSkillTabs(items: SkillPanelItem[]): SkillTab[] {
 
   const tabs: SkillTab[] = [];
   if (builtinNames.size > 0) tabs.push({ id: "builtin", group: "builtin", count: builtinNames.size });
+  if (mine.length > 0) tabs.push({ id: "mine", group: "mine", count: mine.length });
   if (learned.length > 0) tabs.push({ id: "learned", group: "learned", count: learned.length });
   for (const [source, count] of [...sources.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))) {
     tabs.push({ id: `source:${source}`, group: "source", source, count });
@@ -84,6 +89,9 @@ export function buildSkillTabs(items: SkillPanelItem[]): SkillTab[] {
 
 export function cardsForTab(items: SkillPanelItem[], tabId: SkillTabId): SkillCard[] {
   if (tabId === "builtin") return builtinCards(items);
+  if (tabId === "mine") {
+    return sortedCards(items.filter(isMineSkillItem), "mine");
+  }
   if (tabId === "learned") {
     return sortedCards(items.filter((item) => !isBuiltinSkillItem(item) && skillSourceOf(item) === "memmy"), "learned");
   }
@@ -97,14 +105,21 @@ export function cardsForTab(items: SkillPanelItem[], tabId: SkillTabId): SkillCa
 
 /** Mixed results keep built-in copies merged so search does not repeat them. */
 export function searchCards(items: SkillPanelItem[]): SkillCard[] {
-  const cards: SkillCard[] = [...builtinCards(items), ...cardsForTab(items, "learned")];
+  const cards: SkillCard[] = [...builtinCards(items), ...cardsForTab(items, "mine"), ...cardsForTab(items, "learned")];
   const sources = [...new Set(
-    items.filter((item) => !isBuiltinSkillItem(item)).map(skillSourceOf).filter((source) => source !== "memmy")
+    items
+      .filter((item) => !isBuiltinSkillItem(item) && !isMineSkillItem(item))
+      .map(skillSourceOf)
+      .filter((source) => source !== "memmy")
   )].sort();
   for (const source of sources) {
     cards.push(...cardsForTab(items, `source:${source}`));
   }
   return cards;
+}
+
+function isMineSkillItem(item: SkillPanelItem): boolean {
+  return !isBuiltinSkillItem(item) && MINE_SOURCES.has(skillSourceOf(item));
 }
 
 function builtinCards(items: SkillPanelItem[]): SkillCard[] {
@@ -124,13 +139,13 @@ function builtinCards(items: SkillPanelItem[]): SkillCard[] {
 
 function sortedCards(
   items: SkillPanelItem[],
-  group: "learned" | "source",
+  group: "mine" | "learned" | "source",
   source?: string
 ): SkillCard[] {
   return [...items]
     .sort((a, b) => a.title.localeCompare(b.title) || a.id.localeCompare(b.id))
     .map((item) => ({
-      key: group === "source" ? `source:${source}:${item.id}` : `learned:${item.id}`,
+      key: group === "source" ? `source:${source}:${item.id}` : `${group}:${item.id}`,
       group,
       ...(source ? { source } : {}),
       item,

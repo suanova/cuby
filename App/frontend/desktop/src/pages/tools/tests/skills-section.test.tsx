@@ -242,6 +242,47 @@ describe("SkillsSection", () => {
     expect(calls).toEqual([1, 2]);
   });
 
+  it("导入按钮和我的 tab 可用", () => {
+    const base = skillPanelItemsFixture.items[0]!;
+    const html = renderSkills({
+      status: "ready",
+      data: panelItemsOutput([
+        { ...base, id: "mine", title: "my-release-check", metadata: { source: "manual" } }
+      ]),
+      detail: null
+    });
+
+    expect(html).toContain("本地导入");
+    expect(html).toContain("我的");
+    expect(html).toContain("My Release Check");
+  });
+
+  it("展示导入结果提示", () => {
+    const html = renderToString(
+      <I18nProvider language="zh-CN">
+        <SkillsSectionView
+          state={{ status: "ready", data: panelItemsOutput([skillPanelItemsFixture.items[0]!]), detail: null }}
+          query=""
+          searchActive={false}
+          importing={false}
+          importNotice="已导入 2 个 skill。"
+          activeTabId={null}
+          onTabChange={vi.fn()}
+          onImportSkills={vi.fn()}
+          onQueryChange={vi.fn()}
+          onSearch={vi.fn()}
+          onRefresh={vi.fn()}
+          onOpenSkill={vi.fn()}
+          onDeleteSkill={vi.fn(async () => undefined)}
+          onCloseSkill={vi.fn()}
+          onOpenMemoryReference={vi.fn()}
+        />
+      </I18nProvider>
+    );
+
+    expect(html).toContain("已导入 2 个 skill。");
+  });
+
   it("选中的技能卡片边框优先于状态边框", () => {
     const styles = readFileSync(new URL("../../../styles.css", import.meta.url), "utf8");
 
@@ -284,6 +325,10 @@ function renderSkills(
         selectedSkillId={selectedSkillId}
         query={searchActive ? "中文" : ""}
         searchActive={searchActive}
+        importing={false}
+        activeTabId={null}
+        onTabChange={vi.fn()}
+        onImportSkills={vi.fn()}
         onQueryChange={vi.fn()}
         onSearch={vi.fn()}
         onRefresh={vi.fn()}

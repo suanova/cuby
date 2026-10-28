@@ -41,6 +41,7 @@ const items = [
   skill({ id: "docs", title: "openai-docs", source: "codex" }),
   skill({ id: "evolved", title: "archify_code_flow_diagram" }),
   skill({ id: "evolved-memmy", title: "local_web_page_issue_audit", source: "memmy" }),
+  skill({ id: "mine", title: "my-release-check", source: "manual" }),
 ];
 
 describe("skill groups", () => {
@@ -56,9 +57,10 @@ describe("skill groups", () => {
     expect(skillSourceOf(items[3]!)).toBe("codex");
   });
 
-  it("builds tabs in builtin, learned, then source order", () => {
+  it("builds tabs in builtin, mine, learned, then source order", () => {
     expect(buildSkillTabs(items)).toEqual([
       { id: "builtin", group: "builtin", count: 2 },
+      { id: "mine", group: "mine", count: 1 },
       { id: "learned", group: "learned", count: 2 },
       { id: "source:codex", group: "source", source: "codex", count: 2 },
     ]);
@@ -73,6 +75,10 @@ describe("skill groups", () => {
     expect(resume.item.id).toBe("resume-workbuddy");
   });
 
+  it("puts locally imported skills in the mine tab", () => {
+    expect(cardsForTab(items, "mine").map((card) => card.item.title)).toEqual(["my-release-check"]);
+  });
+
   it("keeps built-in copies out of their source tabs", () => {
     const cards = cardsForTab(items, "source:codex");
 
@@ -85,6 +91,7 @@ describe("skill groups", () => {
     expect(cards.map((card) => card.key)).toEqual([
       "builtin:memmy-memory",
       "builtin:memmy-resume",
+      "mine:mine",
       "learned:evolved",
       "learned:evolved-memmy",
       "source:codex:imagegen",

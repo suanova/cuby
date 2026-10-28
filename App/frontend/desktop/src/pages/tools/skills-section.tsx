@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type Ref } from "react";
+import { Upload } from "lucide-react";
 import type { GetMemoryOutput, MemoryApiLog, MemoryApiLogToolName, PanelItemsOutput } from "@memmy/local-api-contracts";
 import type { MemoryRuntimeClient } from "../../api/memory-runtime-client.js";
 import { formatUserDateTime } from "../../lib/user-time-zone.js";
@@ -33,6 +34,7 @@ import { MemoryStateBox } from "../memory/memory-state-box.js";
 import { type RemoteData, toErrorMessage } from "../memory/remote-state.js";
 import { demoSkillDetail, demoSkillPanelItems, demoSkillTimeline, isSkillsDemoEnabled } from "../memory/skill-demo-data.js";
 import { buildSkillTabs, cardsForTab, searchCards, skillSourceOf, sourceLabel, type SkillCard, type SkillTabId } from "./skill-groups.js";
+import { readSkillImportFile, skillImportMemoryInput, type ImportedSkillDraft } from "./skill-import.js";
 
 type SkillDetailState = RemoteData<SkillDetailData> | null;
 const SKILLS_CACHE_SECTION = "skills";
@@ -140,6 +142,9 @@ export function SkillsSection(props: SkillsSectionProps) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [importNotice, setImportNotice] = useState<string | null>(null);
+  const [activeTabId, setActiveTabId] = useState<SkillTabId | null>(null);
   const [state, setState] = useState<RemoteData<PanelItemsOutput>>({ status: "loading" });
   const [detail, setDetail] = useState<SkillDetailState>(null);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
@@ -245,6 +250,46 @@ export function SkillsSection(props: SkillsSectionProps) {
       .catch(() => undefined);
   }
 
+  async function importSkills(files: File[]) {
+    if (files.length === 0 || demoEnabled) return;
+    if (!props.client) {
+      setImportNotice(t("memory.clientNotReady"));
+      return;
+    }
+    setImporting(true);
+    setImportNotice(null);
+    const drafts: ImportedSkillDraft[] = [];
+    const errors: string[] = [];
+    for (const file of files) {
+      try {
+        drafts.push(...await readSkillImportFile(file));
+      } catch (error) {
+        errors.push(`${file.name}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+    let imported = 0;
+    for (const draft of drafts) {
+      try {
+        await props.client.addMemory(skillImportMemoryInput(draft));
+        imported += 1;
+      } catch (error) {
+        errors.push(`${draft.name}: ${toErrorMessage(error)}`);
+      }
+    }
+    const parts: string[] = [];
+    if (imported > 0) parts.push(t("memory.skills.importSuccess", { count: imported }));
+    if (errors.length > 0) parts.push(t("memory.skills.importFailed", { count: errors.length }), errors.slice(0, 3).join("; "));
+    setImportNotice(parts.join(" "));
+    setImporting(false);
+    if (imported > 0) {
+      setQuery("");
+      setSubmittedQuery("");
+      setActiveTabId("mine");
+      clearMemoryPanelCache();
+      void refresh({ query: "", useCache: false }).catch(() => undefined);
+    }
+  }
+
   function closeSkill() {
     setDetail(null);
     setSelectedSkillId(null);
@@ -298,6 +343,11 @@ export function SkillsSection(props: SkillsSectionProps) {
       selectedSkillId={selectedSkillId}
       query={query}
       searchActive={submittedQuery.trim().length > 0}
+      importing={importing}
+      importNotice={importNotice}
+      activeTabId={activeTabId}
+      onTabChange={setActiveTabId}
+      onImportSkills={importSkills}
       onQueryChange={changeQuery}
       onSearch={runSearch}
       onRefresh={async () => {
@@ -327,6 +377,11 @@ export interface SkillsSectionViewProps {
   selectedSkillId?: string | null;
   query: string;
   searchActive: boolean;
+  importing: boolean;
+  importNotice?: string | null;
+  activeTabId: SkillTabId | null;
+  onTabChange: (id: SkillTabId) => void;
+  onImportSkills: (files: File[]) => void | Promise<void>;
   onQueryChange: (value: string) => void;
   onSearch: () => void;
   onRefresh: () => void | Promise<void>;
@@ -338,10 +393,10 @@ export interface SkillsSectionViewProps {
 
 export function SkillsSectionView(props: SkillsSectionViewProps) {
   const { t } = useTranslation();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const items = props.state.status === "ready" ? props.state.data.items : [];
   const tabs = buildSkillTabs(items);
-  const [activeTabId, setActiveTabId] = useState<SkillTabId | null>(null);
-  const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? tabs[0];
+  const activeTab = tabs.find((tab) => tab.id === props.activeTabId) ?? tabs[0];
   const cards = props.searchActive
     ? searchCards(items)
     : activeTab
@@ -373,9 +428,36 @@ export function SkillsSectionView(props: SkillsSectionViewProps) {
               className="memory-search__input"
             />
           </label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".zip,.md,text/markdown,application/zip"
+            multiple
+            hidden
+            onChange={(event) => {
+              const files = Array.from(event.target.files ?? []);
+              event.target.value = "";
+              void props.onImportSkills(files);
+            }}
+          />
+          <button
+            type="button"
+            disabled={props.importing}
+            onClick={() => fileInputRef.current?.click()}
+            title={t("memory.skills.importHint")}
+            className="flex items-center gap-1.5 rounded-btn border border-content-panel bg-background-paper px-3 py-1.5 text-xs text-text-ink/65 transition-colors hover:bg-canvas-oat/40 disabled:opacity-50"
+          >
+            <Upload size={13} />
+            {props.importing ? t("memory.skills.importing") : t("memory.skills.import")}
+          </button>
           <MemoryRefreshButton onClick={props.onRefresh} />
         </div>
       </div>
+      {props.importNotice && (
+        <p className="mb-3 rounded-card border border-amber-300/40 bg-amber-50/60 px-3 py-2 text-xs text-amber-700">
+          {props.importNotice}
+        </p>
+      )}
       {props.state.status === "loading" && <MemoryStateBox message={t("memory.skills.loading")} />}
       {props.state.status === "error" && <MemoryStateBox message={props.state.message} tone="error" />}
       {props.state.status === "ready" && !props.searchActive && tabs.length > 0 && (
@@ -386,7 +468,7 @@ export function SkillsSectionView(props: SkillsSectionViewProps) {
               type="button"
               role="tab"
               aria-selected={tab.id === activeTab?.id}
-              onClick={() => setActiveTabId(tab.id)}
+              onClick={() => props.onTabChange(tab.id)}
               className={`tools-skill-tab${tab.id === activeTab?.id ? " tools-skill-tab--active" : ""}`}
             >
               {skillTabLabel(tab, t)}
@@ -432,9 +514,11 @@ function SkillGridCard(props: {
   const groupLabel = props.searchActive
     ? props.card.group === "builtin"
       ? t("memory.skills.tabs.builtin")
-      : props.card.group === "learned"
-        ? t("memory.skills.tabs.learned")
-        : sourceLabel(props.card.source ?? "")
+      : props.card.group === "mine"
+        ? t("memory.skills.tabs.mine")
+        : props.card.group === "learned"
+          ? t("memory.skills.tabs.learned")
+          : sourceLabel(props.card.source ?? "")
     : props.card.group === "builtin"
       ? t("memory.skills.syncedTools", { count: new Set(props.card.mergedItems.map(skillSourceOf)).size })
       : "";
@@ -463,8 +547,9 @@ function SkillGridCard(props: {
   );
 }
 
-function skillTabLabel(tab: { group: "builtin" | "learned" | "source"; source?: string }, t: (key: MessageKey) => string): string {
+function skillTabLabel(tab: { group: "builtin" | "mine" | "learned" | "source"; source?: string }, t: (key: MessageKey) => string): string {
   if (tab.group === "builtin") return t("memory.skills.tabs.builtin");
+  if (tab.group === "mine") return t("memory.skills.tabs.mine");
   if (tab.group === "learned") return t("memory.skills.tabs.learned");
   return sourceLabel(tab.source ?? "");
 }
