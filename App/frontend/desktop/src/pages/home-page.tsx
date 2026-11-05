@@ -53,7 +53,7 @@ import {
   type PendingFileAttachment,
   type PendingImage
 } from "../state/agent-composer-state.js";
-import { createModelWorkspace, defaultModelSelectionInput, resolveModelSelection } from "../state/model-workspace.js";
+import { createModelWorkspace, defaultModelSelectionInput, resolveModelSelection, getModelCandidates } from "../state/model-workspace.js";
 import {
   AgentCommandPalette,
   buildVisibleSlashCommands,
@@ -73,7 +73,9 @@ import { AgentQueuedMessageList } from "./agent-queued-message-list.js";
 import { AgentThreadMessages, ChatImageLightbox } from "./agent-thread-messages.js";
 import { AgentWorkspaceContext } from "./agent-workspace-context.js";
 import { AppFrame } from "./app-frame.js";
+import { matchesProjectDiscovery, type ProjectDiscoveryMap } from "./project-discovery.js";
 import { FinanceWorkspace, FinanceWorkflowCards, FINANCE_REVIEW_LINK } from "./finance-workspace.js";
+import { useSavedFinanceProjects, type SavedFinanceSelection } from "./use-saved-finance-projects.js";
 import { completedFinanceReviewPath, financeWorkflowDisplayText, type FinanceWorkflowId } from "./finance-workflows.js";
 import {
   MicrophonePermissionError,
@@ -856,6 +858,9 @@ export function HomePage() {
   const [financePendingReview, setFinancePendingReview] = useState<{ chatId: string; requestId: string; startedAt: number } | null>(null);
   const [financeSessionReview,setFinanceSessionReview]=useState<FinanceReviewBinding|null>(null);
   const [financeResultNotice, setFinanceResultNotice] = useState("");
+  const [financeSavedSelection, setFinanceSavedSelection] = useState<SavedFinanceSelection | null>(null);
+  const savedFinanceProjects = useSavedFinanceProjects(clients?.memmyAgent, financeEnabled, state.agent.connectionStatus,
+    () => taskStateCoordinator.refreshTaskState({reason:"manual",state:state.agent}));
   useEffect(() => {
     let active = true;
     void clients?.memmyAgent.bootstrap({force:state.agent.connectionStatus==="connected"}).then((boot) => {
@@ -863,15 +868,6 @@ export function HomePage() {
     }).catch(() => { if (active) setFinanceEnabled(false); });
     return () => { active = false; };
   }, [clients?.memmyAgent, state.agent.connectionStatus]);
-  useEffect(()=>{
-    if(!financeEnabled || !clients?.memmyAgent.financeReaderRequest)return;
-    let active=true;
-    // Restore the existing local report library into native folders on startup.
-    void clients.memmyAgent.financeReaderRequest({action:"project-list"}).then(()=>{
-      if(active)taskStateCoordinator.refreshTaskState({reason:"manual",state:state.agent});
-    }).catch(()=>{});
-    return()=>{active=false;};
-  },[financeEnabled,clients?.memmyAgent,state.agent.connectionStatus]);
   useEffect(()=>{
     const key=state.agent.currentSessionKey;
     if(!financeEnabled || !clients?.memmyAgent.financeReaderRequest)return;
@@ -891,6 +887,7 @@ export function HomePage() {
     loadAgentThread(clients.memmyAgent,dispatch,binding.chat_id,binding.session_key,{taskState:state.agent,taskStateCoordinator});
   }
   function chooseFinanceWorkflow(id: FinanceWorkflowId) {
+    setFinanceSavedSelection(null);
     setFinanceWorkflow(id); setFinanceReviewPath(null); setFinanceArtifactPath(null); setFinanceOpen(true); setEnvironmentPanelOpen(false);
   }
   const [isCreatingChat, setIsCreatingChat] = useState(false);
@@ -945,6 +942,9 @@ export function HomePage() {
     modelWorkspaceMode,
     selectedModelPreset
   );
+  const recoveryModels=resolvedConversationModel.unavailable&&committedModelSelection?.model
+    ?getModelCandidates(modelWorkspace,modelWorkspaceMode,'chat').filter(candidate=>candidate.available&&candidate.model===committedModelSelection.model&&candidate.provider===committedModelSelection.provider&&candidate.source===(committedModelSelection.source==='account'?'platform':'byok')):[];
+  const recoverAskModel=recoveryModels.length===1?recoveryModels[0]:undefined;
   // Persist the model the user picks in the chat selector as the mode default, so a new chat
   // after restart defaults to the last-used model instead of the platform default. Only the
   // account/byok `agent.default` is written (the backend mirrors it to agents.defaults.modelPreset);
@@ -1793,8 +1793,9 @@ export function HomePage() {
   /**
    * Sends one round of a live Agent conversation.
    */
-  async function sendMessage(workflowContent?: string, review?:FinanceReviewBinding) {
-    const sendChatId=review?.chat_id??state.agent.currentChatId;
+  async function sendMessage(workflowContent?: string, review?:FinanceReviewBinding, workflowProjectId?:string) {
+    // A peer comparison starts a separate chat under the chosen report project.
+    const sendChatId=workflowProjectId?null:review?.chat_id??state.agent.currentChatId;
     if (!workflowContent && runExactLocalSlashCommand(input)) {
       return;
     }
@@ -1839,7 +1840,7 @@ export function HomePage() {
       clientRequestId,
       resolvedConversationModel.candidateId
     ));
-    const target: WebuiSessionTarget | null = sendChatId ? null : draftTarget;
+    const target: WebuiSessionTarget | null = sendChatId ? null : workflowProjectId?{kind:"project",projectId:workflowProjectId}:draftTarget;
     try {
       const submitted = await submitAgentComposerMessage({
         chatId: sendChatId,
@@ -2749,6 +2750,13 @@ export function HomePage() {
   return (
     <AppFrame
       title={t("home.title")}
+      projectDiscovery={financeEnabled ? savedFinanceProjects.metadata : undefined}
+      projectContentAction={financeEnabled ? (project, collapsed) => {
+        const saved = savedFinanceProjects.entries[project.id];
+        return saved ? <button type="button" tabIndex={collapsed ? -1 : undefined} className="finance-saved-project-action" aria-label={`${project.name}：查看已保存文件／繼續設定`} onClick={() => {
+          setFinanceSavedSelection(saved.selection); setFinanceWorkflow("consistency"); setFinanceOpen(true); setEnvironmentPanelOpen(false);
+        }}><strong>查看已保存文件／繼續設定</strong><small>{saved.detail}</small></button> : null;
+      } : undefined}
       topBar={hasActiveConversation || environmentScope ? (
         <h1 className="agent-conversation-title" title={hasActiveConversation ? activeConversationTitle : selectedDraftProject?.name}>
           <span className="agent-conversation-title__text">
@@ -2758,7 +2766,7 @@ export function HomePage() {
         </h1>
       ) : null}
       topBarEnd={<>
-        {financeEnabled && <button className="finance-launch-button" aria-pressed={financeOpen && !financeWorkflow} onClick={() => { setFinanceWorkflow(null); setFinanceOpen(!financeOpen); setEnvironmentPanelOpen(false); }}>報告工作台</button>}
+        {financeEnabled && <button type="button" title="報告工作台" aria-label="報告工作台" className="finance-launch-button" aria-pressed={financeOpen && !financeWorkflow} onClick={() => { setFinanceSavedSelection(null); setFinanceWorkflow(null); setFinanceOpen(!financeOpen); setEnvironmentPanelOpen(false); }}>報告工作台</button>}
         {hasActiveConversation || environmentScope ? (
         <button
           type="button"
@@ -2777,6 +2785,7 @@ export function HomePage() {
       windowsTitlebarSafe={Boolean(hasActiveConversation || environmentScope)}
     >
       {financeResultNotice && <p role="status" className="finance-result-notice">{financeResultNotice}</p>}
+      {financeEnabled && savedFinanceProjects.error && <p role="status" className="finance-result-notice">已保存報告文件清單暫未能載入。<button type="button" onClick={() => void savedFinanceProjects.refresh()}>重試載入</button></p>}
       <div className={`agent-workspace-layout${environmentPanelOpen ? " agent-workspace-layout--environment-open" : ""}${financeOpen && !financeWorkflow ? " agent-workspace-layout--finance-open" : ""}`}>
         {!hasActiveConversation ? (
         <section className="app-frame-page-content home-empty-screen flex flex-col items-center justify-center h-full">
@@ -2878,6 +2887,7 @@ export function HomePage() {
                   target={draftTarget}
                   selectedProject={selectedDraftProject}
                   projects={state.agent.projects}
+                  projectDiscovery={financeEnabled ? savedFinanceProjects.metadata : undefined}
                   sessions={state.agent.sessions}
                   registryState={state.agent.projectRegistryState}
                   disabled={messageSendInFlight || projectPickerOperationId != null}
@@ -3105,9 +3115,12 @@ export function HomePage() {
         </section>
         )}
         {environmentPanel}
-        {financeEnabled && clients?.memmyAgent && <FinanceWorkspace visible={financeOpen} client={clients.memmyAgent} initialPath={financeReviewPath} artifactPath={financeArtifactPath} workflow={financeWorkflow} initialReview={financeSessionReview} onReviewOpened={openFinanceReview}
+        {financeEnabled && clients?.memmyAgent && <FinanceWorkspace visible={financeOpen} client={clients.memmyAgent} initialPath={financeReviewPath} artifactPath={financeArtifactPath} workflow={financeWorkflow} initialReview={financeSessionReview} initialSetupSelection={financeSavedSelection} onReviewOpened={openFinanceReview}
           projectContext={state.agent.projects.find(p=>p.id===(state.agent.sessions.find(s=>s.key===state.agent.currentSessionKey)?.projectId??selectedDraftProject?.id))??null}
-          busy={isCurrentAgentRunning || isCreatingChat || messageSendInFlight || state.agent.connectionStatus !== "connected" || resolvedConversationModel.unavailable} onChoose={setFinanceWorkflow} onLaunch={sendMessage} onClose={() => { setFinanceOpen(false); setFinanceWorkflow(null); }} />}
+          askQueued={isCurrentAgentRunning}
+          askRecovery={recoverAskModel?{label:`重新選用 ${recoverAskModel.model}`,onClick:()=>dispatch(agentActions.pendingModelPresetUpdated(modelSelectionScopeKey,recoverAskModel.id))}:undefined}
+          askBlockedReason={state.agent.connectionStatus!=="connected"||!connection?"對話尚未連線，連線恢復後即可送出。":resolvedConversationModel.unavailable?"此對話的模型不可用；請在對話下方選擇可用模型。":isCreatingChat||messageSendInFlight?"正在送出上一則訊息，完成後即可再送出。":undefined}
+          busy={isCurrentAgentRunning || isCreatingChat || messageSendInFlight || state.agent.connectionStatus !== "connected" || resolvedConversationModel.unavailable} onChoose={id => { setFinanceSavedSelection(null); setFinanceWorkflow(id); }} onLaunch={sendMessage} onClose={() => { setFinanceSavedSelection(null); setFinanceOpen(false); setFinanceWorkflow(null); void savedFinanceProjects.refresh(); }} />}
       </div>
     </AppFrame>
   );
@@ -3236,7 +3249,8 @@ function projectPickerSessionActivityMs(session: ProjectPickerSessionActivity): 
 export const filterProjectTargetPickerProjects = (
   projects: MemmyAgentProject[],
   query: string,
-  sessions: readonly ProjectPickerSessionActivity[] = []
+  sessions: readonly ProjectPickerSessionActivity[] = [],
+  metadata: ProjectDiscoveryMap = {},
 ): MemmyAgentProject[] => {
   const latestActivityByProjectId = new Map<string, number>();
   for (const session of sessions) {
@@ -3258,9 +3272,7 @@ export const filterProjectTargetPickerProjects = (
     ? sortedProjects
     : sortedProjects.filter((project) => {
       const displayPath = formatWorkspaceDisplayPath(project.rootPath).toLocaleLowerCase();
-      return project.name.toLocaleLowerCase().includes(normalizedQuery)
-        || project.rootPath.toLocaleLowerCase().includes(normalizedQuery)
-        || displayPath.includes(normalizedQuery);
+      return matchesProjectDiscovery(project, normalizedQuery, metadata) || displayPath.includes(normalizedQuery);
     });
   return matched.slice(0, PROJECT_TARGET_PICKER_MAX_RECENT);
 };
@@ -3313,6 +3325,7 @@ export function ProjectTargetPicker(props: {
   target: WebuiSessionTarget;
   selectedProject: MemmyAgentProject | null;
   projects: MemmyAgentProject[];
+  projectDiscovery?: ProjectDiscoveryMap;
   sessions?: readonly ProjectPickerSessionActivity[];
   registryState: "ready" | "corrupt";
   disabled: boolean;
@@ -3329,15 +3342,15 @@ export function ProjectTargetPicker(props: {
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const selectedPath = props.selectedProject
-    ? formatWorkspaceDisplayPath(props.selectedProject.rootPath)
+    ? props.selectedProject.rootPath
     : null;
   const selectedLabel = props.registryState === "corrupt"
     ? t("home.project.registryUnavailable")
     : props.selectedProject
-      ? workspaceFolderName(props.selectedProject.rootPath)
+      ? props.selectedProject.name
       : t("home.project.optional");
   const visibleProjects = props.registryState === "ready"
-    ? filterProjectTargetPickerProjects(props.projects, query, props.sessions)
+    ? filterProjectTargetPickerProjects(props.projects, query, props.sessions, props.projectDiscovery)
     : [];
   const itemKeys = [
     ...visibleProjects.map((project) => `project:${project.id}`),
@@ -3483,7 +3496,6 @@ export function ProjectTargetPicker(props: {
                 <p className="home-project-picker__empty" role="status">{t("home.project.empty")}</p>
               ) : visibleProjects.map((project, index) => {
                 const selected = props.target.kind === "project" && props.target.projectId === project.id;
-                const displayPath = formatCompactWorkspacePath(project.rootPath);
                 return (
                   <button
                     id={`home-project-picker-option-${index}`}
@@ -3494,12 +3506,15 @@ export function ProjectTargetPicker(props: {
                     aria-selected={selected}
                     data-project-id={project.id}
                     className={`home-project-picker__option${selected ? " home-project-picker__option--selected" : ""}${hasKeyboardNavigated && activeIndex === index ? " home-project-picker__option--keyboard-active" : ""}`}
-                    title={formatWorkspaceDisplayPath(project.rootPath)}
+                    title={project.rootPath}
                     onPointerDown={preserveProjectTargetPickerSearchFocus}
                     onClick={() => props.onSelect({ kind: "project", projectId: project.id })}
                   >
                     <Folder size={13} className="shrink-0" aria-hidden="true" />
-                    <span className="home-project-picker__path truncate">{displayPath}</span>
+                    <span className="project-discovery-label">
+                      <strong className="home-project-picker__path truncate">{project.name}</strong>
+                      {props.projectDiscovery?.[project.id] && <small className="project-discovery-summary">{props.projectDiscovery[project.id]!.summary}</small>}
+                    </span>
                     {selected ? <Check size={13} className="shrink-0" aria-hidden="true" /> : null}
                   </button>
                 );

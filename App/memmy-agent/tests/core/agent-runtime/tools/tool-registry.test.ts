@@ -28,6 +28,15 @@ function toolNames(definitions: Array<Record<string, any>>): string[] {
 }
 
 describe("ToolRegistry", () => {
+  it("enforces an explicit trial allowlist on late MCP and builtin registrations", async () => {
+    const names = ["read_file", "mcp_financebuddy_reports_read_project_report"];
+    const registry = new ToolRegistry(names);
+    names.push("exec");
+    for (const name of [...names,"write_file","mcp_other_exec"]) registry.register(new FakeTool(name));
+    expect(registry.toolNames).toEqual(["read_file", "mcp_financebuddy_reports_read_project_report"]);
+    expect(await registry.execute("exec", {})).toContain("not found");
+    const empty=new ToolRegistry([]);empty.register(new FakeTool("exec"));expect(empty.size).toBe(0);
+  });
   it("orders builtins before MCP tools", () => {
     const registry = new ToolRegistry();
     registry.register(new FakeTool("mcp_git_status"));

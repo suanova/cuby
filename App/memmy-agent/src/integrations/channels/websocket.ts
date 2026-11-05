@@ -13,6 +13,7 @@ import {
 } from "@memmy/local-api-contracts";
 import { requestMcpReload } from "../../core/agent-runtime/tools/mcp.js";
 import { FinanceReaderApi, FinanceReaderError, type FinanceToolCall } from "../../entrypoints/frontend-bridge/finance-reader-api.js";
+import { resolveFinanceInputMedia } from "../../entrypoints/frontend-bridge/finance-input-media.js";
 import { BaseChannel, type ChannelHandleMessageOptions } from "./base.js";
 import {
   OUTBOUND_META_AGENT_UI,
@@ -718,7 +719,8 @@ export class WebSocketChannel extends BaseChannel {
 
   setFinanceReaderTools(callTool: FinanceToolCall): void {
     const history=this.projectStore && this.sessionManager ? new FinanceHistory(this.projectStore,this.sessionManager,(id,record)=>this.tryAppendWebuiTranscript(id,record)) : undefined;
-    this.financeReader = new FinanceReaderApi(callTool, fetch, getMediaDir("websocket"),history,this.workspacePath);
+    this.financeReader = new FinanceReaderApi(callTool, fetch, getMediaDir("websocket"),history,this.workspacePath,
+      ref=>resolveFinanceInputMedia(ref,this.mediaSecret,getMediaDir(),path.join(getMediaDir("websocket"),"webui")));
   }
 
   async handleFinanceDownload(request:HttpRequestLike,id:string):Promise<HttpLikeResponse> {

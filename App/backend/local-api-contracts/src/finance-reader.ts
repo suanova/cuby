@@ -1,6 +1,8 @@
 import { z } from "zod";
-import { ConsistencySlotSchema, ConsistencySourceSlotSchema, ConsistencyComparisonSchema, ConsistencyRunSchema } from "./finance-consistency.js";
+import { C2ProfileSchema, ConsistencySlotSchema, ConsistencySourceSlotSchema, ConsistencyComparisonSchema, ConsistencyRunSchema } from "./finance-consistency.js";
 import { FinanceProjectIdSchema, ConsistencyEditSchema } from "./finance-projects.js";
+import { FinancePeerCompanySchema } from "./finance-peers.js";
+import { ConsistencyFollowupsReadRequestSchema, ConsistencyFollowupUpdateRequestSchema, ConsistencyFollowupsExportRequestSchema } from "./finance-followups.js";
 
 export const FinanceReviewPathSchema = z
   .string()
@@ -181,24 +183,33 @@ export const FinanceDraftExportSchema = z.object({
   ),
 });
 export const FinanceRequestSchema = z.discriminatedUnion("action", [
+  ConsistencyFollowupsReadRequestSchema, ConsistencyFollowupUpdateRequestSchema, ConsistencyFollowupsExportRequestSchema,
+  z.object({action:z.literal("input-knowledge"),fiscal_year:z.string().regex(/^20\d{2}\/\d{2}$/).optional(),slots:z.array(ConsistencySlotSchema).max(4).optional()}).strict(),
+  z.object({action:z.literal("input-inspect"),media_ref:z.string().min(1).max(4096),file_name:z.string().min(1).max(200)}).strict(),
+  z.object({action:z.literal("project-peers"),project_id:FinanceProjectIdSchema,expected_revision:z.number().int().nonnegative(),companies:z.array(FinancePeerCompanySchema).max(8)}).strict(),
   z.object({action:z.literal("project-list")}).strict(),
   z.object({action:z.literal("project-open"),project_id:FinanceProjectIdSchema,run_id:ConsistencyRunSchema}).strict(),
   z.object({action:z.literal("project-session"),session_key:z.string().min(1).max(240)}).strict(),
   z.object({action:z.literal("project-create"),title:z.string().min(1).max(100),external_id:z.string().max(180).optional()}).strict(),
   z.object({action:z.literal("project-save"),project_id:FinanceProjectIdSchema,expected_revision:z.number().int().nonnegative(),fiscal_year:z.string().regex(/^20\d{2}\/\d{2}$/),
-    documents:z.array(z.object({slot:ConsistencySlotSchema,path:z.string().max(4096),file_name:z.string().max(200).optional()}).strict()).length(4).optional(),run_id:ConsistencyRunSchema.optional()}).strict(),
-  z.object({action:z.literal("project-build"),project_id:FinanceProjectIdSchema,version_id:z.string().regex(/^[a-f0-9]{32}$/),comparisons:z.array(ConsistencyComparisonSchema).min(1).max(4)}).strict(),
+    documents:z.array(z.object({slot:ConsistencySlotSchema,path:z.string().max(4096),file_name:z.string().max(200).optional(),inspection_id:z.string().uuid().optional(),confirmed_issuer:z.literal("yeebo").optional()}).strict()).min(1).max(4).optional(),run_id:ConsistencyRunSchema.optional()}).strict(),
+  z.object({action:z.literal("project-build"),project_id:FinanceProjectIdSchema,version_id:z.string().regex(/^[a-f0-9]{32}$/),kind:z.enum(["consistency","c2"]).optional(),comparisons:z.array(ConsistencyComparisonSchema).min(1).max(4)}).strict(),
+  z.object({action:z.literal("project-supplement"),project_id:FinanceProjectIdSchema,run_id:ConsistencyRunSchema,confirmed:z.literal(true),retry:z.boolean().optional(),
+    documents:z.array(z.object({slot:ConsistencySlotSchema,path:z.string().max(4096),file_name:z.string().max(200).optional()}).strict()).min(1).max(4)}).strict(),
   z.object({action:z.literal("consistency-editor"),run_id:ConsistencyRunSchema}).strict(),
+  z.object({action:z.literal("consistency-prepare"),run_id:ConsistencyRunSchema}).strict(),
   z.object({action:z.literal("consistency-suggest"),run_id:ConsistencyRunSchema,check_id:z.string().max(180)}).strict(),
   z.object({action:z.literal("consistency-decide"),run_id:ConsistencyRunSchema,check_id:z.string().max(180),expected_revision:z.number().int().nonnegative(),
     operation:z.enum(["accept","dismiss","undo"]),proposal_id:z.string().optional(),facts_confirmed:z.boolean().optional(),edits:z.array(ConsistencyEditSchema).max(4).optional()}).strict(),
   z.object({action:z.literal("consistency-draft-page"),run_id:ConsistencyRunSchema,slot:ConsistencySlotSchema,page:z.number().int().min(1).max(300)}).strict(),
-  z.object({action:z.literal("consistency-draft-export"),run_id:ConsistencyRunSchema,slot:ConsistencySlotSchema.optional()}).strict(),
+  z.object({action:z.literal("consistency-draft-export"),run_id:ConsistencyRunSchema,expected_revision:z.number().int().nonnegative(),slot:ConsistencySlotSchema.optional()}).strict(),
   z.object({action:z.literal("consistency-build"),fiscal_year:z.string().regex(/^20\d{2}\/\d{2}$/),
     comparisons:z.array(ConsistencyComparisonSchema).min(1).max(4).optional(),
-    documents:z.array(z.object({slot:ConsistencySlotSchema,path:z.string().max(4096)}).strict()).length(4).optional()}).strict(),
+    documents:z.array(z.object({slot:ConsistencySlotSchema,path:z.string().max(4096)}).strict()).min(1).max(4).optional()}).strict(),
   z.object({action:z.literal("consistency-read"),run_id:ConsistencyRunSchema}).strict(),
   z.object({action:z.literal("consistency-semantic-start"),run_id:ConsistencyRunSchema}).strict(),
+  z.object({action:z.literal("c2-start"),run_id:ConsistencyRunSchema,profile:C2ProfileSchema}).strict(),
+  z.object({action:z.literal("c2-rule-page"),run_id:ConsistencyRunSchema,page:z.number().int().min(1).max(100)}).strict(),
   z.object({action:z.literal("consistency-page"),run_id:ConsistencyRunSchema,slot:ConsistencySourceSlotSchema,
     page:z.number().int().min(1).max(300),check_id:z.string().max(180).optional()}).strict(),
   z

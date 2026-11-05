@@ -1,0 +1,2787 @@
+{
+  "schema_version": "financebuddy-c2-full-catalog-1",
+  "revision": "1.0.0",
+  "jurisdiction": "HKEX Main Board",
+  "effective_from": "2025-01-01",
+  "source": {
+    "file_name": "HKEX_主板C2_ESG守則_EN.pdf",
+    "local_path": "dataset/rules/HKEX_主板C2_ESG守則_EN.pdf",
+    "sha256": "4bbf50f7f9231953e26d0bf391d53aa178dd9d4c774806db97072fa22dbb4746",
+    "text_sha256": "061ee0fbbf57a3b6afbb07584afb0cf5d671df5946fe1611ea87ff4b61f1f622",
+    "page_count": 27,
+    "url": "https://en-rules.hkex.com.hk/rulebook/appendix-c2-environmental-social-and-governance-reporting-code-0",
+    "pdf_url": "https://en-rules.hkex.com.hk/sites/default/files/net_file_store/HKEX4476_3841_VER36624.pdf"
+  },
+  "batches": [
+    {
+      "id": "general",
+      "label": "報告原則及董事會"
+    },
+    {
+      "id": "environment",
+      "label": "環境披露"
+    },
+    {
+      "id": "social",
+      "label": "社會披露"
+    },
+    {
+      "id": "climate_strategy",
+      "label": "氣候治理及策略"
+    },
+    {
+      "id": "climate_finance",
+      "label": "氣候財務影響及韌性"
+    },
+    {
+      "id": "climate_metrics",
+      "label": "氣候指標及計量"
+    },
+    {
+      "id": "climate_targets",
+      "label": "氣候目標及進度"
+    }
+  ],
+  "inventory": [
+    {
+      "unit": "1",
+      "part": "A",
+      "handling": "context",
+      "checks": [],
+      "note": "定義、義務架構或閱讀指引；透過適用性引擎及各披露項執行，不另假定公司須逐字重述守則。"
+    },
+    {
+      "unit": "2",
+      "part": "A",
+      "handling": "context",
+      "checks": [],
+      "note": "定義、義務架構或閱讀指引；透過適用性引擎及各披露項執行，不另假定公司須逐字重述守則。"
+    },
+    {
+      "unit": "3",
+      "part": "A",
+      "handling": "context",
+      "checks": [],
+      "note": "定義、義務架構或閱讀指引；透過適用性引擎及各披露項執行，不另假定公司須逐字重述守則。"
+    },
+    {
+      "unit": "4",
+      "part": "A",
+      "handling": "review",
+      "checks": [
+        "C2-4-1-period",
+        "C2-4-1-publication",
+        "C2-4-2-a",
+        "C2-4-2-d"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "5",
+      "part": "A",
+      "handling": "context",
+      "checks": [],
+      "note": "定義、義務架構或閱讀指引；透過適用性引擎及各披露項執行，不另假定公司須逐字重述守則。"
+    },
+    {
+      "unit": "6",
+      "part": "A",
+      "handling": "context",
+      "checks": [],
+      "note": "定義、義務架構或閱讀指引；透過適用性引擎及各披露項執行，不另假定公司須逐字重述守則。"
+    },
+    {
+      "unit": "7",
+      "part": "A",
+      "handling": "review",
+      "checks": [
+        "C2-7"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "8",
+      "part": "A",
+      "handling": "context",
+      "checks": [],
+      "note": "定義、義務架構或閱讀指引；透過適用性引擎及各披露項執行，不另假定公司須逐字重述守則。"
+    },
+    {
+      "unit": "9",
+      "part": "A",
+      "handling": "review",
+      "checks": [
+        "C2-9"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "10",
+      "part": "A",
+      "handling": "review",
+      "checks": [
+        "C2-13-i"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "11",
+      "part": "A",
+      "handling": "review",
+      "checks": [
+        "C2-11-1",
+        "C2-11-2",
+        "C2-11-3",
+        "C2-11-4"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "12",
+      "part": "A",
+      "handling": "review",
+      "checks": [
+        "C2-12-i",
+        "C2-12-ii",
+        "C2-12-iii"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "13",
+      "part": "B",
+      "handling": "review",
+      "checks": [
+        "C2-13-i",
+        "C2-13-ii",
+        "C2-13-iii"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "14",
+      "part": "B",
+      "handling": "review",
+      "checks": [
+        "C2-11-1",
+        "C2-11-4",
+        "C2-14-materiality",
+        "C2-14-stakeholders",
+        "C2-14-quantitative",
+        "C2-14-consistency"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "15",
+      "part": "B",
+      "handling": "review",
+      "checks": [
+        "C2-15-boundary",
+        "C2-15-change"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "16",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-16-2"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "17",
+      "part": "D",
+      "handling": "context",
+      "checks": [],
+      "note": "定義、義務架構或閱讀指引；透過適用性引擎及各披露項執行，不另假定公司須逐字重述守則。"
+    },
+    {
+      "unit": "18",
+      "part": "D",
+      "handling": "context",
+      "checks": [],
+      "note": "定義、義務架構或閱讀指引；透過適用性引擎及各披露項執行，不另假定公司須逐字重述守則。"
+    },
+    {
+      "unit": "19",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-19-a",
+        "C2-19-a-i",
+        "C2-19-a-ii",
+        "C2-19-a-iii",
+        "C2-19-a-iv",
+        "C2-19-b-i",
+        "C2-19-b-ii"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "20",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-20-a",
+        "C2-20-b",
+        "C2-20-c",
+        "C2-20-d",
+        "C2-20-note2"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "21",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-21-a",
+        "C2-21-b"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "22",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-22-a-i",
+        "C2-22-a-ii",
+        "C2-22-a-iii",
+        "C2-22-a-iv",
+        "C2-22-b"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "23",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-23"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "24",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-24-a",
+        "C2-24-b",
+        "C2-24-note2"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "25",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-25-a",
+        "C2-25-b",
+        "C2-25-notes3-5"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "26",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-26-a",
+        "C2-26-b-i",
+        "C2-26-b-ii",
+        "C2-26-b-iii"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "27",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-27-a-i",
+        "C2-27-a-ii",
+        "C2-27-a-iii",
+        "C2-27-a-iv",
+        "C2-27-a-v",
+        "C2-27-a-vi",
+        "C2-27-b",
+        "C2-27-c"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "28",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-28-a",
+        "C2-28-b",
+        "C2-28-c"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "29",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-29-a",
+        "C2-29-b-i",
+        "C2-29-b-ii",
+        "C2-29-b-iii",
+        "C2-29-c-location",
+        "C2-29-c-contracts",
+        "C2-29-d",
+        "C2-29-note2",
+        "C2-29-note3"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "30",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-30"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "31",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-31"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "32",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-32"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "33",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-33"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "34",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-34"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "35",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-35"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "36",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-36"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "37",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-37-targets",
+        "C2-37-a",
+        "C2-37-b",
+        "C2-37-c",
+        "C2-37-d",
+        "C2-37-e",
+        "C2-37-f",
+        "C2-37-g",
+        "C2-37-h"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "38",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-38-a",
+        "C2-38-b",
+        "C2-38-c",
+        "C2-38-d"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "39",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-39"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "40",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-40-a",
+        "C2-40-b",
+        "C2-40-c",
+        "C2-40-d",
+        "C2-40-e-i",
+        "C2-40-e-ii",
+        "C2-40-e-iii",
+        "C2-40-e-iv"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "41",
+      "part": "D",
+      "handling": "review",
+      "checks": [
+        "C2-41"
+      ],
+      "note": ""
+    },
+    {
+      "unit": "A1-GD",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-A1-GD"
+      ]
+    },
+    {
+      "unit": "A2-GD",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-A2-GD"
+      ]
+    },
+    {
+      "unit": "A3-GD",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-A3-GD"
+      ]
+    },
+    {
+      "unit": "B1-GD",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B1-GD"
+      ]
+    },
+    {
+      "unit": "B2-GD",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B2-GD"
+      ]
+    },
+    {
+      "unit": "B3-GD",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B3-GD"
+      ]
+    },
+    {
+      "unit": "B4-GD",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B4-GD"
+      ]
+    },
+    {
+      "unit": "B5-GD",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B5-GD"
+      ]
+    },
+    {
+      "unit": "B6-GD",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B6-GD"
+      ]
+    },
+    {
+      "unit": "B7-GD",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B7-GD"
+      ]
+    },
+    {
+      "unit": "B8-GD",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B8-GD"
+      ]
+    },
+    {
+      "unit": "A1.1",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-A1-1"
+      ]
+    },
+    {
+      "unit": "A1.3",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-A1-3"
+      ]
+    },
+    {
+      "unit": "A1.4",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-A1-4"
+      ]
+    },
+    {
+      "unit": "A1.5",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-A1-5"
+      ]
+    },
+    {
+      "unit": "A1.6",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-A1-6"
+      ]
+    },
+    {
+      "unit": "A2.1",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-A2-1"
+      ]
+    },
+    {
+      "unit": "A2.2",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-A2-2"
+      ]
+    },
+    {
+      "unit": "A2.3",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-A2-3"
+      ]
+    },
+    {
+      "unit": "A2.4",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-A2-4"
+      ]
+    },
+    {
+      "unit": "A2.5",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-A2-5"
+      ]
+    },
+    {
+      "unit": "A3.1",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-A3-1"
+      ]
+    },
+    {
+      "unit": "B1.1",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B1-1"
+      ]
+    },
+    {
+      "unit": "B1.2",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B1-2"
+      ]
+    },
+    {
+      "unit": "B2.1",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B2-1"
+      ]
+    },
+    {
+      "unit": "B2.2",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B2-2"
+      ]
+    },
+    {
+      "unit": "B2.3",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B2-3"
+      ]
+    },
+    {
+      "unit": "B3.1",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B3-1"
+      ]
+    },
+    {
+      "unit": "B3.2",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B3-2"
+      ]
+    },
+    {
+      "unit": "B4.1",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B4-1"
+      ]
+    },
+    {
+      "unit": "B4.2",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B4-2"
+      ]
+    },
+    {
+      "unit": "B5.1",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B5-1"
+      ]
+    },
+    {
+      "unit": "B5.2",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B5-2"
+      ]
+    },
+    {
+      "unit": "B5.3",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B5-3"
+      ]
+    },
+    {
+      "unit": "B5.4",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B5-4"
+      ]
+    },
+    {
+      "unit": "B6.1",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B6-1"
+      ]
+    },
+    {
+      "unit": "B6.2",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B6-2"
+      ]
+    },
+    {
+      "unit": "B6.3",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B6-3"
+      ]
+    },
+    {
+      "unit": "B6.4",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B6-4"
+      ]
+    },
+    {
+      "unit": "B6.5",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B6-5"
+      ]
+    },
+    {
+      "unit": "B7.1",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B7-1"
+      ]
+    },
+    {
+      "unit": "B7.2",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B7-2"
+      ]
+    },
+    {
+      "unit": "B7.3",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B7-3"
+      ]
+    },
+    {
+      "unit": "B8.1",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B8-1"
+      ]
+    },
+    {
+      "unit": "B8.2",
+      "part": "C",
+      "handling": "review",
+      "checks": [
+        "C2-B8-2"
+      ]
+    },
+    {
+      "unit": "A1.2",
+      "part": "C",
+      "handling": "repealed",
+      "checks": [],
+      "note": "已於2025-01-01刪除，不當作現行遺漏。"
+    },
+    {
+      "unit": "A4-GD",
+      "part": "C",
+      "handling": "repealed",
+      "checks": [],
+      "note": "已於2025-01-01刪除，不當作現行遺漏。"
+    },
+    {
+      "unit": "A4.1",
+      "part": "C",
+      "handling": "repealed",
+      "checks": [],
+      "note": "已於2025-01-01刪除，不當作現行遺漏。"
+    }
+  ],
+  "checks": [
+    {
+      "id": "C2-4-1-period",
+      "clause": "4(1)-period",
+      "part": "A",
+      "batch": "general",
+      "label": "ESG 與年報期間一致",
+      "rule_page": 2,
+      "rule_quote": "regarding the same period covered in its annual report",
+      "criteria": "核對 ESG 與年報的起訖日；未提供年報時列待補，不能以ESG自述證明兩份相同。",
+      "kind": "disclosure",
+      "condition": "annual_required",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-4-1-publication",
+      "clause": "4(1)-publication",
+      "part": "A",
+      "batch": "general",
+      "label": "年度發布及兩個網站刊載",
+      "rule_page": 2,
+      "rule_quote": "must be published on the Exchange’s website and the issuer’s website",
+      "criteria": "需正式刊載日期及交易所、公司網站網址；待刊稿尚未發布不等於已違規。",
+      "kind": "external",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-4-2-a",
+      "clause": "4(2)(a)",
+      "part": "A",
+      "batch": "general",
+      "label": "向股東提供獨立 ESG 報告",
+      "rule_page": 2,
+      "rule_quote": "provide the ESG report to its shareholders using electronic means",
+      "criteria": "獨立報告的股東提供安排及適用法律須另核；PDF內容不能證明已送達。",
+      "kind": "external",
+      "condition": "separate_report",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-4-2-d",
+      "clause": "4(2)(d)",
+      "part": "A",
+      "batch": "general",
+      "label": "獨立 ESG 與年報同時發布",
+      "rule_page": 2,
+      "rule_quote": "at the same time as the publication of the annual report",
+      "criteria": "核對正式刊載日期；待刊稿列待補發布安排，不判違規。",
+      "kind": "external",
+      "condition": "separate_report",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-7",
+      "clause": "7",
+      "part": "A",
+      "batch": "general",
+      "label": "額外重大議題及持份者意見",
+      "rule_page": 2,
+      "rule_quote": "additional ESG issues and KPIs that reflect the issuer’s significant environmental and social impacts",
+      "criteria": "此項屬鼓勵性披露；如有額外重大議題，記錄選擇及持份者意見，不能當硬性遺漏。",
+      "kind": "recommended",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-9",
+      "clause": "9",
+      "part": "A",
+      "batch": "general",
+      "label": "獨立鑒證的級別、範圍及程序",
+      "rule_page": 3,
+      "rule_quote": "Where independent assurance is obtained",
+      "criteria": "只在取得鑒證時核對級別、範圍及程序；沒有鑒證並非違規，未說明有無則適用性待確認。",
+      "kind": "disclosure",
+      "condition": "assurance_obtained",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-11-1",
+      "clause": "11(1)",
+      "part": "A",
+      "batch": "general",
+      "label": "重大議題與氣候財務影響",
+      "rule_page": 3,
+      "rule_quote": "could reasonably be expected to affect its cash flows, its access to finance or cost of capital",
+      "criteria": "重大議題辨識及氣候財務重大性，不能把所有一般環保活動當作財務重大風險。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": [
+        "14"
+      ]
+    },
+    {
+      "id": "C2-11-2",
+      "clause": "11(2)",
+      "part": "A",
+      "batch": "general",
+      "label": "量化數據、目的及比較資料",
+      "rule_page": 3,
+      "rule_quote": "Quantitative information should be accompanied by a narrative",
+      "criteria": "歷史KPI可量度、有目的及影響解釋，適當時有比較資料；不把方向性目標一律當缺少數值。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-11-3",
+      "clause": "11(3)",
+      "part": "A",
+      "batch": "general",
+      "label": "平衡呈現",
+      "rule_page": 3,
+      "rule_quote": "avoid selections, omissions, or presentation formats",
+      "criteria": "只報告有具體原文支持的偏頗或誤導呈現；僅有平衡聲明不能核實全體資訊，欠原始資料時列需人工核實。",
+      "kind": "manual",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-11-4",
+      "clause": "11(4)",
+      "part": "A",
+      "batch": "general",
+      "label": "跨年方法一致性",
+      "rule_page": 3,
+      "rule_quote": "consistent methodologies to allow for meaningful comparisons",
+      "criteria": "方法及KPI變更是否交代；不得假設沿用方法或直接將數字相同視為口徑相同。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": [
+        "14"
+      ]
+    },
+    {
+      "id": "C2-12-i",
+      "clause": "12(i)",
+      "part": "A",
+      "batch": "general",
+      "label": "董事報告的環境政策及表現",
+      "rule_page": 4,
+      "rule_quote": "a discussion of the issuer’s environmental (including climate-related) policies and performance",
+      "criteria": "核對年報董事報告的業務回顧及ESG銜接。",
+      "kind": "disclosure",
+      "condition": "annual_required",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-12-ii",
+      "clause": "12(ii)",
+      "part": "A",
+      "batch": "general",
+      "label": "董事報告的重大法律合規",
+      "rule_page": 4,
+      "rule_quote": "a discussion of the issuer’s compliance with the relevant laws and regulations",
+      "criteria": "核對對公司有重大影響的法規遵守說明；不以一般聲明核實實際法律合規。",
+      "kind": "disclosure",
+      "condition": "annual_required",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-12-iii",
+      "clause": "12(iii)",
+      "part": "A",
+      "batch": "general",
+      "label": "董事報告的關鍵關係",
+      "rule_page": 4,
+      "rule_quote": "an account of the issuer’s key relationships",
+      "criteria": "核對員工、客戶、供應商及其他關鍵關係。",
+      "kind": "disclosure",
+      "condition": "annual_required",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-13-i",
+      "clause": "13(i)",
+      "part": "B",
+      "batch": "general",
+      "label": "董事會監督 ESG",
+      "rule_page": 5,
+      "rule_quote": "a disclosure of the board’s oversight of ESG issues",
+      "criteria": "需董事會聲明及監督角色，只有工作小組介紹不足。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": [
+        "10"
+      ]
+    },
+    {
+      "id": "C2-13-ii",
+      "clause": "13(ii)",
+      "part": "B",
+      "batch": "general",
+      "label": "ESG 管理策略及重大議題管理",
+      "rule_page": 5,
+      "rule_quote": "the board’s ESG management approach and strategy",
+      "criteria": "辨識、評估、排序及管理重大ESG議題和業務風險的程序。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-13-iii",
+      "clause": "13(iii)",
+      "part": "B",
+      "batch": "general",
+      "label": "董事會檢討目標進度",
+      "rule_page": 5,
+      "rule_quote": "how the board reviews progress made against ESG-related goals and targets",
+      "criteria": "董事會如何檢討進度，以及目標與業務的關係。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-14-materiality",
+      "clause": "14-materiality",
+      "part": "B",
+      "batch": "general",
+      "label": "重大議題辨識及選擇準則",
+      "rule_page": 5,
+      "rule_quote": "the process to identify and the criteria for the selection of material ESG factors",
+      "criteria": "辨識程序及選擇準則兩者均須檢視。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-14-stakeholders",
+      "clause": "14-stakeholders",
+      "part": "B",
+      "batch": "general",
+      "label": "持份者參與程序及結果",
+      "rule_page": 5,
+      "rule_quote": "a description of significant stakeholders identified",
+      "criteria": "如有持份者參與，須有主要持份者、程序及結果；未進行不可猜測。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-14-quantitative",
+      "clause": "14-quantitative",
+      "part": "B",
+      "batch": "general",
+      "label": "排放及能源計算依據",
+      "rule_page": 5,
+      "rule_quote": "Information on the standards, methodologies, assumptions and/",
+      "criteria": "標準、方法、假設／工具、換算因子來源；只列因子不能確認其他要素。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-14-consistency",
+      "clause": "14-consistency",
+      "part": "B",
+      "batch": "general",
+      "label": "影響可比性的變更",
+      "rule_page": 5,
+      "rule_quote": "any changes to the methods or KPIs used",
+      "criteria": "方法、KPI及其他影響比較的變動；欠底稿不能核實數值真實性。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-15-boundary",
+      "clause": "15-boundary",
+      "part": "B",
+      "batch": "general",
+      "label": "報告邊界及選取程序",
+      "rule_page": 5,
+      "rule_quote": "describing the process used to identify which entities or operations are included",
+      "criteria": "需有涵蓋公司／營運及選取程序；財務合併邊界不必然等同ESG營運邊界。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-15-change",
+      "clause": "15-change",
+      "part": "B",
+      "batch": "general",
+      "label": "範圍變更及原因",
+      "rule_page": 5,
+      "rule_quote": "explain the difference and reason for the change",
+      "criteria": "如有範圍變動，核對差異及原因，不把正常擴展業務直接判錯。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-A1-GD",
+      "clause": "A1-GD",
+      "part": "C",
+      "batch": "environment",
+      "label": "排放政策及重大法規",
+      "rule_page": 6,
+      "rule_quote": "Information on:\n(a)\t\nthe policies; and\n(b)\t\ncompliance with relevant laws and regulations that have a significant impact on \nthe issuer\nrelating to air emissions, dischar",
+      "criteria": "逐項核對此一般披露原文的所有要素及相關主題；政策與重大法律遵守說明須分別檢視。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-A2-GD",
+      "clause": "A2-GD",
+      "part": "C",
+      "batch": "environment",
+      "label": "資源使用政策",
+      "rule_page": 7,
+      "rule_quote": "Policies on the efficient use of resources, including energy, water and other raw \nmaterials.\nNote:\t\nResources may be used in production, in storage, transportation, in \n",
+      "criteria": "逐項核對此一般披露原文的所有要素及相關主題；政策與重大法律遵守說明須分別檢視。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-A3-GD",
+      "clause": "A3-GD",
+      "part": "C",
+      "batch": "environment",
+      "label": "環境及天然資源政策",
+      "rule_page": 7,
+      "rule_quote": "Policies on minimising the issuer’s significant impacts on the environment and \nnatural resources.",
+      "criteria": "逐項核對此一般披露原文的所有要素及相關主題；政策與重大法律遵守說明須分別檢視。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B1-GD",
+      "clause": "B1-GD",
+      "part": "C",
+      "batch": "social",
+      "label": "僱傭政策及重大法規",
+      "rule_page": 8,
+      "rule_quote": "Information on:\n(a)\t\nthe policies; and\n(b)\t\ncompliance with relevant laws and regulations that have a significant impact \non the issuer\nrelating to compensation and dismi",
+      "criteria": "逐項核對此一般披露原文的所有要素及相關主題；政策與重大法律遵守說明須分別檢視。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B2-GD",
+      "clause": "B2-GD",
+      "part": "C",
+      "batch": "social",
+      "label": "健康安全政策及重大法規",
+      "rule_page": 8,
+      "rule_quote": "Information on:\n(a)\t\nthe policies; and\n(b)\t\ncompliance with relevant laws and regulations that have a significant impact \non the issuer\nrelating to providing a safe worki",
+      "criteria": "逐項核對此一般披露原文的所有要素及相關主題；政策與重大法律遵守說明須分別檢視。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B3-GD",
+      "clause": "B3-GD",
+      "part": "C",
+      "batch": "social",
+      "label": "培訓政策及活動",
+      "rule_page": 9,
+      "rule_quote": "Policies on improving employees’ knowledge and skills for discharging duties at \nwork. Description of training activities.\nNote:\t\nTraining refers to vocational training. ",
+      "criteria": "逐項核對此一般披露原文的所有要素及相關主題；政策與重大法律遵守說明須分別檢視。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B4-GD",
+      "clause": "B4-GD",
+      "part": "C",
+      "batch": "social",
+      "label": "防止童工及強迫勞工",
+      "rule_page": 9,
+      "rule_quote": "Information on:\n(a)\t\nthe policies; and\n(b)\t\ncompliance with relevant laws and regulations that have a significant impact \non the issuer\nrelating to preventing child and f",
+      "criteria": "逐項核對此一般披露原文的所有要素及相關主題；政策與重大法律遵守說明須分別檢視。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B5-GD",
+      "clause": "B5-GD",
+      "part": "C",
+      "batch": "social",
+      "label": "供應鏈環境及社會風險政策",
+      "rule_page": 10,
+      "rule_quote": "Policies on managing environmental and social risks of the supply chain.",
+      "criteria": "逐項核對此一般披露原文的所有要素及相關主題；政策與重大法律遵守說明須分別檢視。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B6-GD",
+      "clause": "B6-GD",
+      "part": "C",
+      "batch": "social",
+      "label": "產品責任政策及重大法規",
+      "rule_page": 11,
+      "rule_quote": "Information on:\n(a)\t\nthe policies; and\n(b)\t\ncompliance with relevant laws and regulations that have a significant impact \non the issuer\nrelating to health and safety, adv",
+      "criteria": "逐項核對此一般披露原文的所有要素及相關主題；政策與重大法律遵守說明須分別檢視。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B7-GD",
+      "clause": "B7-GD",
+      "part": "C",
+      "batch": "social",
+      "label": "反貪污政策及重大法規",
+      "rule_page": 12,
+      "rule_quote": "Information on:\n(a)\t\nthe policies; and\n(b)\t\ncompliance with relevant laws and regulations that have a significant impact \non the issuer\nrelating to bribery, extortion, fr",
+      "criteria": "逐項核對此一般披露原文的所有要素及相關主題；政策與重大法律遵守說明須分別檢視。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B8-GD",
+      "clause": "B8-GD",
+      "part": "C",
+      "batch": "social",
+      "label": "社區參與政策",
+      "rule_page": 12,
+      "rule_quote": "Policies on community engagement to understand the needs of the communities \nwhere the issuer operates and to ensure its activities take into consideration the \ncommuniti",
+      "criteria": "逐項核對此一般披露原文的所有要素及相關主題；政策與重大法律遵守說明須分別檢視。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-A1-1",
+      "clause": "A1.1",
+      "part": "C",
+      "batch": "environment",
+      "label": "廢氣種類及排放數據",
+      "rule_page": 6,
+      "rule_quote": "The types of emissions and respective emissions data.",
+      "criteria": "The types of emissions and respective emissions data. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-A1-3",
+      "clause": "A1.3",
+      "part": "C",
+      "batch": "environment",
+      "label": "有害廢物總量及密度",
+      "rule_page": 6,
+      "rule_quote": "Total hazardous waste produced (in tonnes) and, where appropriate, \nintensity (e.g. per unit of production volume, per facility).",
+      "criteria": "Total hazardous waste produced (in tonnes) and, where appropriate, intensity (e.g. per unit of production volume, per facility). 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-A1-4",
+      "clause": "A1.4",
+      "part": "C",
+      "batch": "environment",
+      "label": "無害廢物總量及密度",
+      "rule_page": 6,
+      "rule_quote": "Total non-hazardous waste produced (in tonnes) and, where \nappropriate, intensity (e.g. per unit of production volume, per facility).",
+      "criteria": "Total non-hazardous waste produced (in tonnes) and, where appropriate, intensity (e.g. per unit of production volume, per facility). 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-A1-5",
+      "clause": "A1.5",
+      "part": "C",
+      "batch": "environment",
+      "label": "排放目標及行動",
+      "rule_page": 6,
+      "rule_quote": "Description of emission target(s) set and steps taken to achieve them.",
+      "criteria": "Description of emission target(s) set and steps taken to achieve them. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-A1-6",
+      "clause": "A1.6",
+      "part": "C",
+      "batch": "environment",
+      "label": "廢物處理、減量目標及行動",
+      "rule_page": 6,
+      "rule_quote": "Description of how hazardous and non-hazardous wastes are handled, \nand a description of reduction target(s) set and steps taken to achieve \nthem.",
+      "criteria": "Description of how hazardous and non-hazardous wastes are handled, and a description of reduction target(s) set and steps taken to achieve them. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-A2-1",
+      "clause": "A2.1",
+      "part": "C",
+      "batch": "environment",
+      "label": "分類能源總量及密度",
+      "rule_page": 7,
+      "rule_quote": "Direct and/or indirect energy consumption by type (e.g. electricity, gas \nor oil) in total (kWh in ’000s) and intensity (e.g. per unit of production \nvolume, per facility",
+      "criteria": "Direct and/or indirect energy consumption by type (e.g. electricity, gas or oil) in total (kWh in ’000s) and intensity (e.g. per unit of production volume, per facility). 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-A2-2",
+      "clause": "A2.2",
+      "part": "C",
+      "batch": "environment",
+      "label": "用水總量及密度",
+      "rule_page": 7,
+      "rule_quote": "Water consumption in total and intensity (e.g. per unit of production \nvolume, per facility).",
+      "criteria": "Water consumption in total and intensity (e.g. per unit of production volume, per facility). 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-A2-3",
+      "clause": "A2.3",
+      "part": "C",
+      "batch": "environment",
+      "label": "能源效益目標及行動",
+      "rule_page": 7,
+      "rule_quote": "Description of energy use efficiency target(s) set and steps taken to \nachieve them.",
+      "criteria": "Description of energy use efficiency target(s) set and steps taken to achieve them. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-A2-4",
+      "clause": "A2.4",
+      "part": "C",
+      "batch": "environment",
+      "label": "取水問題、用水效益目標及行動",
+      "rule_page": 7,
+      "rule_quote": "Description of whether there is any issue in sourcing water that is fit \nfor purpose, water efficiency target(s) set and steps taken to achieve \nthem.",
+      "criteria": "Description of whether there is any issue in sourcing water that is fit for purpose, water efficiency target(s) set and steps taken to achieve them. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-A2-5",
+      "clause": "A2.5",
+      "part": "C",
+      "batch": "environment",
+      "label": "包裝材料總量及每單位用量",
+      "rule_page": 7,
+      "rule_quote": "Total packaging material used for finished products (in tonnes) and, if \napplicable, with reference to per unit produced.",
+      "criteria": "Total packaging material used for finished products (in tonnes) and, if applicable, with reference to per unit produced. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-A3-1",
+      "clause": "A3.1",
+      "part": "C",
+      "batch": "environment",
+      "label": "重大環境影響及管理行動",
+      "rule_page": 7,
+      "rule_quote": "Description of the significant impacts of activities on the environment \nand natural resources and the actions taken to manage them.",
+      "criteria": "Description of the significant impacts of activities on the environment and natural resources and the actions taken to manage them. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B1-1",
+      "clause": "B1.1",
+      "part": "C",
+      "batch": "social",
+      "label": "員工人數的四類細分",
+      "rule_page": 8,
+      "rule_quote": "Total workforce by gender, employment type (for example, full- or part-\ntime), age group and geographical region.",
+      "criteria": "Total workforce by gender, employment type (for example, full- or part- time), age group and geographical region. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B1-2",
+      "clause": "B1.2",
+      "part": "C",
+      "batch": "social",
+      "label": "流失率的三類細分",
+      "rule_page": 8,
+      "rule_quote": "Employee turnover rate by gender, age group and geographical region.",
+      "criteria": "Employee turnover rate by gender, age group and geographical region. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B2-1",
+      "clause": "B2.1",
+      "part": "C",
+      "batch": "social",
+      "label": "三年工亡人數及比率",
+      "rule_page": 8,
+      "rule_quote": "Number and rate of work-related fatalities occurred in each of the past \nthree years including the reporting year.",
+      "criteria": "Number and rate of work-related fatalities occurred in each of the past three years including the reporting year. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B2-2",
+      "clause": "B2.2",
+      "part": "C",
+      "batch": "social",
+      "label": "工傷損失工作日",
+      "rule_page": 8,
+      "rule_quote": "Lost days due to work injury.",
+      "criteria": "Lost days due to work injury. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B2-3",
+      "clause": "B2.3",
+      "part": "C",
+      "batch": "social",
+      "label": "安全措施及執行監察",
+      "rule_page": 8,
+      "rule_quote": "Description of occupational health and safety measures adopted, and \nhow they are implemented and monitored.",
+      "criteria": "Description of occupational health and safety measures adopted, and how they are implemented and monitored. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B3-1",
+      "clause": "B3.1",
+      "part": "C",
+      "batch": "social",
+      "label": "按性別及職級的受訓比例",
+      "rule_page": 9,
+      "rule_quote": "The percentage of employees trained by gender and employee \ncategory (e.g. senior management, middle management).",
+      "criteria": "The percentage of employees trained by gender and employee category (e.g. senior management, middle management). 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B3-2",
+      "clause": "B3.2",
+      "part": "C",
+      "batch": "social",
+      "label": "按性別及職級的平均培訓時數",
+      "rule_page": 9,
+      "rule_quote": "The average training hours completed per employee by gender and \nemployee category.",
+      "criteria": "The average training hours completed per employee by gender and employee category. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B4-1",
+      "clause": "B4.1",
+      "part": "C",
+      "batch": "social",
+      "label": "防止童工及強迫勞工的審查",
+      "rule_page": 9,
+      "rule_quote": "Description of measures to review employment practices to avoid child \nand forced labour.",
+      "criteria": "Description of measures to review employment practices to avoid child and forced labour. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B4-2",
+      "clause": "B4.2",
+      "part": "C",
+      "batch": "social",
+      "label": "發現違規後的處理程序",
+      "rule_page": 9,
+      "rule_quote": "Description of steps taken to eliminate such practices when \ndiscovered.",
+      "criteria": "Description of steps taken to eliminate such practices when discovered. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B5-1",
+      "clause": "B5.1",
+      "part": "C",
+      "batch": "social",
+      "label": "按地區的供應商數目",
+      "rule_page": 10,
+      "rule_quote": "Number of suppliers by geographical region.",
+      "criteria": "Number of suppliers by geographical region. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B5-2",
+      "clause": "B5.2",
+      "part": "C",
+      "batch": "social",
+      "label": "供應商聘用慣例及覆蓋數目",
+      "rule_page": 10,
+      "rule_quote": "Description of practices relating to engaging suppliers, number of \nsuppliers where the practices are being implemented, and how they \nare implemented and monitored.",
+      "criteria": "Description of practices relating to engaging suppliers, number of suppliers where the practices are being implemented, and how they are implemented and monitored. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B5-3",
+      "clause": "B5.3",
+      "part": "C",
+      "batch": "social",
+      "label": "供應鏈環社風險辨識及監察",
+      "rule_page": 10,
+      "rule_quote": "Description of practices used to identify environmental and social risks \nalong the supply chain, and how they are implemented and monitored.",
+      "criteria": "Description of practices used to identify environmental and social risks along the supply chain, and how they are implemented and monitored. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B5-4",
+      "clause": "B5.4",
+      "part": "C",
+      "batch": "social",
+      "label": "環保採購慣例及監察",
+      "rule_page": 10,
+      "rule_quote": "Description of practices used to promote environmentally preferable \nproducts and services when selecting suppliers, and how they are \nimplemented and monitored.",
+      "criteria": "Description of practices used to promote environmentally preferable products and services when selecting suppliers, and how they are implemented and monitored. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B6-1",
+      "clause": "B6.1",
+      "part": "C",
+      "batch": "social",
+      "label": "因安全健康召回的產品比例",
+      "rule_page": 11,
+      "rule_quote": "Percentage of total products sold or shipped subject to recalls for \nsafety and health reasons.",
+      "criteria": "Percentage of total products sold or shipped subject to recalls for safety and health reasons. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B6-2",
+      "clause": "B6.2",
+      "part": "C",
+      "batch": "social",
+      "label": "產品服務投訴數及處理",
+      "rule_page": 11,
+      "rule_quote": "Number of products and service related complaints received and how \nthey are dealt with.",
+      "criteria": "Number of products and service related complaints received and how they are dealt with. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B6-3",
+      "clause": "B6.3",
+      "part": "C",
+      "batch": "social",
+      "label": "知識產權保護",
+      "rule_page": 11,
+      "rule_quote": "Description of practices relating to observing and protecting intellectual \nproperty rights.",
+      "criteria": "Description of practices relating to observing and protecting intellectual property rights. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B6-4",
+      "clause": "B6.4",
+      "part": "C",
+      "batch": "social",
+      "label": "品質保證及召回程序",
+      "rule_page": 11,
+      "rule_quote": "Description of quality assurance process and recall procedures.",
+      "criteria": "Description of quality assurance process and recall procedures. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B6-5",
+      "clause": "B6.5",
+      "part": "C",
+      "batch": "social",
+      "label": "客戶資料私隱政策及監察",
+      "rule_page": 11,
+      "rule_quote": "Description of consumer data protection and privacy policies, and how \nthey are implemented and monitored.",
+      "criteria": "Description of consumer data protection and privacy policies, and how they are implemented and monitored. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B7-1",
+      "clause": "B7.1",
+      "part": "C",
+      "batch": "social",
+      "label": "已審結貪污案件數及結果",
+      "rule_page": 12,
+      "rule_quote": "Number of concluded legal cases regarding corrupt practices brought \nagainst the issuer or its employees during the reporting period and the \noutcomes of the cases.",
+      "criteria": "Number of concluded legal cases regarding corrupt practices brought against the issuer or its employees during the reporting period and the outcomes of the cases. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B7-2",
+      "clause": "B7.2",
+      "part": "C",
+      "batch": "social",
+      "label": "預防及舉報程序與監察",
+      "rule_page": 12,
+      "rule_quote": "Description of preventive measures and whistle-blowing procedures, \nand how they are implemented and monitored.",
+      "criteria": "Description of preventive measures and whistle-blowing procedures, and how they are implemented and monitored. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B7-3",
+      "clause": "B7.3",
+      "part": "C",
+      "batch": "social",
+      "label": "董事及員工反貪污培訓",
+      "rule_page": 12,
+      "rule_quote": "Description of anti-corruption training provided to directors and staff.",
+      "criteria": "Description of anti-corruption training provided to directors and staff. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B8-1",
+      "clause": "B8.1",
+      "part": "C",
+      "batch": "social",
+      "label": "社區貢獻重點",
+      "rule_page": 12,
+      "rule_quote": "Focus areas of contribution (e.g. education, environmental concerns, \nlabour needs, health, culture, sport).",
+      "criteria": "Focus areas of contribution (e.g. education, environmental concerns, labour needs, health, culture, sport). 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-B8-2",
+      "clause": "B8.2",
+      "part": "C",
+      "batch": "social",
+      "label": "投入社區的金錢或時間",
+      "rule_page": 12,
+      "rule_quote": "Resources contributed (e.g. money or time) to the focus area.",
+      "criteria": "Resources contributed (e.g. money or time) to the focus area. 核對數值、單位、分母、期間、所有要求細分及所需行動／監察；索引不算實際披露。零值與明確否定陳述可以是有效披露；條文中的where appropriate／if applicable不可刪掉。",
+      "kind": "disclosure",
+      "condition": "topic_relevance",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-16-2",
+      "clause": "16(2)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "尚未披露項目的工作計劃",
+      "rule_page": 13,
+      "rule_quote": "work plan, progress and timetable",
+      "criteria": "此項屬鼓勵披露；有不披露或寬免主張時記錄補充披露的工作計劃、進度及時間表。",
+      "kind": "recommended",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-19-a",
+      "clause": "19(a)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "氣候監督機構或負責人",
+      "rule_page": 14,
+      "rule_quote": "the governance body(s)",
+      "criteria": "董事會／委員會或負責人的身份及監督職責；可與B13合併披露，不要求重複章節。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-19-a-i",
+      "clause": "19(a)(i)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "氣候監督的技能及能力",
+      "rule_page": 14,
+      "rule_quote": "how the body(s) or individual(s) determines whether appropriate skills",
+      "criteria": "現有或將發展的技能能力，以及如何作此判斷。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-19-a-ii",
+      "clause": "19(a)(ii)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "氣候資訊匯報方式及頻率",
+      "rule_page": 14,
+      "rule_quote": "how and how often the body(s) or individual(s) is informed",
+      "criteria": "方式及頻率均須核對。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-19-a-iii",
+      "clause": "19(a)(iii)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "氣候事項納入策略及重大交易",
+      "rule_page": 14,
+      "rule_quote": "when overseeing the issuer’s strategy, its decisions on major transactions",
+      "criteria": "策略、重大交易、風險管理及相關政策如何考慮風險機遇及權衡。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-19-a-iv",
+      "clause": "19(a)(iv)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "監督氣候目標及薪酬連結",
+      "rule_page": 14,
+      "rule_quote": "oversees the setting of, and monitors progress",
+      "criteria": "目標訂立、進度監督及是否／如何連結薪酬；可交叉引用35。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-19-b-i",
+      "clause": "19(b)(i)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "管理層氣候職責及監督",
+      "rule_page": 15,
+      "rule_quote": "whether the role is delegated to a specific management-level position",
+      "criteria": "職責委派對象及其監督安排。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-19-b-ii",
+      "clause": "19(b)(ii)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "管理層控制程序及內部整合",
+      "rule_page": 15,
+      "rule_quote": "whether management uses controls and procedures",
+      "criteria": "有否及如何使用控制程序，與其他內部職能如何整合。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-20-a",
+      "clause": "20(a)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "氣候風險機遇及財務影響",
+      "rule_page": 15,
+      "rule_quote": "describe climate-related risks and opportunities",
+      "criteria": "對現金流、融資或資本成本可能有影響的風險及機遇。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-20-b",
+      "clause": "20(b)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "實體及轉型風險分類",
+      "rule_page": 15,
+      "rule_quote": "physical risk or climate-related transition risk",
+      "criteria": "逐項風險的實體／轉型分類。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-20-c",
+      "clause": "20(c)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "風險機遇的時間跨度",
+      "rule_page": 15,
+      "rule_quote": "over which time horizons",
+      "criteria": "各項風險及機遇的短中長期影響。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-20-d",
+      "clause": "20(d)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "短中長期定義及規劃銜接",
+      "rule_page": 15,
+      "rule_quote": "how the issuer defines ‘short term’",
+      "criteria": "三種期限的定義與策略規劃時間的關係。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-20-note2",
+      "clause": "20-note2",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "商業敏感機遇的豁免主張",
+      "rule_page": 16,
+      "rule_quote": "disclose the fact that it has used the exemption",
+      "criteria": "只限機遇、非公開、嚴重損害經濟利益且不能用彙總披露達標；使用時披露事實及每期重評。不得把一般保密理由當已批准豁免。",
+      "kind": "disclosure",
+      "condition": "commercial_sensitivity_claim",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-21-a",
+      "clause": "21(a)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "業務模式及價值鏈影響",
+      "rule_page": 17,
+      "rule_quote": "current and anticipated effects",
+      "criteria": "需有目前及預期影響，不能只列一般氣候風險名稱。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-21-b",
+      "clause": "21(b)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "風險機遇集中位置",
+      "rule_page": 17,
+      "rule_quote": "where in the issuer’s business model and value chain",
+      "criteria": "地區、設施、資產類型等集中位置。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-22-a-i",
+      "clause": "22(a)(i)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "業務模式及資源調整",
+      "rule_page": 17,
+      "rule_quote": "current and anticipated changes to the issuer’s business model",
+      "criteria": "目前及預期變更，包括資源分配。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-22-a-ii",
+      "clause": "22(a)(ii)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "適應及減緩措施",
+      "rule_page": 17,
+      "rule_quote": "current and anticipated adaptation and mitigation efforts",
+      "criteria": "目前與預期、直接或間接措施。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-22-a-iii",
+      "clause": "22(a)(iii)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "氣候轉型計劃或否定陳述",
+      "rule_page": 17,
+      "rule_quote": "or an appropriate negative statement where the issuer does not have",
+      "criteria": "有計劃則披露主要假設及依賴條件；沒有可明確作否定陳述。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-22-a-iv",
+      "clause": "22(a)(iv)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "實現氣候目標的方法",
+      "rule_page": 17,
+      "rule_quote": "how the issuer plans to achieve any climate-related targets",
+      "criteria": "與37–40所列目標相對應的實現方法。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-22-b",
+      "clause": "22(b)",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "氣候行動的資源投入",
+      "rule_page": 18,
+      "rule_quote": "how the issuer is resourcing, and plans to resource",
+      "criteria": "現有及計劃資源如何支持22(a)活動。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-23",
+      "clause": "23",
+      "part": "D",
+      "batch": "climate_strategy",
+      "label": "以往氣候計劃的進度",
+      "rule_page": 18,
+      "rule_quote": "progress of plans disclosed in previous reporting periods",
+      "criteria": "本稿是否披露以往計劃的進度；未提供舊報告時不能確認已完整承接所有舊承諾。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-24-a",
+      "clause": "24(a)",
+      "part": "D",
+      "batch": "climate_finance",
+      "label": "本期氣候財務影響",
+      "rule_page": 18,
+      "rule_quote": "financial position, financial performance and cash flows for the reporting period",
+      "criteria": "定性及定量、本期財務狀況、業績及現金流；量化豁免須按25附註3/5核對，不直接判漏。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-24-b",
+      "clause": "24(b)",
+      "part": "D",
+      "batch": "climate_finance",
+      "label": "下年度重大賬面值調整風險",
+      "rule_page": 18,
+      "rule_quote": "a material adjustment within the next annual reporting period",
+      "criteria": "資產及負債的賬面值重大調整風險；明確無此風險可作有效陳述。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-24-note2",
+      "clause": "24-note2",
+      "part": "D",
+      "batch": "climate_finance",
+      "label": "財務影響與財報項目銜接",
+      "rule_page": 18,
+      "rule_quote": "explain how such information is reflected in its financial statements",
+      "criteria": "量化資訊如非財報獨立行，需說明反映在哪些財務項目。",
+      "kind": "disclosure",
+      "condition": "non_line_item_financial_quantification",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-25-a",
+      "clause": "25(a)",
+      "part": "D",
+      "batch": "climate_finance",
+      "label": "預期財務狀況、投資及資金",
+      "rule_page": 18,
+      "rule_quote": "its investment and disposal plans",
+      "criteria": "短中長期財務狀況變化、投資／處置計劃及資金來源；核對25附註的量化寬免條件。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-25-b",
+      "clause": "25(b)",
+      "part": "D",
+      "batch": "climate_finance",
+      "label": "預期業績及現金流影響",
+      "rule_page": 19,
+      "rule_quote": "financial performance and cash flows to change",
+      "criteria": "短中長期業績及現金流的定性及定量資訊，適用量化寬免須有依據。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-25-notes3-5",
+      "clause": "25-notes3-5",
+      "part": "D",
+      "batch": "climate_finance",
+      "label": "財務量化寬免的原因及替代披露",
+      "rule_page": 19,
+      "rule_quote": "explain why it has not provided quantitative information",
+      "criteria": "核對不能分開辨識／高度不確定性；欠技能能力資源只適用預期量化。主張寬免時需原因、定性影響及相關財報項目；附註5(c)合併量化或無用處判斷亦須核對（PDF20）。",
+      "kind": "disclosure",
+      "condition": "financial_relief_claim",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-26-a",
+      "clause": "26(a)",
+      "part": "D",
+      "batch": "climate_finance",
+      "label": "氣候韌性評估結果",
+      "rule_page": 20,
+      "rule_quote": "the issuer’s assessment of its climate resilience",
+      "criteria": "評估日期、策略及業務模式意涵、重大不確定性及短中長期適應能力。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-26-b-i",
+      "clause": "26(b)(i)",
+      "part": "D",
+      "batch": "climate_finance",
+      "label": "情境分析輸入的七項資料",
+      "rule_page": 20,
+      "rule_quote": "information about the inputs used",
+      "criteria": "情境及來源、多樣性、實體／轉型、最新國際協議相容情境及選擇原因、時間及營運範圍；完整要求延續至PDF21。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-26-b-ii",
+      "clause": "26(b)(ii)",
+      "part": "D",
+      "batch": "climate_finance",
+      "label": "情境分析主要假設",
+      "rule_page": 21,
+      "rule_quote": "the key assumptions the issuer made in the analysis",
+      "criteria": "核對主要假設；不能用模型常識補充。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-26-b-iii",
+      "clause": "26(b)(iii)",
+      "part": "D",
+      "batch": "climate_finance",
+      "label": "情境分析執行期間",
+      "rule_page": 21,
+      "rule_quote": "the reporting period in which the climate-related scenario analysis was carried out",
+      "criteria": "實際執行的報告期間，不能用報告出版年代替。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-27-a-i",
+      "clause": "27(a)(i)",
+      "part": "D",
+      "batch": "climate_finance",
+      "label": "風險程序的輸入及參數",
+      "rule_page": 21,
+      "rule_quote": "the inputs and parameters the issuer uses",
+      "criteria": "資料來源及程序涵蓋營運範圍。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-27-a-ii",
+      "clause": "27(a)(ii)",
+      "part": "D",
+      "batch": "climate_finance",
+      "label": "情境分析納入風險辨識",
+      "rule_page": 21,
+      "rule_quote": "whether and how the issuer uses climate-related scenario analysis",
+      "criteria": "是否及如何使用；否定陳述不等於自動違規。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-27-a-iii",
+      "clause": "27(a)(iii)",
+      "part": "D",
+      "batch": "climate_finance",
+      "label": "風險性質、機率及影響程度",
+      "rule_page": 21,
+      "rule_quote": "nature, likelihood and magnitude",
+      "criteria": "定性因素、量化門檻或其他評估準則。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-27-a-iv",
+      "clause": "27(a)(iv)",
+      "part": "D",
+      "batch": "climate_finance",
+      "label": "氣候風險與其他風險排序",
+      "rule_page": 21,
+      "rule_quote": "prioritises climate-related risks relative to other types of risks",
+      "criteria": "是否及如何相對其他風險排序。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-27-a-v",
+      "clause": "27(a)(v)",
+      "part": "D",
+      "batch": "climate_finance",
+      "label": "氣候風險監察",
+      "rule_page": 22,
+      "rule_quote": "how the issuer monitors climate-related risks",
+      "criteria": "實際監察程序。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-27-a-vi",
+      "clause": "27(a)(vi)",
+      "part": "D",
+      "batch": "climate_finance",
+      "label": "風險程序的跨年變更",
+      "rule_page": 22,
+      "rule_quote": "changed the processes it uses compared with the previous reporting period",
+      "criteria": "是否及如何改變；明確無變更可有效披露。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-27-b",
+      "clause": "27(b)",
+      "part": "D",
+      "batch": "climate_finance",
+      "label": "氣候機遇管理程序",
+      "rule_page": 22,
+      "rule_quote": "the processes the issuer uses to identify, assess, prioritise and monitor",
+      "criteria": "機遇辨識、評估、排序、監察及是否／如何使用情境分析。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-27-c",
+      "clause": "27(c)",
+      "part": "D",
+      "batch": "climate_finance",
+      "label": "整體風險管理整合",
+      "rule_page": 22,
+      "rule_quote": "integrated into and inform the issuer’s overall risk management process",
+      "criteria": "整合程度及方法，可引用綜合ESG風險管理，毋須重複章節。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-28-a",
+      "clause": "28(a)",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "Scope 1 排放總量、單位及期間",
+      "rule_page": 22,
+      "rule_quote": "Scope 1 greenhouse gas emissions",
+      "criteria": "當期absolute gross總量、metric tonnes CO2e及清楚期間；不可用淨抵銷值代替，不能從表格總數推定gross方法。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-28-b",
+      "clause": "28(b)",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "Scope 2 排放總量、單位及期間",
+      "rule_page": 22,
+      "rule_quote": "Scope 2 greenhouse gas emissions",
+      "criteria": "當期absolute gross總量、metric tonnes CO2e及清楚期間；不可用淨抵銷值代替，不能從表格總數推定gross方法。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-28-c",
+      "clause": "28(c)",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "Scope 3 排放總量、單位及期間",
+      "rule_page": 22,
+      "rule_quote": "Scope 3 greenhouse gas emissions",
+      "criteria": "當期absolute gross總量、metric tonnes CO2e及清楚期間；不可用淨抵銷值代替，不能從表格總數推定gross方法。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-29-a",
+      "clause": "29(a)",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "溫室氣體計量標準",
+      "rule_page": 22,
+      "rule_quote": "Greenhouse Gas Protocol: A Corporate Accounting and Reporting Standard (2004)",
+      "criteria": "核對各適用Scope，非僅Scope3；其他計量標準須有管轄機關或另一上市交易所要求依據。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-29-b-i",
+      "clause": "29(b)(i)",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "排放方法、輸入及假設",
+      "rule_page": 23,
+      "rule_quote": "the measurement approach, inputs and assumptions",
+      "criteria": "方法、輸入及假設各自核對；需跨讀能源表及腳註；因子來源並不代表完整方法。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-29-b-ii",
+      "clause": "29(b)(ii)",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "選擇排放計量方法的原因",
+      "rule_page": 23,
+      "rule_quote": "the reason why the issuer has chosen",
+      "criteria": "方法、輸入及假設的選擇原因；與本期變更原因不同。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-29-b-iii",
+      "clause": "29(b)(iii)",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "排放方法變更及原因",
+      "rule_page": 23,
+      "rule_quote": "any changes the issuer made to the measurement approach",
+      "criteria": "本期方法、輸入、假設的變更及原因。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-29-c-location",
+      "clause": "29(c)-location",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "Scope 2 地點基準排放",
+      "rule_page": 23,
+      "rule_quote": "disclose its location-based Scope 2 greenhouse gas emissions",
+      "criteria": "location-based須清晰；地區因子只能部分支持，market-based不能取代。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-29-c-contracts",
+      "clause": "29(c)-contracts",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "Scope 2 合約文書資訊",
+      "rule_page": 23,
+      "rule_quote": "provide information about any contractual instruments",
+      "criteria": "如有相關文書，需足以理解Scope2的資訊；未提及不能推定沒有。",
+      "kind": "disclosure",
+      "condition": "contracts_if_any",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-29-d",
+      "clause": "29(d)",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "Scope 3 涵蓋類別",
+      "rule_page": 23,
+      "rule_quote": "disclose the categories included within the issuer’s measure",
+      "criteria": "依2011價值鏈標準說明納入的類別；本項不表示所有15類均適用，核對界定及理由。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-29-note2",
+      "clause": "29-note2",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "價值鏈數據期間差異",
+      "rule_page": 23,
+      "rule_quote": "the length of the reporting periods is the same",
+      "criteria": "如採不同期間的價值鏈數據，核對最近可取得、期間長度相同及期間之間重大事件影響披露。",
+      "kind": "disclosure",
+      "condition": "value_chain_different_periods",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-29-note3",
+      "clause": "29-note3",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "金融業融資排放補充",
+      "rule_page": 24,
+      "rule_quote": "additional information about the issuer’s Category 15",
+      "criteria": "只在業務包括資產管理、商業銀行或保險時考慮；屬鼓勵披露。",
+      "kind": "recommended",
+      "condition": "financial_sector",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-30",
+      "clause": "30",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "轉型風險資產／業務金額及比例",
+      "rule_page": 24,
+      "rule_quote": "assets or business activities vulnerable to climate-related transition risks",
+      "criteria": "金額及百分比、對應資產／業務及分母；估計毛利損失不自動等同受影響業務比例。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-31",
+      "clause": "31",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "實體風險資產／業務金額及比例",
+      "rule_page": 24,
+      "rule_quote": "assets or business activities vulnerable to climate-related physical risks",
+      "criteria": "金額及百分比，以及資產／業務範圍和分母。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-32",
+      "clause": "32",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "氣候機遇資產／業務金額及比例",
+      "rule_page": 24,
+      "rule_quote": "assets or business activities aligned with climate-related opportunities",
+      "criteria": "金額及百分比，以及資產／業務範圍和分母。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-33",
+      "clause": "33",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "氣候資本、融資及投資金額",
+      "rule_page": 24,
+      "rule_quote": "capital expenditure, financing or investment",
+      "criteria": "投向氣候風險及機遇的資本開支、融資或投資金額。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-34",
+      "clause": "34",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "內部碳價或否定陳述",
+      "rule_page": 24,
+      "rule_quote": "does not apply a carbon price in decision-making",
+      "criteria": "有使用時需是否及如何用於決策及每噸價格；沒有可明確否定，不能要求虛構碳價。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-35",
+      "clause": "35",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "氣候薪酬連結或否定陳述",
+      "rule_page": 25,
+      "rule_quote": "whether and how climate-related considerations are factored",
+      "criteria": "是否及如何納入薪酬，或明確否定；可與19(a)(iv)合併。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-36",
+      "clause": "36",
+      "part": "D",
+      "batch": "climate_metrics",
+      "label": "行業指標",
+      "rule_page": 25,
+      "rule_quote": "An issuer is encouraged to disclose industry-based metrics",
+      "criteria": "建議披露；參考相關行業指標及適用性，不把未披露當硬性缺失。",
+      "kind": "recommended",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-37-targets",
+      "clause": "37-targets",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "自訂及法定氣候目標",
+      "rule_page": 25,
+      "rule_quote": "qualitative and quantitative climate-related targets",
+      "criteria": "自訂及法規要求目標；不能假設一定有某個未證實法定目標。",
+      "kind": "disclosure",
+      "condition": "always",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-37-a",
+      "clause": "37(a)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "目標指標",
+      "rule_page": 25,
+      "rule_quote": "the metric used to set the target",
+      "criteria": "逐個目標對應指標。",
+      "kind": "disclosure",
+      "condition": "targets_if_any",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-37-b",
+      "clause": "37(b)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "目標目的",
+      "rule_page": 25,
+      "rule_quote": "the objective of the target",
+      "criteria": "減緩、適應或科學倡議等目的。",
+      "kind": "disclosure",
+      "condition": "targets_if_any",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-37-c",
+      "clause": "37(c)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "目標涵蓋範圍",
+      "rule_page": 25,
+      "rule_quote": "the part of the issuer to which the target applies",
+      "criteria": "全公司或指定業務、地區等。",
+      "kind": "disclosure",
+      "condition": "targets_if_any",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-37-d",
+      "clause": "37(d)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "目標期間",
+      "rule_page": 25,
+      "rule_quote": "the period over which the target applies",
+      "criteria": "每項目標適用期間。",
+      "kind": "disclosure",
+      "condition": "targets_if_any",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-37-e",
+      "clause": "37(e)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "目標基準期",
+      "rule_page": 25,
+      "rule_quote": "the base period from which progress is measured",
+      "criteria": "每項目標基準期。",
+      "kind": "disclosure",
+      "condition": "targets_if_any",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-37-f",
+      "clause": "37(f)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "里程碑或中期目標",
+      "rule_page": 25,
+      "rule_quote": "milestones or interim targets (if any)",
+      "criteria": "如有才要求；不能將沒有中期目標自動判硬性遺漏。",
+      "kind": "disclosure",
+      "condition": "targets_if_any",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-37-g",
+      "clause": "37(g)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "絕對值或密度目標",
+      "rule_page": 25,
+      "rule_quote": "whether the target is an absolute target or an intensity target",
+      "criteria": "量化目標需說明絕對或強度；定性目標不適用此細項。",
+      "kind": "disclosure",
+      "condition": "targets_if_any",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-37-h",
+      "clause": "37(h)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "國際協議及地區承諾如何影響目標",
+      "rule_page": 26,
+      "rule_quote": "how the latest international agreement on climate change",
+      "criteria": "如何影響目標設定，包括相關地區承諾；不替公司補充主張。",
+      "kind": "disclosure",
+      "condition": "targets_if_any",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-38-a",
+      "clause": "38(a)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "目標及方法是否第三方驗證",
+      "rule_page": 26,
+      "rule_quote": "whether the target and the methodology for setting the target has been validated",
+      "criteria": "是否驗證及對應目標；並非強制必須找第三方驗證。",
+      "kind": "disclosure",
+      "condition": "targets_if_any",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-38-b",
+      "clause": "38(b)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "目標檢討程序",
+      "rule_page": 26,
+      "rule_quote": "the issuer’s processes for reviewing the target",
+      "criteria": "逐項目標的檢討程序。",
+      "kind": "disclosure",
+      "condition": "targets_if_any",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-38-c",
+      "clause": "38(c)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "監察目標進度的指標",
+      "rule_page": 26,
+      "rule_quote": "the metrics used to monitor progress",
+      "criteria": "逐項目標的進度指標。",
+      "kind": "disclosure",
+      "condition": "targets_if_any",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-38-d",
+      "clause": "38(d)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "目標修訂及原因",
+      "rule_page": 26,
+      "rule_quote": "any revisions to the target and an explanation",
+      "criteria": "如有修訂，需內容及原因。",
+      "kind": "disclosure",
+      "condition": "targets_if_any",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-39",
+      "clause": "39",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "氣候目標表現及趨勢",
+      "rule_page": 26,
+      "rule_quote": "performance against each climate-related target",
+      "criteria": "對每項目標的表現及趨勢／變動分析；僅年度同比不必然等同對目標基準期進度。",
+      "kind": "disclosure",
+      "condition": "targets_if_any",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-40-a",
+      "clause": "40(a)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "排放目標涵蓋氣體",
+      "rule_page": 26,
+      "rule_quote": "which greenhouse gases are covered by the target",
+      "criteria": "每項排放目標涵蓋哪些氣體。",
+      "kind": "disclosure",
+      "condition": "ghg_targets_if_any",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-40-b",
+      "clause": "40(b)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "排放目標涵蓋 Scope",
+      "rule_page": 26,
+      "rule_quote": "whether Scope 1, Scope 2 or Scope 3",
+      "criteria": "每項目標所涵蓋範圍。",
+      "kind": "disclosure",
+      "condition": "ghg_targets_if_any",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-40-c",
+      "clause": "40(c)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "總量及淨排放目標",
+      "rule_page": 26,
+      "rule_quote": "separately disclose its associated gross greenhouse gas emissions target",
+      "criteria": "標明gross/net；淨目標另需gross目標。",
+      "kind": "disclosure",
+      "condition": "ghg_targets_if_any",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-40-d",
+      "clause": "40(d)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "行業減碳路徑",
+      "rule_page": 26,
+      "rule_quote": "whether the target was derived using a sectoral decarbonisation approach",
+      "criteria": "是否使用行業減碳方法，否定陳述可有效。",
+      "kind": "disclosure",
+      "condition": "ghg_targets_if_any",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-40-e-i",
+      "clause": "40(e)(i)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "碳信用依賴程度",
+      "rule_page": 26,
+      "rule_quote": "relies on the use of carbon credits",
+      "criteria": "若計劃以碳信用達成淨排放目標，披露程度及方法。",
+      "kind": "disclosure",
+      "condition": "carbon_credits_planned",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-40-e-ii",
+      "clause": "40(e)(ii)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "碳信用第三方認證計劃",
+      "rule_page": 26,
+      "rule_quote": "which third-party scheme(s) will verify or certify",
+      "criteria": "計劃使用碳信用時的認證計劃。",
+      "kind": "disclosure",
+      "condition": "carbon_credits_planned",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-40-e-iii",
+      "clause": "40(e)(iii)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "碳信用類型及減碳／移除",
+      "rule_page": 27,
+      "rule_quote": "the type of carbon credit",
+      "criteria": "自然／技術移除及減排／移除的類型。",
+      "kind": "disclosure",
+      "condition": "carbon_credits_planned",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-40-e-iv",
+      "clause": "40(e)(iv)",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "碳信用可信度及完整性",
+      "rule_page": 27,
+      "rule_quote": "credibility and integrity of the carbon credits",
+      "criteria": "理解可信度及完整性所需其他因素，例如永久性假設。",
+      "kind": "disclosure",
+      "condition": "carbon_credits_planned",
+      "related_clauses": []
+    },
+    {
+      "id": "C2-41",
+      "clause": "41",
+      "part": "D",
+      "batch": "climate_targets",
+      "label": "跨行業及行業指標的適用性考慮",
+      "rule_page": 27,
+      "rule_quote": "refer to and consider the applicability",
+      "criteria": "準備21–26及37–38時考慮跨行業及行業指標；第36仍屬鼓勵披露，不能因本條把全部行業指標轉為強制。",
+      "kind": "manual",
+      "condition": "always",
+      "related_clauses": []
+    }
+  ],
+  "scope_note": "C2第1–41段及Part C現行一般披露／KPI全數登記；披露項、程序及建議項分開，並非全部屬硬性義務。外部引用準則、台帳及法律合規真實性不由PDF單獨證實。"
+}

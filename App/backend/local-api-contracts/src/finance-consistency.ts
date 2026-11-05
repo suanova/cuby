@@ -4,6 +4,19 @@ export const ConsistencySourceSlotSchema = z.enum(["esg_zh", "esg_en", "annual_z
 export const ConsistencyComparisonSchema = z.enum(["bilingual", "cross_report", "internal", "restatement"]);
 export const ConsistencyRunSchema = z.string().regex(/^\d{8}T\d{6}-[a-f0-9]{8}$/);
 export const ConsistencyReviewStateSchema = z.enum(["matched", "difference", "needs_confirmation", "not_checked", "candidate"]);
+export const ConsistencyRecommendationSchema=z.object({summary:z.string().min(1).max(500),requires_confirmation:z.boolean(),confirmation_prompt:z.string().max(500),
+  edits:z.array(z.object({slot:ConsistencySlotSchema,page:z.number().int().positive(),original:z.string().min(12).max(1800),replacement:z.string().min(1).max(3000)}).strict()).max(4)});
+export const C2ProfileSchema=z.object({period_start:z.string().regex(/^20\d{2}-\d{2}-\d{2}$/),period_end:z.string().regex(/^20\d{2}-\d{2}-\d{2}$/),part_d_mandatory:z.enum(["yes","no","unknown"]),primary_esg_slot:z.enum(["esg_zh","esg_en"]).optional()}).strict();
+export const C2OutcomeSchema=z.enum(["not_reviewed","disclosed","partially_disclosed","not_located","conflict","explanation_claim","not_applicable","applicability_pending","external_evidence_needed"]);
+export const C2CheckSchema=z.object({id:z.string(),clause:z.string(),part:z.enum(["A","B","C","D"]),label:z.string(),rule_page:z.number().int().positive(),rule_quote:z.string(),criteria:z.string(),kind:z.string(),condition:z.string(),obligation:z.string(),outcome:C2OutcomeSchema,action:z.string(),missing_elements:z.array(z.string())});
+export const C2ReviewSchema=z.object({status:z.enum(["running","completed","partial","failed"]),profile:C2ProfileSchema.passthrough(),model:z.string(),reasoning_effort:z.string(),context_tokens:z.number(),started_at:z.string(),updated_at:z.string(),completed_tasks:z.number(),total_tasks:z.number(),gaps:z.array(z.string()),error:z.string().optional(),
+  source_plan:z.object({mode:z.string(),full_text:z.boolean(),documents:z.array(z.object({slot:ConsistencySourceSlotSchema,pages:z.number().int().positive()})),historical_documents:z.array(z.object({slot:ConsistencySourceSlotSchema,pages:z.number().int().positive()})),policy:z.string()}).optional(),
+  tasks:z.array(z.object({id:z.string(),label:z.string(),status:z.enum(["pending","running","completed","failed"]),phase:z.string(),completed_passes:z.number(),error:z.string().optional(),check_ids:z.array(z.string()).optional(),started_at:z.string().optional(),phase_started_at:z.string().optional(),activity:z.object({stage:z.enum(["requesting","thinking","receiving","validating","retrying"]),updated_at:z.string(),received_chars:z.number().optional(),remaining_checks:z.number().optional()}).optional()})),
+  rule_freshness:z.object({status:z.string(),checked_at:z.string(),url:z.string(),reason:z.string().optional()}).nullable(),catalog_revision:z.string(),
+  rulebook:z.object({file_name:z.string(),sha256:z.string(),text_sha256:z.string(),page_count:z.number(),url:z.string().url(),pdf_url:z.string().url()}),
+  coverage:z.object({inventory_units:z.number(),checks_total:z.number(),checks_reviewed:z.number(),outcomes:z.record(z.string(),z.number()),parts:z.array(z.object({part:z.string(),total:z.number(),reviewed:z.number()}))}),scope_note:z.string()});
+export type C2Profile=z.infer<typeof C2ProfileSchema>;
+export const C2_OUTCOME_LABELS:Record<z.infer<typeof C2OutcomeSchema>,string>={not_reviewed:"尚未核對",disclosed:"有披露證據",partially_disclosed:"披露未完整",not_located:"未找到披露",conflict:"與條款有直接衝突",explanation_claim:"有解釋，待核實",not_applicable:"有不適用依據",applicability_pending:"適用性待確認",external_evidence_needed:"需補外部資料"};
 export const ConsistencyReportSchema = z.object({
   schema_version: z.literal("financebuddy-consistency-1"),
   run_id: ConsistencyRunSchema,
@@ -14,14 +27,22 @@ export const ConsistencyReportSchema = z.object({
     sha256: z.string().regex(/^[a-f0-9]{64}$/), page_count: z.number().int().positive(),
     cover_year_found: z.boolean(), identity_confirmed: z.boolean(), textless_pages: z.array(z.number().int()),
     source_id:z.string().optional(),source_url:z.string().optional(),authority:z.string().optional(),fiscal_year:z.string().optional(),
-  })).min(4).max(8),
+  })).min(1).max(8),
   comparisons:z.array(ConsistencyComparisonSchema),
-  history:z.object({status:z.enum(["ready","unavailable","not_requested"]),fiscal_year:z.string(),source:z.string(),reason:z.string().optional(),catalog_revision:z.string().optional()}),
+  // Presentation annotations remain outside checks so emphasis cannot reset an unsaved edit.
+  source_focus:z.record(z.string().min(1).max(200),z.array(z.object({
+    slot:ConsistencySourceSlotSchema,page:z.number().int().positive(),quote:z.string().min(1),
+    phrases:z.array(z.string().min(1).max(120)).min(1).max(4),
+  }).strict()).min(1).max(8)).optional().catch(undefined),
+  history:z.object({status:z.enum(["ready","unavailable","not_requested"]),fiscal_year:z.string(),source:z.string(),reason:z.string().optional(),catalog_revision:z.string().optional(),missing_slots:z.array(ConsistencySourceSlotSchema).optional()}),
   checks: z.array(z.object({
-    id: z.string(), category: z.enum(["metric", "page_numbers", "basis", "cross_report", "internal", "restatement"]),
+    id: z.string(), category: z.enum(["metric", "page_numbers", "basis", "cross_report", "internal", "restatement", "regulatory"]),
     status: z.enum(["matched", "difference", "pending"]), title: z.string(), reason: z.string(),
     review_state: ConsistencyReviewStateSchema.optional(),
+    reader_copy:z.object({title:z.string().max(60),problem:z.string().max(160),next_step:z.string().max(160),action_kind:z.enum(["edit","verify","supplement"]).optional()}).optional(),
     semantic_kind: ConsistencyComparisonSchema.optional(),
+    regulatory:C2CheckSchema.optional(),
+    recommendation:ConsistencyRecommendationSchema.optional(),
     refs: z.array(z.object({slot: ConsistencySourceSlotSchema, page: z.number().int().positive(),
       quote: z.string(), value: z.string().optional(), unit: z.string().optional(),unit_basis:z.string().optional(),
       unit_label:z.string().optional(),highlight_texts:z.array(z.string().max(220)).max(8).optional()})),
@@ -31,6 +52,7 @@ export const ConsistencyReportSchema = z.object({
     metric_checks:z.number(),numeric_facts:z.number(),matched:z.number(),differences:z.number(),pending:z.number(),
     historical_pages:z.number(),internal_checks:z.number(),restatement_checks:z.number(),not_checked:z.number().optional(),needs_confirmation:z.number().optional()}),
   all_numbers_confirmed: z.literal(false), all_basis_confirmed: z.literal(false), limits: z.array(z.string()),
+  compliance:C2ReviewSchema.optional(),
   semantic:z.object({status:z.enum(["running","completed","partial","failed"]),job_id:z.string(),model:z.string(),
     reasoning_effort:z.string(),context_tokens:z.number(),completed_tasks:z.number(),total_tasks:z.number(),started_at:z.string().optional(),updated_at:z.string(),
     findings_count:z.number(),matched_count:z.number(),phase:z.string().optional(),error:z.string().optional(),gaps:z.array(z.string()),
@@ -41,6 +63,14 @@ export type ConsistencyReport = z.infer<typeof ConsistencyReportSchema>;
 export type ConsistencySlot = z.infer<typeof ConsistencySlotSchema>;
 export type ConsistencySourceSlot = z.infer<typeof ConsistencySourceSlotSchema>;
 export type ConsistencyComparison = z.infer<typeof ConsistencyComparisonSchema>;
+export function availableConsistencyComparisons(slots: readonly ConsistencySlot[]): ConsistencyComparison[] {
+  const has = new Set(slots);
+  return [
+    ...(slots.length ? ["internal", "restatement"] as const : []),
+    ...(["esg", "annual"].some(kind => has.has(`${kind}_zh` as ConsistencySlot) && has.has(`${kind}_en` as ConsistencySlot)) ? ["bilingual"] as const : []),
+    ...(slots.some(s => s.startsWith("esg_")) && slots.some(s => s.startsWith("annual_")) ? ["cross_report"] as const : []),
+  ];
+}
 export function consistencyCheckState(check: ConsistencyReport['checks'][number]): z.infer<typeof ConsistencyReviewStateSchema> {
   if (check.review_state) return check.review_state;
   if (check.category === "page_numbers") return "candidate";

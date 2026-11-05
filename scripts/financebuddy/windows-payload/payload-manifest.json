@@ -1,0 +1,221 @@
+{
+  "schema": 1,
+  "files": {
+    ".gitattributes": {
+      "sha256": "3131783d82f971e1a661deab7c0888410a6cdf225968b5a0989816e70a1878c6",
+      "size": 32
+    },
+    "cuby/config/c2-full-catalog.json": {
+      "sha256": "2644c29ff71db3e7c967b5b198dd26fd4ffb50561089a60278ac80f41c6c0bbd",
+      "size": 94769
+    },
+    "cuby/config/c2-ghg-checklist.json": {
+      "sha256": "a18921cb5a2216b3e2ec9775d0589525e90f06a4ecc3e59ff5297ea5c5a6d355",
+      "size": 6348
+    },
+    "cuby/config/peer-report-catalog.json": {
+      "sha256": "8d6e378d60a03c3d7b802e51e436ec013c497988a98898894b72874550524778",
+      "size": 963
+    },
+    "cuby/config/reader-catalog.json": {
+      "sha256": "8c1f6e8a8f0cc2d4e4a74c436878676c6ce7be8fdccfd2b5e060ebaac22e6901",
+      "size": 20
+    },
+    "cuby/config/yeebo-public-reports.json": {
+      "sha256": "f77e08a4663173015cfa83bcd1053528d930e87e70cc60a3090c8c7846be5f34",
+      "size": 6251
+    },
+    "cuby/reader/app.js": {
+      "sha256": "c2729450f74ca56e6d78c12e8f05c19ebfbbd9700dc75b90b836873bf8552f2e",
+      "size": 13499
+    },
+    "cuby/reader/index.html": {
+      "sha256": "41f561530bf1c38aaa9f3580121116aafa168d315146246041333e3244d3efc7",
+      "size": 4080
+    },
+    "cuby/reader/style.css": {
+      "sha256": "de8776bb3e19b971ddc8c97d4abbf295a07dcbe5025b12e87e49bae8c66e0ad2",
+      "size": 10822
+    },
+    "cuby/requirements-local.txt": {
+      "sha256": "4f88c0dd81aafc34a7b498982640bb54d4091bdb1190c1d54ada6c566dda623f",
+      "size": 48
+    },
+    "cuby/service/financebuddy.py": {
+      "sha256": "7202dc787fa1eb7931c31ec0d89413caf0ea1c2dc1162ba60d358d936c287771",
+      "size": 24608
+    },
+    "cuby/service/knowledge_client.py": {
+      "sha256": "174c974c1be8ed580baad6249dd554554deec09e54d2dd55bc5dd6888764a223",
+      "size": 3632
+    },
+    "cuby/service/local_server.py": {
+      "sha256": "e4b8dc1f598f65b81476bb5e5d75983c17102442b67cd8a092746c7971550573",
+      "size": 44112
+    },
+    "cuby/service/server.py": {
+      "sha256": "fc3c0d2a927d931a4f030548adb408a5fba87f3a273e2e0087eda1ecbe1d4cf9",
+      "size": 4199
+    },
+    "dataset/rules/HKEX_主板C2_ESG守則_EN.pdf": {
+      "sha256": "4bbf50f7f9231953e26d0bf391d53aa178dd9d4c774806db97072fa22dbb4746",
+      "size": 142306
+    },
+    "install_packaged.py": {
+      "sha256": "d3e6bc7f1762f38becf9dc5a866b72927be966476c4130dfcc1ae1707ddd4bed",
+      "size": 3918
+    },
+    "planning/workflow-input-example.json": {
+      "sha256": "a8e3abe58ad05e455d449e9cfe6d568f4575945c0b85e0b4ff0c0c4680492540",
+      "size": 2076
+    },
+    "README.md": {
+      "sha256": "b496a50b07ef7ea85602986c29f5d06fe2f381835c0a6cdf294abc956d0f95b8",
+      "size": 1093
+    },
+    "scripts/build_c2_catalog.py": {
+      "sha256": "530a2bea369d0e05c7c949bdc884d1464d7e3cc0a1cd16fdc9332ae98bf6f757",
+      "size": 28244
+    },
+    "scripts/bundled_sources.py": {
+      "sha256": "f511fd16fca769e833abf067a1e5acdbf7d6714500a420a25cab3ccdab840561",
+      "size": 1003
+    },
+    "scripts/c2_disclosure.py": {
+      "sha256": "aa1b1c1c07a9612ce77b95165e9e67628c567dd712f264d33b151cafc4e9a69b",
+      "size": 43218
+    },
+    "scripts/c2_review.py": {
+      "sha256": "22b1d88a8fb4247cba55a20d560591c6970cd0cb8c94d657dc8359cd0ebd7251",
+      "size": 35499
+    },
+    "scripts/c2_test_report.py": {
+      "sha256": "b4acb555b22ea83e423f6898fbaf659ae954a113798a269893d83274ce35c06c",
+      "size": 4836
+    },
+    "scripts/consistency_editor.py": {
+      "sha256": "c1ea5f3b52eff8fa832e782b9fdae2c171b1db021d11e65edb77db9ee32d2d33",
+      "size": 29693
+    },
+    "scripts/consistency_followups.py": {
+      "sha256": "dc4b02ec4b0b4ee3b0acdc7aecb9a9c9888685b5e4455122483d1df86a367eb0",
+      "size": 19394
+    },
+    "scripts/consistency_legacy_tables.py": {
+      "sha256": "263a60a54d814e6c413b8d6c204ccdbac19093efa3d607de92087de03f2d25aa",
+      "size": 4371
+    },
+    "scripts/consistency_pdf.py": {
+      "sha256": "ca4005eb054a17c04edf6a0a9081a8d7e3859680f607b1430fbc31bf4c56be00",
+      "size": 29477
+    },
+    "scripts/consistency_presentation.py": {
+      "sha256": "51d1f70acf4e387348cbd7f68a42d60e4ea14f4cdc0f3b068b982a17404c6212",
+      "size": 9806
+    },
+    "scripts/consistency_recommendations.py": {
+      "sha256": "530c668dc29162640120cdf6b87c0856df3def0c408a52da520d4d8d2de0f55e",
+      "size": 4908
+    },
+    "scripts/consistency_recovery.py": {
+      "sha256": "387c62c7e032dc9625ca6b7a2122ab173fc77416041a18eb563fe09d682f182a",
+      "size": 8953
+    },
+    "scripts/consistency_semantic.py": {
+      "sha256": "bc20f74366c2849f85c35d2eade2d958ab3036e023312aedaf3a0f05195bceb3",
+      "size": 35151
+    },
+    "scripts/emissions_baseline.py": {
+      "sha256": "56bc56a03136e5e4ba3b0b74120194e309854d28f6cfcf746a122e770de95ea9",
+      "size": 26646
+    },
+    "scripts/energy_baseline.py": {
+      "sha256": "0564505e581f1dd6c2c33c717b3b3d651ec7e6b3ff896ce11b6846786d88689b",
+      "size": 25179
+    },
+    "scripts/fetch_hkex_c2.ps1": {
+      "sha256": "754d74cb52828b7903051d716579e0f9be5b39e236c424f703cf640e19464f69",
+      "size": 556
+    },
+    "scripts/fetch_hkex_c2_full.ps1": {
+      "sha256": "d79aeb5a578c63b8d165d79a803a94e3f0e85400d16e01271ff84ca6fd00ec10",
+      "size": 375
+    },
+    "scripts/finance_projects.py": {
+      "sha256": "97dd722ffe5297eb65dff6fd2304166450a7f8fe8a5efe7a55f07624419abc3c",
+      "size": 15914
+    },
+    "scripts/financebuddy_workflow.py": {
+      "sha256": "c8633464480ba6c5357f64ccd7d57dbf3be7f8a86ad55733447266fc8a64f29a",
+      "size": 19610
+    },
+    "scripts/model_tool_json.py": {
+      "sha256": "bc756b1a05e6b1406a4178528f18540b4502a96d6627eb7c62e6855a5e2ae06c",
+      "size": 879
+    },
+    "scripts/peer_comparison.py": {
+      "sha256": "8143e71657397a86773e8138d81de72671db3f5a35a7afd707886501f6c1d503",
+      "size": 13202
+    },
+    "scripts/read_public_pdf.py": {
+      "sha256": "eb2d33299d1798a6dc987dde687ff63fd04725bfeacf72fc8e2f20818ed76e9b",
+      "size": 7954
+    },
+    "scripts/reader_language.py": {
+      "sha256": "45eb4b6073d81ce4c9a4160d2aabba5bfec74ac52524b3bb3c8112fee12dc9fa",
+      "size": 9306
+    },
+    "scripts/report_consistency.py": {
+      "sha256": "51fc250dd7ee192b4c293e69d78fb913ae1d4b1ec812b13a12c733197b91fe9a",
+      "size": 7830
+    },
+    "scripts/report_consistency_bundle.py": {
+      "sha256": "5b273144f5dfced528ee7dd994103f413413359b6a437aebe519fa13266170a6",
+      "size": 42102
+    },
+    "scripts/report_input.py": {
+      "sha256": "1cd6bb66e0af63cb89cf1c45c635e2796d6f124067d1a7f24ceb73ee806e754e",
+      "size": 19303
+    },
+    "scripts/review_reader.py": {
+      "sha256": "60d56cfcf1f0232e1e4c6767f87022e291461b3d3a444fc5a9309fb8ce5fde71",
+      "size": 17869
+    },
+    "scripts/review_suggestions.py": {
+      "sha256": "b7f9e63ba6adaf8927d5dcf05f5996fb570dc83fc81088c29975b8f14ba2a363",
+      "size": 13510
+    },
+    "scripts/source_focus.py": {
+      "sha256": "bfdb8e292791a232e1099c5eeb3d721d1471a76b581cf8c56a11f625a809850e",
+      "size": 5168
+    },
+    "skills/financebuddy-baseline/SKILL.md": {
+      "sha256": "0da2b2f500f6cc9362d21e6848862324b54489c2f4bdf7cde15348874983bfd2",
+      "size": 3644
+    },
+    "skills/financebuddy-c2-review/SKILL.md": {
+      "sha256": "d1fcce4ae95e69ffdc9a78beb18cba88ad7e0d11ccef0d52f22daa39ea400314",
+      "size": 5435
+    },
+    "skills/financebuddy-consistency/SKILL.md": {
+      "sha256": "93099bcdc9a8bd0dbdfc48dae4a1ede16037c040a72aee78fcd61a0b97cca886",
+      "size": 8931
+    },
+    "skills/financebuddy-energy/SKILL.md": {
+      "sha256": "3e09bbd975cbc4a96c5e5f998f5a7ae6e976c46a15c0a14fb8c86275ef38f094",
+      "size": 2941
+    },
+    "skills/financebuddy-peer-comparison/SKILL.md": {
+      "sha256": "3e6801d0d78b94f0d4ce09c50f3599796e9ca3ed713eba69f071090a7f94425d",
+      "size": 13312
+    },
+    "skills/financebuddy-qa/SKILL.md": {
+      "sha256": "51eae6838c95166db42c46d2ef611e06d81e6477bf5707d677c571f5fd35aac5",
+      "size": 7678
+    },
+    "skills/financebuddy-reporting/SKILL.md": {
+      "sha256": "07625c7f5bf4e88fd41ad81a5b64d160c7f5f6bf162957d1d624673cb66bc093",
+      "size": 4093
+    }
+  }
+}

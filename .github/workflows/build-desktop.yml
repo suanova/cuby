@@ -117,12 +117,17 @@ jobs:
       # package-win-local.sh defaults this to cn, so a developer machine and CI
       # have been downloading their packaging binaries from different places.
       CUBY_PACKAGE_MIRROR: ${{ needs.resolve.outputs.mirror }}
+      CUBY_REQUIRE_FINANCEBUDDY_RUNTIME: ${{ github.ref_name == 'financebuddy' && '1' || '0' }}
+      OPENCLAW_DISABLE_PLUGIN_REGISTRY_MIGRATION: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - run: npm ci
       - name: Build the Windows installer
         shell: bash
@@ -154,10 +159,25 @@ jobs:
           watcher_pid=$!
           trap 'kill "$watcher_pid" 2>/dev/null || true' EXIT
 
+          if [[ -f scripts/financebuddy/windows-payload/install_packaged.py ]]; then
+            export CUBY_FINANCEBUDDY_SOURCE_OUTPUT="$PWD/artifacts/financebuddy-third-party-source"
+          fi
           bash scripts/package-win.sh \
             --version "${{ needs.resolve.outputs.version }}" \
             --arch x64 \
-            --sign unsigned
+            --sign unsigned \
+            --publish never
+      - name: Smoke test bundled FinanceBuddy from the unpacked installer
+        if: ${{ hashFiles('scripts/financebuddy/windows-payload/install_packaged.py') != '' }}
+        shell: bash
+        run: python -B -X utf8 scripts/financebuddy/smoke-windows-runtime.py App/shell/desktop/release/win-unpacked
+      - name: Upload matching FinanceBuddy dependency source
+        if: ${{ hashFiles('scripts/financebuddy/windows-payload/install_packaged.py') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: financebuddy-third-party-source
+          path: artifacts/financebuddy-third-party-source/
+          if-no-files-found: error
       - name: Upload the installer
         uses: actions/upload-artifact@v4
         with:

@@ -3,11 +3,14 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Search } from "../pages/memory/memory-prototype-icons.js";
 import type { MemmyAgentProject } from "../api/memmy-agent-client.js";
 import type { AgentTaskView } from "../state/agent-chat-slice.js";
+import { matchesProjectDiscovery, type ProjectDiscoveryMap } from "../pages/project-discovery.js";
 
 export interface SearchPaletteProps {
   open: boolean;
   tasks: AgentTaskView[];
   projects?: MemmyAgentProject[];
+  projectMetadata?: ProjectDiscoveryMap;
+  onSelectProject?: (project: MemmyAgentProject) => void;
   projectRegistryState?: "ready" | "corrupt";
   onClose: () => void;
   onSelectTask: (task: AgentTaskView) => void;
@@ -42,9 +45,16 @@ export function SearchPalette(props: SearchPaletteProps) {
     projectRegistryState,
     standaloneLabel: props.standaloneLabel,
     missingProjectLabel: props.missingProjectLabel,
-    registryUnavailableLabel: props.registryUnavailableLabel
+    registryUnavailableLabel: props.registryUnavailableLabel,
+    projectMetadata: props.projectMetadata,
   });
   const displayTasks = query.trim() ? filtered : tasks.slice(0, 12);
+  const projectMatches = props.onSelectProject && projectRegistryState === "ready"
+    ? [...projects].sort((left, right) => Number(right.pinned) - Number(left.pinned) || right.createdAt.localeCompare(left.createdAt))
+      .filter(project => matchesProjectDiscovery(project, query, props.projectMetadata))
+    : [];
+  const displayProjects = query.trim() ? projectMatches : projectMatches.slice(0, 12);
+  const resultCount = displayProjects.length + displayTasks.length;
 
   useEffect(() => {
     if (open) {
@@ -77,14 +87,18 @@ export function SearchPalette(props: SearchPaletteProps) {
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setActiveIndex((i) => Math.min(i + 1, displayTasks.length - 1));
+      setActiveIndex((i) => Math.max(0, Math.min(i + 1, resultCount - 1)));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setActiveIndex((i) => Math.max(i - 1, 0));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      const task = displayTasks[activeIndex];
-      if (task) onSelectTask(task);
+      const project = displayProjects[activeIndex];
+      if (project) props.onSelectProject?.(project);
+      else {
+        const task = displayTasks[activeIndex - displayProjects.length];
+        if (task) onSelectTask(task);
+      }
     }
   }
 
@@ -104,15 +118,32 @@ export function SearchPalette(props: SearchPaletteProps) {
           />
         </div>
         <div className="search-palette-list" ref={listRef} role="listbox">
-          {displayTasks.length === 0 && (
+          {resultCount === 0 && (
             <div className="search-palette-empty">{emptyLabel}</div>
           )}
-          {displayTasks.map((task, i) => {
+          {displayProjects.map((project, index) => <button
+            key={`project:${project.id}`}
+            type="button"
+            role="option"
+            aria-selected={index === activeIndex}
+            aria-label={[project.name, props.projectMetadata?.[project.id]?.summary, "展開項目"].filter(Boolean).join(" · ")}
+            title={project.rootPath}
+            className={`search-palette-item${index === activeIndex ? " search-palette-item--active" : ""}`}
+            onMouseEnter={() => setActiveIndex(index)}
+            onClick={() => props.onSelectProject?.(project)}
+          >
+            <span className="search-palette-item-title">{project.name}</span>
+            {props.projectMetadata?.[project.id] && <span className="search-palette-item-preview">{props.projectMetadata[project.id]!.summary}</span>}
+            <span className="search-palette-item-preview">展開項目</span>
+          </button>)}
+          {displayTasks.map((task, taskIndex) => {
+            const i = displayProjects.length + taskIndex;
             const ownership = resolveTaskOwnership(task, projects, {
               projectRegistryState,
               standaloneLabel: props.standaloneLabel,
               missingProjectLabel: props.missingProjectLabel,
-              registryUnavailableLabel: props.registryUnavailableLabel
+              registryUnavailableLabel: props.registryUnavailableLabel,
+              projectMetadata: props.projectMetadata,
             });
             const taskLabel = [task.title || untitledLabel || "", ownership].filter(Boolean).join(" · ");
             return (
@@ -122,7 +153,7 @@ export function SearchPalette(props: SearchPaletteProps) {
               role="option"
               aria-selected={i === activeIndex}
               aria-label={taskLabel}
-              title={ownership || undefined}
+              title={props.projectMetadata ? task.cwd || ownership || undefined : ownership || undefined}
               className={`search-palette-item${i === activeIndex ? " search-palette-item--active" : ""}`}
               onMouseEnter={() => setActiveIndex(i)}
               onClick={() => onSelectTask(task)}
@@ -152,13 +183,15 @@ export function filterTasks(
       task.title,
       task.preview,
       ...task.tags,
-      resolveTaskOwnership(task, projects, labels)
+      resolveTaskOwnership(task, projects, labels),
+      task.cwd,
     ].join(" ").toLowerCase();
     return haystack.includes(q);
   });
 }
 
 interface TaskOwnershipLabels {
+  projectMetadata?: ProjectDiscoveryMap;
   projectRegistryState?: "ready" | "corrupt";
   standaloneLabel?: string;
   missingProjectLabel?: string;
@@ -173,7 +206,10 @@ export function resolveTaskOwnership(
   const project = task.groupProjectId
     ? projects.find((candidate) => candidate.id === task.groupProjectId) ?? null
     : null;
-  if (project) return `${project.name} · ${task.cwd}`;
+  if (project) {
+    // Root metadata describes its selected project version, not every historical task.
+    return labels.projectMetadata ? project.name : `${project.name} · ${task.cwd}`;
+  }
   if (task.projectId == null) return "";
   const unavailableLabel = labels.projectRegistryState === "corrupt"
     ? labels.registryUnavailableLabel

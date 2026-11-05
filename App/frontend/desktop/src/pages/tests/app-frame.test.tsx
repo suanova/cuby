@@ -175,6 +175,69 @@ describe("AppFrame", () => {
       .toEqual([projectB.id]);
   });
 
+  it("shows newest-created projects first, including empty projects, with stable ties and unchanged inputs", () => {
+    const oldest = { ...project("oldest"), createdAt: "2026-07-01T00:00:00.000Z" };
+    const tiedZulu = { ...project("tie-z"), createdAt: "2026-08-01T00:00:00.000Z" };
+    const tiedAlpha = { ...project("tie-a"), createdAt: "2026-08-01T00:00:00.000Z" };
+    const newestEmpty = { ...project("newest-empty"), createdAt: "2026-11-04T00:00:00.000Z" };
+    const projects = [oldest, tiedZulu, tiedAlpha, newestEmpty];
+    const tasks = [
+      task("oldest-second", { projectId: oldest.id, groupProjectId: oldest.id }),
+      task("tied", { projectId: tiedZulu.id, groupProjectId: tiedZulu.id }),
+      task("oldest-first", { projectId: oldest.id, groupProjectId: oldest.id })
+    ];
+    const before = structuredClone({ projects, tasks });
+    projects.forEach(Object.freeze);
+    tasks.forEach(Object.freeze);
+    Object.freeze(projects);
+    Object.freeze(tasks);
+
+    const tree = deriveSidebarPlacement(tasks, projects);
+
+    expect(tree.projects.map((node) => node.project.id))
+      .toEqual(["newest-empty", "tie-z", "tie-a", "oldest"]);
+    expect(tree.projects[0]).toEqual({ project: newestEmpty, tasks: [] });
+    expect(tree.projects[3]!.tasks).toEqual([tasks[0], tasks[2]]);
+    expect(tree.projects[0]!.project).toBe(newestEmpty);
+    expect(tree.projects[3]!.tasks[0]).toBe(tasks[0]);
+    expect({ projects, tasks }).toEqual(before);
+  });
+
+  it("orders pinned and archived project cohorts while preserving task membership and order", () => {
+    const ordinaryOlder = { ...project("ordinary-older"), createdAt: "2026-07-01T00:00:00.000Z" };
+    const pinnedOlder = { ...project("pinned-older", true), createdAt: "2026-08-01T00:00:00.000Z" };
+    const pinnedNewer = { ...project("pinned-newer", true), createdAt: "2026-09-01T00:00:00.000Z" };
+    const ordinaryNewest = { ...project("ordinary-newest"), createdAt: "2026-11-04T00:00:00.000Z" };
+    const tasks = [
+      task("archived-newest", { archived: true, projectId: ordinaryNewest.id, groupProjectId: ordinaryNewest.id }),
+      task("standalone-second"),
+      task("pinned-project-second", { projectId: pinnedNewer.id, groupProjectId: pinnedNewer.id }),
+      task("pinned-task-second", { pinned: true, projectId: ordinaryOlder.id, groupProjectId: ordinaryOlder.id }),
+      task("archived-pinned-second", { archived: true, pinned: true, projectId: pinnedNewer.id, groupProjectId: pinnedNewer.id }),
+      task("pinned-project-first", { projectId: pinnedNewer.id, groupProjectId: pinnedNewer.id }),
+      task("standalone-first"),
+      task("archived-pinned-first", { archived: true, projectId: pinnedNewer.id, groupProjectId: pinnedNewer.id }),
+      task("pinned-task-first", { pinned: true }),
+      task("archived-standalone-second", { archived: true }),
+      task("archived-standalone-first", { archived: true })
+    ];
+    const tree = deriveSidebarPlacement(tasks, [ordinaryOlder, pinnedOlder, pinnedNewer, ordinaryNewest]);
+    const activeView = deriveVisibleSidebarPlacement(tree, { projectTasks: false, standaloneTasks: false });
+    const archivedView = deriveVisibleSidebarPlacement(tree, { projectTasks: true, standaloneTasks: true });
+
+    expect(activeView.pinnedProjects.map((node) => node.project.id)).toEqual(["pinned-newer", "pinned-older"]);
+    expect(activeView.projects.map((node) => node.project.id)).toEqual(["ordinary-newest", "ordinary-older"]);
+    expect(activeView.pinnedProjects[0]!.tasks.map((item) => item.chatId)).toEqual(["pinned-project-second", "pinned-project-first"]);
+    expect(activeView.pinnedTasks.map((item) => item.chatId)).toEqual(["pinned-task-second", "pinned-task-first"]);
+    expect(activeView.standaloneTasks.map((item) => item.chatId)).toEqual(["standalone-second", "standalone-first"]);
+    expect(archivedView.pinnedProjects).toEqual([]);
+    expect(archivedView.pinnedTasks).toEqual([]);
+    expect(archivedView.projects.map((node) => node.project.id))
+      .toEqual(["ordinary-newest", "pinned-newer", "pinned-older", "ordinary-older"]);
+    expect(archivedView.projects[1]!.tasks.map((item) => item.chatId)).toEqual(["archived-pinned-second", "archived-pinned-first"]);
+    expect(archivedView.standaloneTasks.map((item) => item.chatId)).toEqual(["archived-standalone-second", "archived-standalone-first"]);
+  });
+
   it("marks the current sidebar session as selected", () => {
     const source = readFileSync(resolve(__dirname, "..", "app-frame.tsx"), "utf8");
     const html = renderToString(

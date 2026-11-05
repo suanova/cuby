@@ -1,5 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
-import { FinanceReaderApi } from "../../../src/entrypoints/frontend-bridge/finance-reader-api.js";
+import { FinanceReaderApi, isFinanceReaderTool } from "../../../src/entrypoints/frontend-bridge/finance-reader-api.js";
+
+it("allows full C2 UI actions through the gateway's fixed tool guard", () => {
+  expect(isFinanceReaderTool("mcp_financebuddy_reports_start_c2_disclosure_review")).toBe(true);
+  expect(isFinanceReaderTool("mcp_financebuddy_reports_read_c2_rule_page")).toBe(true);
+  expect(isFinanceReaderTool("mcp_financebuddy_reports_shell")).toBe(false);
+  expect(isFinanceReaderTool("mcp_other_read_c2_rule_page")).toBe(false);
+});
 
 const sha = "a".repeat(64);
 const path = "outputs/c2-reviews/business-review/review.json";
@@ -52,6 +59,33 @@ function setup(url = "http://127.0.0.1:60939") {
 }
 
 describe("Native Cuby FinanceBuddy adapter", () => {
+  it("saves the selected project's peer companies through a fixed operation and rejects credentials",async()=>{
+    const project={id:'a'.repeat(32),title:'Project',external_id:null,revision:1,latest_run:null,created_at:'2026-01-01',updated_at:'2026-01-01',versions:[],peer_companies:[{name:'Example'}]};
+    const tool=vi.fn(async()=>project),api=new FinanceReaderApi(tool);
+    expect(await api.request({action:'project-peers',project_id:project.id,expected_revision:0,companies:project.peer_companies})).toEqual(project);
+    expect(tool).toHaveBeenCalledWith('mcp_financebuddy_reports_manage_finance_project',{operation:'peers',project_id:project.id,expected_revision:0,companies:project.peer_companies});
+    tool.mockClear();await expect(api.request({action:'project-peers',project_id:project.id,expected_revision:1,companies:[{name:'Example',apiKey:'untrusted'}]})).rejects.toThrow('Invalid report reader request');
+    expect(tool).not.toHaveBeenCalled();
+  });
+  it("prepares automatic suggestions through the fixed tool without accepting any edits",async()=>{
+    const state={run_id:"20310101T000000-aabbccdd",base_sha256:sha,revision:0,proposals:{},decisions:{},history:[],preparation:{id:'batch',status:'running',updated_at:'2031-01-01',total:10,ready:2,failed:0}};
+    const tool=vi.fn(async()=>state),api=new FinanceReaderApi(tool);
+    expect(await api.request({action:'consistency-editor',run_id:state.run_id})).toEqual(state);
+    expect(tool).toHaveBeenLastCalledWith('mcp_financebuddy_reports_edit_consistency_draft',{operation:'read',run_id:state.run_id});
+    await api.request({action:'consistency-prepare',run_id:state.run_id});
+    expect(tool).toHaveBeenLastCalledWith('mcp_financebuddy_reports_edit_consistency_draft',{operation:'prepare',run_id:state.run_id,retry_failed:true});
+    tool.mockClear();
+    await expect(api.request({action:'consistency-prepare',run_id:state.run_id,config_path:'untrusted',facts_confirmed:true})).rejects.toThrow('Invalid report reader request');
+    expect(tool).not.toHaveBeenCalled();
+  });
+  it("routes C2 through fixed tools and rejects supplied credentials or external rule image URLs",async()=>{
+    const tool=vi.fn(async()=>({data_url:'https://attacker.example/rules.png'})),api=new FinanceReaderApi(tool),run_id='20310101T000000-aabbccdd';
+    const profile={period_start:'2031-04-01',period_end:'2032-03-31',part_d_mandatory:'unknown'};
+    await expect(api.request({action:'c2-start',run_id,profile:{...profile,apiKey:'untrusted'}})).rejects.toThrow('Invalid report reader request');
+    expect(tool).not.toHaveBeenCalled();
+    await expect(api.request({action:'c2-rule-page',run_id,page:5})).rejects.toThrow('C2規則頁面無效');
+    expect(tool).toHaveBeenCalledWith('mcp_financebuddy_reports_read_c2_rule_page',{run_id,page:5});
+  });
   it("routes persistent projects and review decisions only through their fixed tools", async()=>{
     const state={run_id:"20310101T000000-aabbccdd",base_sha256:sha,revision:1,proposals:{},decisions:{},history:[]};
     const tool=vi.fn(async()=>state),api=new FinanceReaderApi(tool);
@@ -79,6 +113,9 @@ describe("Native Cuby FinanceBuddy adapter", () => {
   it("refuses untrusted upload paths before invoking the business tool", async () => {
     const tool=vi.fn();const api=new FinanceReaderApi(tool);
     await expect(api.request({action:"consistency-build",fiscal_year:"2031/32",documents:["esg_zh","esg_en","annual_zh","annual_en"].map(slot=>({slot,path:"C:/private/report.pdf"}))})).rejects.toThrow("已上載");
+    expect(tool).not.toHaveBeenCalled();
+    await expect(api.request({action:'project-supplement',project_id:'a'.repeat(32),run_id:'20310101T000000-aabbccdd',confirmed:true,documents:[{slot:'esg_en',path:'C:/private/report.pdf'}]})).rejects.toThrow('已上載');
+    await expect(api.request({action:'project-supplement',project_id:'a'.repeat(32),run_id:'20310101T000000-aabbccdd',confirmed:false,documents:[{slot:'esg_en',path:'uploaded.pdf'}]})).rejects.toThrow('Invalid report reader request');
     expect(tool).not.toHaveBeenCalled();
   });
   it("routes reversible drafts through fixed authenticated resources", async () => {

@@ -1,8 +1,9 @@
 import crypto from "node:crypto";
 import path from "node:path";
 import fs from "node:fs";
-import { ConsistencyReportSchema } from "@memmy/local-api-contracts";
+import { ConsistencyReportSchema, InputInspectionSchema, InputKnowledgeSchema, type InputInspection } from "@memmy/local-api-contracts";
 import { FinanceProjectSchema, FinanceProjectListSchema, FinanceProjectBuildSchema, ConsistencyEditorSchema, ConsistencyExportSchema, type FinanceProject } from "@memmy/local-api-contracts";
+import { ConsistencyFollowupsSchema, ConsistencyFollowupsExportSchema } from "@memmy/local-api-contracts";
 import type { FinanceHistory } from "./finance-history.js";
 import {
   FinanceCatalogSchema,
@@ -14,6 +15,10 @@ import {
 } from "@memmy/local-api-contracts";
 
 export type FinanceToolCall = (name: string, args: Record<string, unknown>) => Promise<unknown>;
+const FINANCE_READER_TOOLS = ["start_c2_disclosure_review", "read_c2_rule_page", "manage_finance_project", "edit_consistency_draft", "list_c2_reviews", "open_c2_reader", "build_consistency_review", "start_consistency_semantic", "read_consistency_review", "read_consistency_page"] as const;
+export function isFinanceReaderTool(name: string): boolean {
+  return FINANCE_READER_TOOLS.some(tool => name === `mcp_financebuddy_reports_${tool}`);
+}
 export class FinanceReaderError extends Error {
   constructor(
     message: string,
@@ -27,12 +32,14 @@ export class FinanceReaderError extends Error {
 export class FinanceReaderApi {
   private handles = new Map<string, { base: string; sha: string; expires: number }>();
   private downloads = new Map<string,{file:string;root:string;sha:string;bytes:number;file_name:string;mime:string;expires:number}>();
+  private inspections=new Map<string,{path:string;sha:string;bytes:number;result:InputInspection;expires:number}>();
   constructor(
     private callTool: FinanceToolCall,
     private fetchFn: typeof fetch = fetch,
     private mediaRoot?: string,
     private history?: FinanceHistory,
     private workspaceRoot?: string,
+    private resolveInputMedia?: (ref:string)=>string,
   ) {}
 
   private async connectProject(project:FinanceProject) {
@@ -45,7 +52,7 @@ export class FinanceReaderApi {
     return project;
   }
 
-  private async tool(name: "manage_finance_project" | "edit_consistency_draft" | "list_c2_reviews" | "open_c2_reader" | "build_consistency_review" | "start_consistency_semantic" | "read_consistency_review" | "read_consistency_page", args: Record<string, unknown>) {
+  private async tool(name: typeof FINANCE_READER_TOOLS[number], args: Record<string, unknown>) {
     const raw = await this.callTool(`mcp_financebuddy_reports_${name}`, args);
     try {
       return typeof raw === "string" ? JSON.parse(raw) : raw;
@@ -106,6 +113,56 @@ export class FinanceReaderApi {
     const parsed = FinanceRequestSchema.safeParse(raw);
     if (!parsed.success) throw new FinanceReaderError("Invalid report reader request.");
     const input = parsed.data;
+    if (input.action === "consistency-followups" || input.action === "consistency-followup-update" || input.action === "consistency-followups-export") {
+      const {action, ...args} = input;
+      const operation = action === "consistency-followups" ? "followups-read" : action === "consistency-followups-export" ? "followups-export" : "followups-update";
+      const parameters: Record<string, unknown> = { ...args };
+      if (input.action === "consistency-followup-update") {
+        delete parameters.operation;
+        parameters.followup_operation = input.operation;
+      }
+      const raw = await this.tool("edit_consistency_draft", { operation, ...parameters }) as Record<string, unknown>;
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new FinanceReaderError("跟進服務回應無效，請重新載入。", 502);
+      if (raw?.status === "followup_conflict") throw new FinanceReaderError(typeof raw.message === "string" ? raw.message : "跟進或來源已更新，請重新載入。", 409);
+      if (raw.status === "followup_invalid") throw new FinanceReaderError(typeof raw.message === "string" ? raw.message : "跟進資料無效，請檢查後重試。", 400);
+      if (input.action === "consistency-followup-update" && (raw.binding_sha256 !== input.expected_binding_sha256 || ![input.expected_revision, input.expected_revision + 1].includes(raw.revision as number)))
+        throw new FinanceReaderError("跟進回應的來源或修訂版本不符。", 409);
+      const decoded = action === "consistency-followups-export" ? ConsistencyFollowupsExportSchema.safeParse(raw) : ConsistencyFollowupsSchema.safeParse(raw);
+      if (!decoded.success) throw new FinanceReaderError("跟進服務回應無效，請重新載入。", 502);
+      const result = decoded.data;
+      if (action !== "consistency-followups-export") {
+        const state = ConsistencyFollowupsSchema.parse(result);
+        if (state.project_id !== input.project_id || state.version_id !== input.version_id || state.run_id !== input.run_id || state.binding_status !== (input.action === "consistency-followups" && input.history_only ? "historical_unvalidated" : "current"))
+          throw new FinanceReaderError("跟進回應與所選項目／版本不符。", 409);
+
+      } else if (result.revision !== (input as {expected_revision:number}).expected_revision || result.binding_sha256 !== (input as {expected_binding_sha256:string}).expected_binding_sha256) {
+        throw new FinanceReaderError("匯出跟進版本已改變，請重新載入。", 409);
+      }
+      return result;
+    }
+
+    if(input.action==="input-knowledge") {
+      if(input.fiscal_year && !this.validFiscalYear(input.fiscal_year))throw new FinanceReaderError("請確認報告財年，例如2026/27。");
+      return InputKnowledgeSchema.parse(await this.tool("manage_finance_project",{operation:"input-knowledge",...(input.fiscal_year?{fiscal_year:input.fiscal_year}:{}),...(input.slots?{slots:input.slots}:{})}));
+    }
+    if(input.action==="input-inspect") {
+      if(!this.resolveInputMedia)throw new FinanceReaderError("請更新本機文件辨認支援。",503);
+      let file:string;try{file=this.resolveInputMedia(input.media_ref);}catch{throw new FinanceReaderError("請重新加入 PDF，文件連結無效或已過期。",400);}
+      const data=this.inputBytes(file),sha=crypto.createHash("sha256").update(data).digest("hex");
+      const result=InputInspectionSchema.parse(await this.tool("manage_finance_project",{operation:"input-inspect",path:file,sha256:sha,file_name:input.file_name}));
+      if(result.pages===0 || result.limits.some(value=>value.startsWith("readable_body_not_found")))throw new FinanceReaderError("未能讀取報告內文。請使用未加密、可選取文字且不超過300頁的 PDF。",400);
+      if(result.sha256!==sha || result.bytes!==data.length || Object.values(result.fields).some(f=>f.status==="identified"&&!f.evidence.length))throw new FinanceReaderError("文件辨認證據不完整，請重新加入。",502);
+      if(crypto.createHash("sha256").update(this.inputBytes(file)).digest("hex")!==sha)throw new FinanceReaderError("文件已變更，請重新加入。",409);
+      for(const [id,value] of this.inspections)if(value.expires<Date.now())this.inspections.delete(id);
+      if(this.inspections.size>=64)this.inspections.delete(this.inspections.keys().next().value!);
+      const inspection_id=crypto.randomUUID();
+      this.inspections.set(inspection_id,{path:file,sha,bytes:data.length,result,expires:Date.now()+30*60_000});
+      return {...result,inspection_id};
+    }
+    if(input.action === "project-peers") {
+      const {action,...args}=input;
+      return this.connectProject(FinanceProjectSchema.parse(await this.tool("manage_finance_project",{operation:"peers",...args})));
+    }
     if (input.action === "project-list") {
       const result=FinanceProjectListSchema.parse(await this.tool("manage_finance_project",{operation:"list"}));
       for(let i=0;i<result.projects.length;i++) result.projects[i]=await this.connectProject(result.projects[i]);
@@ -131,9 +188,11 @@ export class FinanceReaderApi {
     }
     if (input.action === "project-save") {
       if (input.documents) this.validateUploads(input.documents);
+      if(input.documents)this.validateInspections(input.documents,input.fiscal_year);
       if (input.documents && input.run_id) throw new FinanceReaderError("請選上載或沿用底稿其中一種來源。");
       const {action,...args}=input;
-      return this.connectProject(FinanceProjectSchema.parse(await this.tool("manage_finance_project",{operation:"save",...args})));
+      const documents=args.documents?.map(({inspection_id,confirmed_issuer,...doc})=>({...doc,expected_sha256:this.inspections.get(inspection_id!)!.sha}));
+      return this.connectProject(FinanceProjectSchema.parse(await this.tool("manage_finance_project",{operation:"save",...args,...(documents?{documents}:{})})));
     }
     if (input.action === "project-build") {
       const {action,...args}=input;
@@ -141,9 +200,16 @@ export class FinanceReaderApi {
       result.project=await this.connectProject(result.project);
       return result;
     }
-    if (input.action === "consistency-editor" || input.action === "consistency-suggest") {
+    if (input.action === "project-supplement") {
+      this.validateUploads(input.documents);
       const {action,...args}=input;
-      return ConsistencyEditorSchema.parse(await this.tool("edit_consistency_draft",{operation:action==="consistency-editor"?"read":"suggest",...args}));
+      const result=FinanceProjectBuildSchema.parse(await this.tool("manage_finance_project",{operation:"supplement",...args}));
+      result.project=await this.connectProject(result.project);
+      return result;
+    }
+    if (input.action === "consistency-editor" || input.action === "consistency-suggest" || input.action === "consistency-prepare") {
+      const {action,...args}=input;
+      return ConsistencyEditorSchema.parse(await this.tool("edit_consistency_draft",{operation:action==="consistency-editor"?"read":action==="consistency-prepare"?"prepare":"suggest",...args,...(action==="consistency-prepare"?{retry_failed:true}:{})}));
     }
     if (input.action === "consistency-decide") {
       const {action,operation,...args}=input;
@@ -160,23 +226,22 @@ export class FinanceReaderApi {
     if (input.action === "consistency-draft-export") {
       const {action,...args}=input;
       const result=await this.tool("edit_consistency_draft",{operation:"export",...args}) as Record<string,unknown>;
+      if (result.status === "revision_conflict" ||
+          Number.isInteger(result.revision) && result.revision !== input.expected_revision)
+        throw new FinanceReaderError("修訂已更新，請重新載入後再匯出。", 409);
       this.checkLayout(result);
       return this.grantDownload(input.run_id,result);
     }
     if (input.action === "consistency-semantic-start")
       return ConsistencyReportSchema.parse(await this.tool("start_consistency_semantic", {run_id:input.run_id}));
+    if(input.action==="c2-start")return ConsistencyReportSchema.parse(await this.tool("start_c2_disclosure_review",{run_id:input.run_id,profile:input.profile}));
+    if(input.action==="c2-rule-page"){
+      const result=await this.tool("read_c2_rule_page",{run_id:input.run_id,page:input.page}) as {data_url?:unknown};
+      if(typeof result.data_url!=="string"||result.data_url.length>8*1024*1024||!result.data_url.startsWith("data:image/png;base64,iVBORw0KGgo"))throw new FinanceReaderError("C2規則頁面無效。",502);
+      return {data_url:result.data_url};
+    }
     if (input.action === "consistency-build") {
-      if (input.documents) {
-        if (!this.mediaRoot || new Set(input.documents.map(d => d.slot)).size !== 4)
-          throw new FinanceReaderError("請為四個位置各選一份已上載的 PDF。");
-        const root = fs.realpathSync(this.mediaRoot);
-        for (const doc of input.documents) {
-          const real = fs.realpathSync(doc.path);
-          const relative = path.relative(root, real);
-          if (!relative || relative.startsWith("..") || path.isAbsolute(relative) || path.extname(real).toLowerCase() !== ".pdf")
-            throw new FinanceReaderError("只能使用 Cuby 本次上載的 PDF。");
-        }
-      }
+      if (input.documents) this.validateUploads(input.documents);
       return ConsistencyReportSchema.parse(await this.tool("build_consistency_review", {
         fiscal_year: input.fiscal_year, ...(input.comparisons ? {comparisons:input.comparisons} : {}), ...(input.documents ? {documents:input.documents} : {}),
       }));
@@ -185,10 +250,10 @@ export class FinanceReaderApi {
       return ConsistencyReportSchema.parse(await this.tool("read_consistency_review", {run_id:input.run_id,full:true}));
     if (input.action === "consistency-page") {
       const {action, ...args} = input;
-      const image = await this.tool("read_consistency_page", args) as {data_url?:unknown};
+      const image = await this.tool("read_consistency_page", args) as {data_url?:unknown;highlight_status?:unknown;unlocated_quotes?:unknown};
       if (typeof image.data_url !== "string" || image.data_url.length > 8*1024*1024 || !image.data_url.startsWith("data:image/png;base64,iVBORw0KGgo"))
         throw new FinanceReaderError("Invalid consistency PDF page.",502);
-      return {data_url:image.data_url};
+      return {data_url:image.data_url,...(typeof image.highlight_status==='string'?{highlight_status:image.highlight_status}:{}),...(Array.isArray(image.unlocated_quotes)?{unlocated_quotes:image.unlocated_quotes}: {})};
     }
     if (input.action === "open") {
       const receipt = (await this.tool("open_c2_reader", {
@@ -336,11 +401,32 @@ export class FinanceReaderApi {
   }
 
   private validateUploads(documents:{slot:string;path:string}[]) {
-    if (!this.mediaRoot || new Set(documents.map(d=>d.slot)).size!==4) throw new FinanceReaderError("請選四份已上載的 PDF。");
+    if (!this.mediaRoot || documents.length<1 || documents.length>4 || new Set(documents.map(d=>d.slot)).size!==documents.length) throw new FinanceReaderError("請選1至4份已上載的 PDF，每個種類及語言只可選一份。");
     const root=fs.realpathSync(this.mediaRoot);
     for (const doc of documents) {
       const real=fs.realpathSync(doc.path),relative=path.relative(root,real);
       if (!relative || relative.startsWith("..") || path.isAbsolute(relative) || path.extname(real).toLowerCase()!==".pdf") throw new FinanceReaderError("只能儲存 Cuby 已上載的 PDF。");
+    }
+  }
+
+  private validFiscalYear(value:string){const match=/^(20\d{2})\/(\d{2})$/.exec(value);return !!match&&Number(match[2])===(Number(match[1])+1)%100;}
+  private inputBytes(file:string){
+    try{const stat=fs.statSync(file);if(!stat.isFile()||stat.size<=0||stat.size>30*1024*1024)throw Error();const data=fs.readFileSync(file);if(data.subarray(0,5).toString()!=="%PDF-")throw Error();return data;}
+    catch{throw new FinanceReaderError("未能讀取 PDF，請重新加入有效文件（每份最多30 MB）。",400);}
+  }
+  private validateInspections(documents:{slot:string;path:string;inspection_id?:string;confirmed_issuer?:"yeebo"}[],year:string){
+    if(!this.validFiscalYear(year))throw new FinanceReaderError("請確認報告財年，例如2026/27。");
+    for(const doc of documents){
+      const saved=doc.inspection_id?this.inspections.get(doc.inspection_id):undefined;
+      if(!saved||saved.expires<Date.now())throw new FinanceReaderError("文件辨認已過期，請重新加入 PDF。",409);
+      let real:string;try{real=fs.realpathSync(doc.path);}catch{throw new FinanceReaderError("文件已變更，請重新加入。",409);}
+      const bytes=this.inputBytes(real);
+      if(real!==saved.path||bytes.length!==saved.bytes||crypto.createHash("sha256").update(bytes).digest("hex")!==saved.sha)throw new FinanceReaderError("文件已變更，請重新加入。",409);
+      const fields=saved.result.fields;
+      if(Object.values(fields).some(f=>f.status==="unsupported") ||
+        (fields.issuer.status==="identified"?fields.issuer.value!=="yeebo":doc.confirmed_issuer!=="yeebo"))throw new FinanceReaderError("目前只支援已識別或明確確認的億都報告。");
+      const expected={fiscal_year:year,kind:doc.slot.startsWith("esg_")?"esg":"annual",language:doc.slot.endsWith("_zh")?"zh-Hant":"en"};
+      for(const key of ["fiscal_year","kind","language"] as const)if(fields[key].status==="identified"&&fields[key].value!==expected[key])throw new FinanceReaderError("所選資料與原文辨認不符，請重新確認文件。",409);
     }
   }
 }

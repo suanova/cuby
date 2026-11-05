@@ -31,7 +31,7 @@ describe("FinanceBuddy guided entry", () => {
     expect(container.querySelectorAll("button")).toHaveLength(5);
     act(() =>
       Array.from(container.querySelectorAll("button"))
-        .find((b) => b.textContent?.includes("檢查報告"))!
+        .find((b) => b.textContent?.includes("C2 披露檢查"))!
         .click(),
     );
     expect(choose).toHaveBeenCalledWith("review");
@@ -75,7 +75,7 @@ describe("FinanceBuddy guided entry", () => {
       financeWorkflowDisplayText(prompt + "\nUser additional instructions"),
     ).toBeNull();
   });
-  it("starts the review with defaults without requiring text entry", async () => {
+  it("opens the complete C2 project workflow without launching the old twelve-check prompt", async () => {
     const launch = vi.fn(async (_prompt: string) => {});
     const close = vi.fn();
     const client = {
@@ -84,6 +84,7 @@ describe("FinanceBuddy guided entry", () => {
         unavailable: [],
         scope: "C2",
       })),
+      financeReaderRequest:vi.fn(async()=>({projects:[]})),
     } as unknown as MemmyAgentClient;
     await act(async () =>
       root.render(
@@ -99,15 +100,12 @@ describe("FinanceBuddy guided entry", () => {
         />,
       ),
     );
-    await act(async () =>
-      Array.from(container.querySelectorAll("button"))
-        .find((b) => b.textContent === "開始此工作")!
-        .click(),
-    );
-    expect(launch).toHaveBeenCalledOnce();
-    expect(launch.mock.calls[0]![0]).toContain("same_year");
+    expect(container.textContent).toContain("148 個核對項");
+    expect(container.querySelector('[aria-label="C2報告開始日"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="加入報告 PDF"]')).not.toBeNull();
+    expect(launch).not.toHaveBeenCalled();
     expect(container.querySelector('[role="dialog"]')).not.toBeNull();
-    expect(close).toHaveBeenCalledOnce();
+    expect(close).not.toHaveBeenCalled();
   });
   it("recognizes only a completed review belonging to the submitted request", () => {
     const user = {
@@ -194,7 +192,7 @@ describe("FinanceBuddy guided entry", () => {
         />,
       ),
     );
-    expect(container.textContent).toContain("等待 Mavis");
+    expect(container.textContent).toContain("等待來源確認");
     expect(container.textContent).not.toContain("開始此工作");
     expect(launch).not.toHaveBeenCalled();
   });

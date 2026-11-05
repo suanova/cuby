@@ -51,6 +51,7 @@ import {
   startManagedRuntimeServices,
   type ManagedRuntimeServices
 } from "./runtime-services.js";
+import { prepareBundledFinanceBuddy } from "./financebuddy-runtime.js";
 import { resolveRendererContextMenuCommands, resolveRendererContextMenuMaxLabelWidth, type RendererContextMenuCommand } from "./renderer-context-menu.js";
 import { startPackagedRendererStaticServer, type PackagedRendererStaticServer } from "./renderer-static-server.js";
 import { shouldBlockRendererReloadShortcut } from "./renderer-shortcuts.js";
@@ -369,13 +370,26 @@ async function boot(): Promise<void> {
       resourcesPath: process.resourcesPath,
       logDirectory: app.getPath("logs"),
       logLevel: getCurrentLogLevel(),
-      beforeStartServices: async ({ databasePath, configPath }) => {
+      beforeStartServices: async ({ databasePath, configPath, agentWorkspace }) => {
         const syncOptions = {
           databasePath,
           memmyConfigPath: configPath,
           accountChannel: resolveCurrentDesktopAccountChannel()
         };
         await syncRuntimeConfigForStartup(syncOptions);
+        try {
+          const financeBuddyReady = await prepareBundledFinanceBuddy({
+            platform: process.platform,
+            isPackaged: app.isPackaged,
+            resourcesPath: process.resourcesPath,
+            configPath,
+            agentWorkspace
+          });
+          if (financeBuddyReady) await writePackagedStartupLog("boot:financebuddy-ready");
+        } catch (error) {
+          const diagnostic = error instanceof Error ? error.message : "Setup unavailable.";
+          await writePackagedStartupLog(`boot:financebuddy-unavailable ${diagnostic}`);
+        }
       },
       runtimeEntries: app.isPackaged
         ? undefined

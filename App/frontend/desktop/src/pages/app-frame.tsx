@@ -40,6 +40,7 @@ import { ImChannelTitleIcon, imChannelTitleDisplay } from "../integrations/integ
 import { ImprovementProgramModal } from "./improvement-program-modal.js";
 import { writeMemorySubPage } from "./memory-page.js";
 import { SearchPalette } from "../components/search-palette.js";
+import { matchesProjectDiscovery, type ProjectDiscoveryMap, type ProjectDiscoveryMetadata } from "./project-discovery.js";
 import { SidebarResizeHandle, useCodexResizableSidebar } from "./sidebar-resize.js";
 import {
   Archive,
@@ -80,6 +81,9 @@ export interface AppFrameProps {
   windowsTitlebarSafe?: boolean;
   /** When set, replaces the main app sidebar with settings section navigation. */
   settingsNav?: SettingsSidebarNav;
+  /** Application-owned actions for explicitly bound projects; absent on general pages. */
+  projectContentAction?: (project: MemmyAgentProject, collapsed: boolean) => ReactNode;
+  projectDiscovery?: ProjectDiscoveryMap;
   children: ReactNode;
 }
 
@@ -277,7 +281,7 @@ export function AppFrame(props: AppFrameProps) {
   const { state, dispatch } = useAppState();
   // A cuberouter account has no memmy cloud backing, so cloud-only entries stay
   // out of the rail instead of leading to an unavailable page.
-  const visibleNavItems = canUseCloudFeatures(state)
+  const visibleNavItems = import.meta.env.VITE_CUBY_LAN_TRIAL === "1" || canUseCloudFeatures(state)
     ? navItems
     : navItems.filter((item) => item.path !== "/knowledge");
   const { clients } = useOptionalApiClients();
@@ -289,6 +293,7 @@ export function AppFrame(props: AppFrameProps) {
   const taskBus = useTaskBus();
   const { syncAgentTaskStatuses } = taskBus;
   const [searchPaletteOpen, setSearchPaletteOpen] = useState(false);
+  const [revealedProject, setRevealedProject] = useState<{ id: string } | null>(null);
   const [taskListMenuAnchor, setTaskListMenuAnchor] = useState<SidebarMenuAnchor | null>(null);
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [taskContextMenu, setTaskContextMenu] = useState<TaskContextMenuState | null>(null);
@@ -340,6 +345,28 @@ export function AppFrame(props: AppFrameProps) {
   );
   const highlightedSessionKey = state.navigation.currentPath === "/main" ? state.agent.currentSessionKey : null;
   const selectedSidebarProjectId = resolveSelectedSidebarProjectId(state.agent, state.navigation.currentPath);
+  const revealedGroup = !showingArchived && state.agent.projects.find(project => project.id === revealedProject?.id)?.pinned ? "pinned" : "projects";
+  const discoveryCollapsedGroups = revealedProject ? {
+    ...state.agent.sidebarState.collapsed_groups,
+    [revealedGroup]: false,
+    [`project:${revealedProject.id}`]: false,
+  } : state.agent.sidebarState.collapsed_groups;
+  useEffect(() => {
+    if (!revealedProject) return;
+    const row = [...document.querySelectorAll<HTMLButtonElement>("[data-project-discovery-id]")]
+      .find(button => button.dataset.projectDiscoveryId === revealedProject.id);
+    row?.scrollIntoView({ block: "nearest" });
+    row?.focus();
+  }, [revealedProject]);
+  function toggleDiscoveredGroup(key: string) {
+    if (revealedProject && (key === revealedGroup || key === `project:${revealedProject.id}`)
+      && state.agent.sidebarState.collapsed_groups[key]) {
+      setRevealedProject(null);
+      return;
+    }
+    setRevealedProject(null);
+    toggleSidebarGroup(key);
+  }
 
   const removeProject = state.agent.projects.find((project) => project.id === removeProjectId) ?? null;
   const archiveProject = state.agent.projects.find((project) => project.id === archiveProjectId) ?? null;
@@ -1114,7 +1141,9 @@ export function AppFrame(props: AppFrameProps) {
               ? state.navigation.currentPath === item.path && (item.path !== "/main" || !state.agent.currentSessionKey)
               : false;
 
-            const label = item.path
+            const label = item.path === "/knowledge" && import.meta.env.VITE_CUBY_LAN_TRIAL === "1"
+              ? "參考資料"
+              : item.path
               ? t(routeTable[item.path].navKey as Parameters<typeof t>[0])
               : t(item.labelKey as Parameters<typeof t>[0]);
 
@@ -1216,15 +1245,15 @@ export function AppFrame(props: AppFrameProps) {
               <ProjectTreeSection
                 title={t("common.pin")}
                 groupKey="pinned"
-                collapsedGroups={state.agent.sidebarState.collapsed_groups}
+                collapsedGroups={discoveryCollapsedGroups}
                 projects={visibleProjectTree.pinnedProjects}
                 tasks={visibleProjectTree.pinnedTasks}
                 currentSessionKey={highlightedSessionKey}
                 selectedProjectId={selectedSidebarProjectId}
                 showPreviews={state.agent.sidebarState.view.show_previews}
                 projectRegistryState={state.agent.projectRegistryState}
-                onToggleGroup={toggleSidebarGroup}
-                onToggleProject={toggleSidebarGroup}
+                onToggleGroup={toggleDiscoveredGroup}
+                onToggleProject={toggleDiscoveredGroup}
                 onOpenTask={openAgentTask}
                 onRenameTask={beginTaskRename}
                 renamingSessionKey={inlineRename?.sessionKey ?? null}
@@ -1242,6 +1271,8 @@ export function AppFrame(props: AppFrameProps) {
                 onDeleteArchivedTask={requestDeleteArchivedTask}
                 onProjectContextMenu={openProjectMenu}
                 onNewProjectTask={(projectId) => openNewAgent({ kind: "project", projectId })}
+                projectContentAction={props.projectContentAction}
+              projectDiscovery={props.projectDiscovery}
               />
             ) : null}
 
@@ -1249,7 +1280,7 @@ export function AppFrame(props: AppFrameProps) {
               title={t("appFrame.projects")}
               showingArchived={showingArchived}
               groupKey="projects"
-              collapsedGroups={state.agent.sidebarState.collapsed_groups}
+              collapsedGroups={discoveryCollapsedGroups}
               projects={visibleProjectTree.projects}
               tasks={[]}
               currentSessionKey={highlightedSessionKey}
@@ -1259,8 +1290,8 @@ export function AppFrame(props: AppFrameProps) {
               emptyText={state.agent.projectRegistryState === "corrupt"
                 ? t("appFrame.project.registryUnavailable")
                 : t("appFrame.project.empty")}
-              onToggleGroup={toggleSidebarGroup}
-              onToggleProject={toggleSidebarGroup}
+              onToggleGroup={toggleDiscoveredGroup}
+              onToggleProject={toggleDiscoveredGroup}
               onOpenTask={openAgentTask}
               onRenameTask={beginTaskRename}
               renamingSessionKey={inlineRename?.sessionKey ?? null}
@@ -1278,6 +1309,8 @@ export function AppFrame(props: AppFrameProps) {
               onDeleteArchivedTask={requestDeleteArchivedTask}
               onProjectContextMenu={openProjectMenu}
               onNewProjectTask={(projectId) => openNewAgent({ kind: "project", projectId })}
+              projectContentAction={props.projectContentAction}
+              projectDiscovery={props.projectDiscovery}
               headerLeadingAction={(
                 <div className="relative flex items-center">
                   <button
@@ -1300,6 +1333,7 @@ export function AppFrame(props: AppFrameProps) {
                     <SidebarWorkspacePickerMenu
                       anchor={projectCreateMenuAnchor}
                       projects={state.agent.projects}
+                      projectDiscovery={props.projectDiscovery}
                       registryState={state.agent.projectRegistryState}
                       onSelectProject={selectSidebarWorkspace}
                       onOpenLocalFolder={() => void registerProject("existing")}
@@ -1313,7 +1347,7 @@ export function AppFrame(props: AppFrameProps) {
               title={t("appFrame.tasks")}
               showingArchived={showingArchived}
               groupKey="standalone"
-              collapsedGroups={state.agent.sidebarState.collapsed_groups}
+              collapsedGroups={discoveryCollapsedGroups}
               projects={[]}
               tasks={visibleProjectTree.standaloneTasks}
               currentSessionKey={highlightedSessionKey}
@@ -1323,8 +1357,8 @@ export function AppFrame(props: AppFrameProps) {
               emptyText={state.agent.isLoadingSessions
                 ? t("appFrame.taskList.loading")
                 : t(showingArchived ? "appFrame.taskList.emptyArchived" as MessageKey : "appFrame.taskList.empty")}
-              onToggleGroup={toggleSidebarGroup}
-              onToggleProject={toggleSidebarGroup}
+              onToggleGroup={toggleDiscoveredGroup}
+              onToggleProject={toggleDiscoveredGroup}
               onOpenTask={openAgentTask}
               onRenameTask={beginTaskRename}
               renamingSessionKey={inlineRename?.sessionKey ?? null}
@@ -1603,6 +1637,11 @@ export function AppFrame(props: AppFrameProps) {
         open={searchPaletteOpen}
         tasks={state.agent.tasks}
         projects={state.agent.projects}
+        projectMetadata={props.projectDiscovery}
+        onSelectProject={props.projectDiscovery ? (project) => {
+          setSearchPaletteOpen(false);
+          setRevealedProject({ id: project.id });
+        } : undefined}
         projectRegistryState={state.agent.projectRegistryState}
         standaloneLabel={t("appFrame.tasks")}
         missingProjectLabel={t("appFrame.project.recordUnavailable")}
@@ -1792,6 +1831,7 @@ export function deriveSidebarPlacement(
     projectFilter: (project: MemmyAgentProject) => boolean
   ): ProjectSidebarNode[] => projects
     .filter(projectFilter)
+    .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
     .map((project) => ({
       project,
       tasks: source.filter((task) => task.groupProjectId === project.id)
@@ -1892,7 +1932,7 @@ export function groupTasksByTime(tasks: AgentTaskView[], now?: Date): TimeGroup[
 
 const PROJECT_SIDEBAR_TASK_PREVIEW_LIMIT = 5;
 
-function ProjectTreeSection(props: {
+export function ProjectTreeSection(props: {
   title: string;
   titleBadge?: string;
   showingArchived?: boolean;
@@ -1927,6 +1967,8 @@ function ProjectTreeSection(props: {
   onDeleteArchivedTask: (task: AgentTaskView) => void;
   onProjectContextMenu: (event: MouseEvent, projectId: string) => void;
   onNewProjectTask: (projectId: string) => void;
+  projectContentAction?: (project: MemmyAgentProject, collapsed: boolean) => ReactNode;
+  projectDiscovery?: ProjectDiscoveryMap;
 }) {
   const { t } = useTranslation();
   const [expandedProjectTaskIds, setExpandedProjectTaskIds] = useState<Record<string, boolean>>({});
@@ -2006,10 +2048,12 @@ function ProjectTreeSection(props: {
                 ? node.tasks.slice(0, PROJECT_SIDEBAR_TASK_PREVIEW_LIMIT)
                 : node.tasks;
               const hiddenTaskCount = node.tasks.length - visibleTasks.length;
+              const contentAction = !props.showingArchived && props.projectContentAction?.(node.project, projectCollapsed);
               return (
                 <div key={node.project.id} className="app-frame-project-node">
                   <ProjectRow
                     project={node.project}
+                    metadata={props.projectDiscovery?.[node.project.id]}
                     collapsed={projectCollapsed}
                     selected={props.selectedProjectId === node.project.id}
                     onToggle={() => props.onToggleProject(projectKey)}
@@ -2022,7 +2066,9 @@ function ProjectTreeSection(props: {
                   >
                     <div className="app-frame-collapsible__inner">
                       <div className="app-frame-project-children">
-                        {node.tasks.length === 0 ? (
+                        {contentAction}
+                        {props.projectDiscovery && <details className="project-discovery-path"><summary tabIndex={projectCollapsed ? -1 : undefined}>工作區位置</summary><code>{node.project.rootPath}</code></details>}
+                        {node.tasks.length === 0 && !contentAction ? (
                           <div className="app-frame-task-empty app-frame-task-empty--nested">
                             {props.showingArchived
                               ? t("appFrame.taskList.emptyArchived")
@@ -2171,6 +2217,7 @@ function SidebarInlineRenameInput(props: {
 
 function ProjectRow(props: {
   project: MemmyAgentProject;
+  metadata?: ProjectDiscoveryMetadata;
   collapsed: boolean;
   selected: boolean;
   onToggle: () => void;
@@ -2187,7 +2234,8 @@ function ProjectRow(props: {
         type="button"
         className="app-frame-project-row__main"
         aria-expanded={!props.collapsed}
-        aria-label={props.collapsed ? t("appFrame.project.expand") : t("appFrame.project.collapse")}
+        data-project-discovery-id={props.project.id}
+        aria-label={[props.project.name, props.metadata?.summary, props.collapsed ? t("appFrame.project.expand") : t("appFrame.project.collapse")].filter(Boolean).join(" · ")}
         onClick={(event) => {
           props.onToggle();
           // Avoid sticky :focus-within fill after mouse expand/collapse.
@@ -2213,7 +2261,10 @@ function ProjectRow(props: {
             className={`app-frame-project-row__chevron${!props.collapsed ? " is-active" : ""}`}
           />
         </span>
-        <SidebarMarqueeText text={props.project.name} className="app-frame-project-title" />
+        <span className="project-discovery-label">
+          <SidebarMarqueeText text={props.project.name} className="app-frame-project-title" />
+          {props.metadata && <small className="project-discovery-summary">{props.metadata.summary}</small>}
+        </span>
       </button>
       <div className="app-frame-project-row__actions">
         <TaskIconButton label={t("appFrame.project.newTask")} tooltip={false} onClick={props.onNewTask}>
@@ -2570,7 +2621,7 @@ function formatSidebarCompactWorkspacePath(rootPath: string, maxWidth = 28): str
   return `${prefix}.../${folder}`;
 }
 
-function filterSidebarWorkspaceProjects(projects: MemmyAgentProject[], query: string): MemmyAgentProject[] {
+function filterSidebarWorkspaceProjects(projects: MemmyAgentProject[], query: string, metadata: ProjectDiscoveryMap = {}): MemmyAgentProject[] {
   const normalized = query.trim().toLocaleLowerCase();
   const sorted = [...projects].sort((left, right) =>
     right.createdAt.localeCompare(left.createdAt) || right.id.localeCompare(left.id)
@@ -2578,15 +2629,14 @@ function filterSidebarWorkspaceProjects(projects: MemmyAgentProject[], query: st
   if (!normalized) return sorted;
   return sorted.filter((project) => {
     const displayPath = formatSidebarWorkspacePath(project.rootPath).toLocaleLowerCase();
-    return project.name.toLocaleLowerCase().includes(normalized)
-      || project.rootPath.toLocaleLowerCase().includes(normalized)
-      || displayPath.includes(normalized);
+    return matchesProjectDiscovery(project, normalized, metadata) || displayPath.includes(normalized);
   });
 }
 
 function SidebarWorkspacePickerMenu(props: {
   anchor: SidebarMenuAnchor;
   projects: MemmyAgentProject[];
+  projectDiscovery?: ProjectDiscoveryMap;
   registryState: "ready" | "corrupt";
   onSelectProject: (projectId: string) => void;
   onOpenLocalFolder: () => void;
@@ -2595,7 +2645,7 @@ function SidebarWorkspacePickerMenu(props: {
   const [query, setQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const visibleProjects = props.registryState === "ready"
-    ? filterSidebarWorkspaceProjects(props.projects, query)
+    ? filterSidebarWorkspaceProjects(props.projects, query, props.projectDiscovery)
     : [];
 
   useEffect(() => {
@@ -2645,12 +2695,13 @@ function SidebarWorkspacePickerMenu(props: {
               role="option"
               aria-selected="false"
               className="home-project-picker__option"
-              title={formatSidebarWorkspacePath(project.rootPath)}
+              title={project.rootPath}
               onClick={() => props.onSelectProject(project.id)}
             >
               <Folder size={13} className="shrink-0" aria-hidden="true" />
-              <span className="home-project-picker__path truncate">
-                {formatSidebarCompactWorkspacePath(project.rootPath)}
+              <span className="project-discovery-label">
+                <strong className="home-project-picker__path truncate">{project.name}</strong>
+                {props.projectDiscovery?.[project.id] && <small className="project-discovery-summary">{props.projectDiscovery[project.id]!.summary}</small>}
               </span>
             </button>
           ))}

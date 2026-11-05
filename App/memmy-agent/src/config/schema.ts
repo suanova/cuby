@@ -939,6 +939,7 @@ export class ToolsConfig extends Base {
   webFetch: WebFetchConfig;
   imageGeneration: ImageGenerationToolConfig;
   restrictToWorkspace = false;
+  allowedTools: string[] | null = null;
   ssrfWhitelist: string[] = [];
   mcpServers: Dict<MCPServerConfig>;
   constructor(init: Dict = {}) {
@@ -967,6 +968,8 @@ export class ToolsConfig extends Base {
         ? init.imageGeneration
         : new ImageGenerationToolConfig(pick(init, ["imageGeneration"], {}));
     this.restrictToWorkspace = pick(init, ["restrictToWorkspace"], false);
+    const allowedTools = pick<string[] | null>(init, ["allowedTools"], null);
+    this.allowedTools = allowedTools === null ? null : assertStringArray("allowedTools", allowedTools);
     this.ssrfWhitelist = assertStringArray("ssrfWhitelist", pick(init, ["ssrfWhitelist"], []));
     const mcp = pick(init, ["mcpServers"], {
       open_computer_use: {
@@ -998,6 +1001,7 @@ export class ToolsConfig extends Base {
       webFetch: this.webFetch.toObject(),
       imageGeneration: this.imageGeneration.toObject(),
       restrictToWorkspace: this.restrictToWorkspace,
+      allowedTools: this.allowedTools,
       ssrfWhitelist: this.ssrfWhitelist,
       mcpServers: dumpServers,
     };

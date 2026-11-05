@@ -119,10 +119,37 @@ export function convertTools(tools: Record<string, any>[]): Record<string, any>[
       type: "function",
       name: fn.name,
       description: fn.description ?? "",
-      parameters: parameters && typeof parameters === "object" && !Array.isArray(parameters) ? parameters : {},
+      parameters: parameters && typeof parameters === "object" && !Array.isArray(parameters) ? responsesToolSchema(parameters) : {},
+      // Responses otherwise attempts strict normalization, turning optional MCP
+      // arguments into required ones. Keep their existing validation semantics.
+      strict: typeof fn.strict === "boolean" ? fn.strict : typeof tool.strict === "boolean" ? tool.strict : false,
     });
   }
   return out;
+}
+
+/** Restore JSON Schema null unions from the MCP bridge's OpenAPI nullable form. */
+function responsesToolSchema(schema: any): any {
+  if (!schema || typeof schema !== "object" || Array.isArray(schema)) return schema;
+  const result: Record<string, any> = { ...schema };
+  for (const key of ["properties", "patternProperties", "$defs", "definitions"]) {
+    if (result[key] && typeof result[key] === "object" && !Array.isArray(result[key]))
+      result[key] = Object.fromEntries(Object.entries(result[key]).map(([name, child]) => [name, responsesToolSchema(child)]));
+  }
+  for (const key of ["items", "additionalProperties", "unevaluatedProperties", "contains", "not", "if", "then", "else", "propertyNames"]) {
+    if (Array.isArray(result[key])) result[key] = result[key].map(responsesToolSchema);
+    else if (result[key] && typeof result[key] === "object") result[key] = responsesToolSchema(result[key]);
+  }
+  for (const key of ["anyOf", "oneOf", "allOf", "prefixItems"])
+    if (Array.isArray(result[key])) result[key] = result[key].map(responsesToolSchema);
+  const nullable = result.nullable === true;
+  if (typeof result.nullable === "boolean") delete result.nullable;
+  if (!nullable) return result;
+  if (typeof result.type === "string") result.type = [result.type, "null"];
+  else if (Array.isArray(result.type)) result.type = [...new Set([...result.type, "null"])];
+  else return { anyOf: [result, { type: "null" }] };
+  if (Array.isArray(result.enum) && !result.enum.includes(null)) result.enum = [...result.enum, null];
+  return result;
 }
 
 function jsonDumpsDefault(value: any): string {

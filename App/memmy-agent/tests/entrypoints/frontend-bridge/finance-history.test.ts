@@ -20,6 +20,21 @@ function setup() {
   return {root,projects,sessions,history,append,run,later,project};
 }
 describe("Finance project review history",()=>{
+  it("labels workflows separately and migrates only generated titles without losing follow-up or binding",()=>{
+    const {root,history,project,run,later,sessions}=setup();
+    project.versions[0]!.reviews=[{run_id:run,kind:"consistency",status:"completed"},{run_id:later,kind:"c2",status:"partial"}];
+    project.external_id=history.project(project,root);
+    const first=history.review(project,run),second=history.review(project,later);
+    expect(sessions.get(first.session_key)!.metadata.title).toMatch(/^一致性審閱/);
+    const saved=sessions.get(second.session_key)!;
+    expect(saved.metadata.title).toMatch(/^C2 披露檢查/);
+    saved.metadata.title=String(saved.metadata.title).replace("C2 披露檢查","報告核對");saved.addMessage("user","保留此追問");sessions.save(saved);
+    expect(history.review(project,later)).toEqual(second);
+    expect(sessions.get(second.session_key)!.metadata.title).toMatch(/^C2 披露檢查/);
+    expect(sessions.get(second.session_key)!.messages.at(-1)?.content).toBe("保留此追問");
+    const renamed=sessions.get(second.session_key)!;renamed.metadata.title="交 Mavis 覆核";sessions.save(renamed);history.review(project,later);
+    expect(sessions.get(second.session_key)!.metadata.title).toBe("交 Mavis 覆核");
+  });
   it("keeps each run and its follow-up messages in one native folder across restarts",()=>{
     const {root,projects,sessions,history,append,project,run,later}=setup();
     project.external_id=history.project(project,root);

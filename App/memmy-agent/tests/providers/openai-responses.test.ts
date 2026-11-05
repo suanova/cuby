@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { OpenAICompatProvider } from "../../src/providers/openai-compat-provider.js";
 import { findByName } from "../../src/providers/registry.js";
+import { normalizeSchemaForOpenAI } from "../../src/core/agent-runtime/tools/mcp.js";
 import {
   consumeSdkStream,
   convertMessages,
@@ -289,6 +290,32 @@ describe("OpenAI Responses convertMessages", () => {
 });
 
 describe("OpenAI Responses convertTools", () => {
+  it("round-trips a nullable MCP field through the real bridge and Responses converter",()=>{
+    const raw={type:'object',properties:{calculation:{type:['object','null'],properties:{operation:{type:'string'}},required:['operation']}},required:[]};
+    const bridge=normalizeSchemaForOpenAI(raw);
+    expect(bridge.properties.calculation.nullable).toBe(true);
+    const wire=convertTools([{name:'export',parameters:bridge}])[0];
+    expect(wire.parameters.properties.calculation.type).toEqual(['object','null']);
+    expect(wire.parameters.required).toEqual([]);expect(wire.strict).toBe(false);
+  });
+  it("preserves optional MCP fields and restores nested nullable calculation objects for Responses",()=>{
+    const parameters={type:"object",properties:{rows:{type:"array",items:{type:"object",properties:{value:{type:["string","number","null"]},calculation:{type:"object",nullable:true,properties:{operation:{type:"string",enum:["sum"]}},required:["operation"],additionalProperties:false}},required:["value"],additionalProperties:false}}},required:["rows"]};
+    const snapshot=structuredClone(parameters);
+    const result=convertTools([{type:"function",function:{name:"export_peer_comparison",parameters}}])[0];
+    expect(result.strict).toBe(false);
+    expect(result.parameters.properties.rows.items.properties.calculation.type).toEqual(["object","null"]);
+    expect(result.parameters.properties.rows.items.properties.calculation).not.toHaveProperty('nullable');
+    expect(result.parameters.properties.rows.items.required).toEqual(["value"]);
+    expect(parameters).toEqual(snapshot);
+  });
+  it("keeps an explicit strict choice and does not rewrite example data named nullable",()=>{
+    const examples=[{nullable:true,type:"example-value"}];
+    const result=convertTools([{type:"function",function:{name:"strict_tool",strict:true,parameters:{type:"object",properties:{choice:{type:"string",nullable:true,enum:["sum"]}},examples}}}])[0];
+    expect(result.strict).toBe(true);
+    expect(result.parameters.properties.choice).toEqual({type:["string","null"],enum:["sum",null]});
+    expect(result.parameters.examples).toEqual(examples);
+    expect(convertTools([{name:'plain',strict:false,parameters:{}}])[0].strict).toBe(false);
+  });
   it("converts standard function tools", () => {
     const result = convertTools([
       { type: "function", function: { name: "get_weather", description: "Get weather", parameters: { type: "object", properties: { city: { type: "string" } } } } },

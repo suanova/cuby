@@ -67,6 +67,7 @@ import {
 } from "../../utils/restart.js";
 import { createChannelAdmin } from "../frontend-bridge/channels-api.js";
 import { ProjectStore } from "../frontend-bridge/projects.js";
+import { isFinanceReaderTool } from "../frontend-bridge/finance-reader-api.js";
 import {
   GatewayTranscriptMonitor,
   GuiTranscriptMirror,
@@ -1191,7 +1192,7 @@ export async function gateway({
   if (webuiChannel instanceof WebSocketChannel) {
     webuiChannel.setProjectStore(projectStore);
     webuiChannel.setFinanceReaderTools(async (name, args) => {
-      if (!["mcp_financebuddy_reports_manage_finance_project", "mcp_financebuddy_reports_edit_consistency_draft", "mcp_financebuddy_reports_list_c2_reviews", "mcp_financebuddy_reports_open_c2_reader", "mcp_financebuddy_reports_build_consistency_review", "mcp_financebuddy_reports_start_consistency_semantic", "mcp_financebuddy_reports_read_consistency_review", "mcp_financebuddy_reports_read_consistency_page"].includes(name)
+      if (!isFinanceReaderTool(name)
           || !loop.tools?.has(name)) throw new Error("FinanceBuddy reader tools are not enabled.");
       return loop.tools.execute(name, args);
     });

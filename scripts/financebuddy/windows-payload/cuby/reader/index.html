@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FinanceBuddy · 報告核對閱讀器</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<body>
+<header class="topbar"><div class="brand"><span class="brand-icon">F</span><div><strong>FinanceBuddy</strong><small>報告核對工作台</small></div></div><div class="document-title"><span id="documentName">正在讀取已核對版本…</span><small id="documentMeta"></small></div><div class="header-actions"><span class="local-badge">本機工作台</span><a href="/api/notes-export" download="reviewer-notes.json" class="button secondary">匯出審閱記錄 ↗</a></div></header>
+<div class="scope-bar"><span class="scope-pill">HKEX C2 · Scope 1 / 2</span><span id="scopeSummary">12 項小範圍核對</span><span class="rule-status" id="ruleStatus"></span></div>
+<main class="workspace">
+<section class="document-pane" aria-label="報告原件閱讀器">
+<div class="document-toolbar"><div class="segmented"><button id="reportTab" class="selected">報告原件</button><button id="ruleTab">規則原件</button></div><div class="page-controls"><button id="previousPage" aria-label="上一頁">‹</button><label>PDF <input id="pageNumber" type="number" min="1" value="41" aria-label="實際 PDF 頁碼"></label><span id="pageTotal">/ 49</span><button id="nextPage" aria-label="下一頁">›</button></div><div class="zoom-controls"><button id="zoomOut" aria-label="縮小">−</button><button id="fitPage">適合寬度</button><button id="zoomIn" aria-label="放大">＋</button></div></div>
+<div class="location-banner" id="locationBanner">點選右側項目，跳到原頁並查看核對依據。</div>
+<div class="paper-scroll" id="paperScroll"><div class="paper" id="paper"><img id="pageImage" alt="報告原始 PDF 頁面"><svg id="highlights" aria-label="核對依據高亮"></svg><div id="imageLoading" class="image-loading">正在載入原件頁面…</div></div></div>
+<div class="evidence-footer"><span class="legend"><i></i> 原文依據</span><span id="sourceFootnote">高亮不等於該句錯誤；缺少披露不會虛構錯句位置。</span></div>
+</section>
+<aside class="review-pane" aria-label="核對項目及審閱記錄">
+<div class="review-heading"><div><span class="eyebrow">DISCLOSURE REVIEW</span><h1>逐項核對</h1></div><span id="reviewProgress" class="progress-badge">0 / 12 已標記</span></div>
+<div class="counts" id="counts"></div>
+<div class="filter-row"><label class="search"><span>⌕</span><input id="search" placeholder="搜尋項目、條款或關鍵字" aria-label="搜尋核對項目"></label><select id="statusFilter" aria-label="篩選核對狀態"><option value="all">全部 12 項</option><option value="judgement">披露判斷 8 項</option><option value="open">尚未標記</option><option value="partially_disclosed">部分披露</option><option value="not_found_pending_review">未找到充分支持</option><option value="evidence_present">數值／單位／期間</option></select></div>
+<p class="review-notice">這是披露核對建議，並非全 C2 合規批准。審閱標記與原始檢查結果分開保存。</p>
+<div id="issueList" class="issue-list"></div>
+<div class="review-downloads"><a href="/api/checklist-export" download="checklist.csv">核對底稿 CSV ↗</a><a href="/api/requests-export" download="data-requests.csv">跟進清單 CSV ↗</a><button id="showScope">檢查範圍</button></div>
+</aside>
+</main>
+<div id="toast" class="toast" role="status" hidden></div>
+<dialog id="scopeDialog"><div class="dialog-header"><h2>本次核對範圍</h2><button id="closeScope" aria-label="關閉">×</button></div><p id="ruleScope"></p><ul id="exclusions"></ul><p>本機審閱註記沒有用戶身分驗證，不構成正式審批或電子簽署。原始 PDF、工具結果與規則版本不受註記改動。</p><a id="officialRule" target="_blank" rel="noreferrer">查看 HKEX 官方條文 ↗</a></dialog>
+</body></html>

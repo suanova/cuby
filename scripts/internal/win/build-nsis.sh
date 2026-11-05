@@ -14,6 +14,10 @@ RUNTIME_DIR="$DESKTOP_DIR/dist/runtime"
 MIGRATIONS_STAGING_DIR="$DESKTOP_DIR/dist/Migrations"
 CLI_BIN_DIR="$RUNTIME_DIR/bin"
 EMBEDDING_MODELS_DIR="$DESKTOP_DIR/dist/embedding-models"
+FINANCEBUDDY_PAYLOAD="$ROOT_DIR/scripts/financebuddy/windows-payload"
+FINANCEBUDDY_RUNTIME="$DESKTOP_DIR/dist/financebuddy-runtime"
+FINANCEBUDDY_PACKAGER="$ROOT_DIR/scripts/financebuddy/build-windows-runtime.py"
+FINANCEBUDDY_BUILD_PYTHON="${CUBY_BUILD_PYTHON:-python}"
 EMBEDDING_MODEL_ID="${CUBY_EMBEDDING_MODEL:-Xenova/all-MiniLM-L6-v2}"
 PACKAGE_ARCH="x64"
 WINDOWS_SIGNING_BUILDER_ARGS=()
@@ -702,6 +706,17 @@ else
   log "CUBY_SKIP_CODESIGN=1, building unsigned Windows smoke package"
 fi
 
+if [ -e "$FINANCEBUDDY_PAYLOAD" ] || [ "${CUBY_REQUIRE_FINANCEBUDDY_RUNTIME:-0}" = "1" ]; then
+  package_step_start "Validate declared FinanceBuddy payload"
+  require_packaged_runtime_file "$FINANCEBUDDY_PACKAGER"
+  require_packaged_runtime_file "$FINANCEBUDDY_PAYLOAD/install_packaged.py"
+  require_packaged_runtime_file "$FINANCEBUDDY_PAYLOAD/payload-manifest.json"
+  require_packaged_runtime_file "$FINANCEBUDDY_PAYLOAD/requirements-windows.lock"
+  FINANCEBUDDY_ENABLED=1
+else
+  FINANCEBUDDY_ENABLED=0
+fi
+
 package_step_start "Install root workspace dependencies if needed"
 if [ ! -d "$ROOT_DIR/node_modules" ]; then
   log "Installing root workspace dependencies"
@@ -879,6 +894,21 @@ create_windows_cli_launcher "$CLI_BIN_DIR/cuby.cmd" "dist\\runtime\\memmy-agent\
 node "$ROOT_DIR/scripts/internal/shared/prepare-embedding-model.mjs" "$EMBEDDING_MODELS_DIR"
 cp -R "$EMBEDDING_MODELS_DIR" "$RUNTIME_DIR/memory/embedding-models"
 
+if [ "$FINANCEBUDDY_ENABLED" = "1" ]; then
+  package_step_start "Stage verified FinanceBuddy Windows x64 resources"
+  FINANCEBUDDY_STAGE_ARGS=(
+    stage
+    --payload "$(to_node_readable_path "$FINANCEBUDDY_PAYLOAD")"
+    --output "$(to_node_readable_path "$FINANCEBUDDY_RUNTIME")"
+  )
+  if [ -n "${CUBY_FINANCEBUDDY_SOURCE_OUTPUT:-}" ]; then
+    FINANCEBUDDY_STAGE_ARGS+=(--source-output "$(to_node_readable_path "$CUBY_FINANCEBUDDY_SOURCE_OUTPUT")")
+  fi
+  "$FINANCEBUDDY_BUILD_PYTHON" -B -X utf8 "$(to_node_readable_path "$FINANCEBUDDY_PACKAGER")" "${FINANCEBUDDY_STAGE_ARGS[@]}"
+else
+  require_packaged_runtime_absent "$FINANCEBUDDY_RUNTIME"
+fi
+
 package_step_start "Patch electron-builder NSIS template"
 patch_electron_builder_nsis_refresh
 
@@ -899,6 +929,13 @@ fi
 npx electron-builder "${BUILDER_ARGS[@]}" --win nsis --x64 "$@" --config.artifactName="$ARTIFACT_NAME"
 package_step_start "Verify packaged Windows app artifacts"
 verify_packaged_windows_unpacked_artifacts
+if [ "$FINANCEBUDDY_ENABLED" = "1" ]; then
+  "$FINANCEBUDDY_BUILD_PYTHON" -B -X utf8 "$(to_node_readable_path "$FINANCEBUDDY_PACKAGER")" verify-copy \
+    --staged "$(to_node_readable_path "$FINANCEBUDDY_RUNTIME")" \
+    --packaged "$(to_node_readable_path "$DESKTOP_DIR/release/win-unpacked/resources/financebuddy-runtime")"
+else
+  require_packaged_runtime_absent "$DESKTOP_DIR/release/win-unpacked/resources/financebuddy-runtime"
+fi
 
 if [ ! -f "$FINAL_EXE" ]; then
   echo "Packaging completed without the expected installer: $FINAL_EXE" >&2

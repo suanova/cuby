@@ -5,8 +5,14 @@ const HINT = "\n\n[Analyze the error above and try a different approach.]";
 export class ToolRegistry {
   private tools = new Map<string, Tool>();
   private cachedDefinitions: Record<string, any>[] | null = null;
+  private readonly allowedNames: ReadonlySet<string> | null;
+
+  constructor(allowedNames: readonly string[] | null = null) {
+    this.allowedNames = allowedNames === null ? null : new Set(allowedNames);
+  }
 
   register(tool: Tool): void {
+    if (this.allowedNames && !this.allowedNames.has(tool.name)) return;
     this.tools.set(tool.name, tool);
     this.cachedDefinitions = null;
   }

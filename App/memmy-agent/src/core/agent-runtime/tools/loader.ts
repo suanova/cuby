@@ -272,7 +272,7 @@ export class ToolLoader {
   }
 
   loadRegistry(ctx: Partial<ToolContext> | null = null, { scope = "core" }: { scope?: string } = {}): ToolRegistry {
-    const registry = new ToolRegistry();
+    const registry = new ToolRegistry((ctx ?? this.context).config?.allowedTools ?? null);
     this.load(ctx, registry, { scope });
     return registry;
   }

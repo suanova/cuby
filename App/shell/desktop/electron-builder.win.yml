@@ -9,6 +9,7 @@ directories:
 files:
   - dist/**/*
   - package.json
+  - "!dist/financebuddy-runtime{,/**}"
   - "!dist/runtime/memmy-agent/dist/skills/docx{,/**}"
   - "!dist/runtime/memmy-agent/dist/skills/pptx{,/**}"
   - "!dist/runtime/memmy-agent/dist/skills/xlsx{,/**}"
@@ -38,6 +39,10 @@ asarUnpack:
   - "dist/renderer/**"
 
 extraResources:
+  - from: dist
+    to: .
+    filter:
+      - "financebuddy-runtime/**/*"
   - from: dist/runtime/memory
     to: memory-runtime
     filter:
@@ -69,6 +74,10 @@ win:
   signAndEditExecutable: true
   signExecutable: true
   forceCodeSigning: true
+  # Keep the upstream Authenticode signatures and exact bundled Python bytes.
+  signExts:
+    - '!financebuddy-runtime\python\python.exe'
+    - '!financebuddy-runtime\python\pythonw.exe'
   signtoolOptions:
     signingHashAlgorithms:
       - sha256

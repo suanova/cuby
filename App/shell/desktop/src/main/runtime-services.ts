@@ -69,7 +69,7 @@ export interface StartManagedRuntimeServicesOptions extends StartPackagedRuntime
   runtimeExecutable?: string;
   platform?: NodeJS.Platform;
   /** Runs after migrations/config preparation and before any managed child starts. */
-  beforeStartServices?: (input: { databasePath: string; configPath: string }) => Promise<void>;
+  beforeStartServices?: (input: { databasePath: string; configPath: string; agentWorkspace: string }) => Promise<void>;
   /** Unpacked Memory runtime shipped as an offline Desktop resource. */
   offlineMemoryRuntimeDirectory?: string;
 }
@@ -191,7 +191,8 @@ export async function startManagedRuntimeServices(
   runtimeConfig.appDatabaseFile = options.appDatabaseFile;
   await options.beforeStartServices?.({
     databasePath: options.appDatabaseFile,
-    configPath: runtimeConfig.configPath
+    configPath: runtimeConfig.configPath,
+    agentWorkspace: runtimeConfig.agentWorkspace
   });
   const browserPreparationAttemptId = randomUUID();
   const children: ManagedChild[] = [];

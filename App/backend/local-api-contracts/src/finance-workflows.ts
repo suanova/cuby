@@ -1,4 +1,5 @@
 import { consistencyQuestionDisplayText } from "./finance-consistency.js";
+import { peerComparisonDisplayText } from "./finance-peers.js";
 
 export type FinanceWorkflowId =
   | "sources"
@@ -27,21 +28,21 @@ export const FINANCE_WORKFLOWS: {
   },
   {
     id: "review",
-    title: "檢查報告",
-    detail: "核對披露、規則版本及補件要求",
-    stage: "可用 · C2 Scope 1/2",
+    title: "C2 披露檢查",
+    detail: "報告有否按 HKEX C2 披露所需內容？",
+    stage: "全本主板 C2 · 148項",
   },
   {
     id: "peers",
     title: "同行比較",
     detail: "查官方報告，比較數據及口徑",
-    stage: "可用 · 排放指標",
+    stage: "預設同行／自行加入公司",
   },
   {
     id: "consistency",
-    title: "報告一致性核對",
-    detail: "中英／跨報告／內部／跨年重述四類初核",
-    stage: "可用 · 新稿＋歷史基準",
+    title: "一致性審閱",
+    detail: "數字、單位及內文說法有沒有矛盾？",
+    stage: "一份報告即可開始",
   },
 ];
 
@@ -56,6 +57,13 @@ export function buildFinancePrompt(input: {
     const synthetic = input.sourceVariant === "deliberate_errors";
     if (synthetic && input.mode !== "same_year")
       throw new Error("錯漏副本測試只支援本年度英文模式。");
+    if(!synthetic&&input.mode==="same_year")return [
+      "執行 FinanceBuddy 全本主板 C2 披露檢查。先讀 skills/financebuddy-c2-review/SKILL.md。",
+      "使用項目已上載的億都 FY2025/26 ESG，單份中文或英文即可；不要查找本年乾淨版對答案。",
+      "先用 manage_finance_project 找所選項目及文件版本，再建立固定副本。按原報告及用戶確認起訖日；大型股氣候披露資格未明時用 unknown。",
+      "呼叫 start_c2_disclosure_review，核對148項版本化清單；若有兩種語言先選primary_esg_slot，不能用另一版填補本稿缺漏。",
+      "背景處理中不宣稱完成。用 read_consistency_review 讀進度，read_consistency_issue 讀單項證據。欠年報或刊載證據列待補，保留條款、原頁及未完成範圍，不把有披露證據稱為整份合規批准。"
+    ].join("\n");
     return [
       "執行 FinanceBuddy 報告檢查。先讀 skills/financebuddy-c2-review/SKILL.md，再按 skill 完成工具核對。",
       "原件：億都 FY2025/26 英文 ESG 報告；範圍只限已支援的 12 項 HKEX C2 Scope 1/2。",
@@ -86,6 +94,8 @@ export function buildFinancePrompt(input: {
 }
 /** Collapse only exact app-generated requests; arbitrary user text remains visible. */
 export function financeWorkflowDisplayText(content: string): string | null {
+  const peer=peerComparisonDisplayText(content);
+  if(peer)return peer;
   const consistency = consistencyQuestionDisplayText(content);
   if (consistency) return consistency;
   if (
@@ -104,7 +114,7 @@ export function financeWorkflowDisplayText(content: string): string | null {
       buildFinancePrompt({ workflow: "review", mode, peers: [] })
     ) {
       return mode === "same_year"
-        ? "檢查億都 FY2025/26 ESG 報告：核對 12 項 C2 Scope 1／2 披露，列出來源、規則及待補資料。"
+        ? "檢查億都 FY2025/26 ESG 報告：核對全本主板 C2 適用披露，列出來源、規則及待補資料。"
         : "以上年 FY2025/26 ESG 報告評估 FY2026/27 準備度；保留原件年份，列出今年仍須確認的資料。";
     }
   }

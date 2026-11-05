@@ -1,0 +1,27 @@
+{
+  "purpose": "Synthetic contract example only. These are not Yeebo facts or actual regulatory requirements.",
+  "entity": "DEMO ONLY",
+  "fiscal_year": "2025/26",
+  "period_start": "2025-04-01",
+  "period_end": "2026-03-31",
+  "rule_catalog_complete": false,
+  "sources": [
+    {"id": "raw", "title": "Synthetic source ledger", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+    {"id": "old-rule", "title": "Synthetic prior rule", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+    {"id": "new-rule", "title": "Synthetic target rule", "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}
+  ],
+  "facts": [
+    {"id": "energy-en", "entity": "DEMO ONLY", "metric": "electricity", "value": "100.00", "unit": "kWh", "period_start": "2025-04-01", "period_end": "2026-03-31", "boundary": "operational_control", "method": "meter", "source_id": "raw", "location": "Sheet Energy B2", "status": "reviewed", "language": "en"},
+    {"id": "energy-zh", "entity": "DEMO ONLY", "metric": "electricity", "value": "100", "unit": "kWh", "period_start": "2025-04-01", "period_end": "2026-03-31", "boundary": "operational_control", "method": "meter", "source_id": "raw", "location": "Sheet Energy B2 Chinese rendition", "status": "reviewed", "language": "zh-Hant"}
+  ],
+  "disclosures": [],
+  "previous_rules": [
+    {"id": "DEMO-A", "version": "synthetic-v1", "verified": true, "source_id": "old-rule", "requirement": "qualitative", "metrics": ["electricity"]}
+  ],
+  "rules": [
+    {"id": "DEMO-A", "version": "synthetic-v2", "verified": true, "source_id": "new-rule", "requirement": "quantitative", "metrics": ["electricity", "water"], "applicability": "applicable", "applicability_reason": "Synthetic example only", "owner": "Demo operations"}
+  ],
+  "sections": [
+    {"report": "esg", "id": "environment", "title": "環境指標示例", "fact_ids": ["energy-en"], "paragraphs": [{"text": "此為虛構資料的流程示例，並非億都報告。", "status": "draft", "source_ids": ["raw"]}]}
+  ]
+}

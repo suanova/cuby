@@ -1,10 +1,15 @@
 import { z } from "zod";
 import { ConsistencySlotSchema, ConsistencyReportSchema } from "./finance-consistency.js";
+import { FinancePeerCompanySchema } from "./finance-peers.js";
 
 export const FinanceProjectIdSchema=z.string().regex(/^[a-f0-9]{32}$/);
 export const FinanceProjectSchema=z.object({id:FinanceProjectIdSchema,title:z.string(),external_id:z.string().nullable(),revision:z.number().int(),
+  peer_companies:z.array(FinancePeerCompanySchema).max(8).optional(),
   active_version:z.string().optional(),latest_run:z.string().nullable(),created_at:z.string(),updated_at:z.string(),
   versions:z.array(z.object({id:z.string(),fiscal_year:z.string(),created_at:z.string(),runs:z.array(z.string()),
+    reviews:z.array(z.object({run_id:z.string(),kind:z.enum(["consistency","c2"]),status:z.enum(["not_started","running","completed","partial","failed"]),
+      history_status:z.enum(["ready","unavailable","not_requested"]).optional(),history_year:z.string().optional(),
+      missing_history_slots:z.array(z.string()).optional(),restatement_status:z.enum(["not_started","pending","running","completed","failed"]).optional()})).optional(),
     documents:z.array(z.object({slot:ConsistencySlotSchema,file_name:z.string(),sha256:z.string(),bytes:z.number()}))}))});
 export const FinanceProjectListSchema=z.object({projects:z.array(FinanceProjectSchema)});
 export const FinanceProjectBuildSchema=z.object({project:FinanceProjectSchema,report:ConsistencyReportSchema});
@@ -13,6 +18,7 @@ export const FinanceSessionReviewSchema=z.object({binding:FinanceReviewBindingSc
 export type FinanceReviewBinding=z.infer<typeof FinanceReviewBindingSchema>;
 export const ConsistencyEditSchema=z.object({slot:ConsistencySlotSchema,page:z.number().int().positive(),original:z.string().min(12).max(1800),replacement:z.string().min(1).max(3000)}).strict();
 export const ConsistencyEditorSchema=z.object({run_id:z.string(),base_sha256:z.string(),revision:z.number().int(),
+  preparation:z.object({id:z.string(),status:z.enum(["running","completed","partial"]),updated_at:z.string(),total:z.number().int().nonnegative(),ready:z.number().int().nonnegative(),failed:z.number().int().nonnegative(),error:z.string().optional()}).optional(),
   proposals:z.record(z.string(),z.object({id:z.string(),status:z.enum(["generating","ready","failed"]),updated_at:z.string(),summary:z.string().optional(),
     requires_confirmation:z.boolean().optional(),confirmation_prompt:z.string().optional(),edits:z.array(ConsistencyEditSchema).optional(),error:z.string().optional(),model:z.string().optional(),reasoning_effort:z.string().optional()})),
   decisions:z.record(z.string(),z.object({status:z.enum(["accepted","dismissed"]),edits:z.array(ConsistencyEditSchema),at:z.string(),proposal_id:z.string().optional(),facts_confirmed:z.boolean().optional()})),

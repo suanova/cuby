@@ -1,0 +1,22 @@
+{
+  "version": "0.1.0",
+  "report_year": "2025",
+  "sources": {
+    "00732": {
+      "company": "Truly International Holdings Limited（信利國際）",
+      "title": "Annual Report 2025",
+      "url": "https://www.truly.com.hk/Upload/trulyhk/Chinese/InterimAnnualReport/2025/c2025AnnaulReport-17290934346.pdf",
+      "sha256": "b73d70e4912ead765c82659608a38cef1270ffdbe6a5d1285aeffdc22653836c",
+      "table_page": 53,
+      "context_pages": [45, 54]
+    },
+    "02878": {
+      "company": "Solomon Systech (International) Limited（晶門半導體）",
+      "title": "Environmental, Social and Governance Report 2025",
+      "url": "https://www.solomon-systech.com/media/custom-news/40da83e3-cd69-4f91-8a9b-2e0d11c861ca/assets/1e9aff06-5e7f-4850-a06c-6a40f0cb31d7/E2878_esg.pdf?disposition=inline",
+      "sha256": "ffab0c950ac683feba631ee0daa309b70551d7a3c6dfdc8f308095a50d82a60e",
+      "table_page": 21,
+      "context_pages": [6, 10, 20, 22]
+    }
+  }
+}

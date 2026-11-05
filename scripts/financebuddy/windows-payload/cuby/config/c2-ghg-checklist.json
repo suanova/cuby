@@ -1,0 +1,30 @@
+{
+  "schema_version": "c2-ghg-checklist-1",
+  "revision": "0.1.0",
+  "review_status": "technical_source_mapping_verified_business_review_pending",
+  "scope": "HKEX C2 Part D paragraphs 28 (Scope 1/2 portions) and 29(a), 29(b)(i)-(iii), 29(c)",
+  "effective_financial_year_start_from": "2025-01-01",
+  "implementation_source_url": "https://www.hkex.com.hk/Listing/Sustainability/ESG-Academy/Rules-and-Regulations?sc_lang=en",
+  "official_current_url": "https://en-rules.hkex.com.hk/rulebook/appendix-c2-environmental-social-and-governance-reporting-code-0",
+  "official_pdf_url": "https://en-rules.hkex.com.hk/sites/default/files/net_file_store/HKEX4476_3841_VER36624.pdf",
+  "local_rule_file": "dataset/rules/HKEX_主板C2_ESG守則_EN.pdf",
+  "local_rule_sha256": "4bbf50f7f9231953e26d0bf391d53aa178dd9d4c774806db97072fa22dbb4746",
+  "selected_block_sha256": "c9d8729d56c5199cbfc186bb1fb1bba76981a20230f29d2690159eee6e827f83",
+  "mandatory_context_quote": "An issuer must disclose its Scope 1 greenhouse gas emissions and Scope 2 greenhouse gas emissions pursuant to paragraphs 28(a), 28(b) and 29 on a mandatory basis.",
+  "mandatory_context_actual_pdf_page": 13,
+  "exclusions": ["Scope 3 obligations and category completeness", "Other C2 Parts/clauses, annual-report rules and full legal compliance", "Underlying ledger accuracy, recalculation, gross-versus-net assurance", "Bilingual/cross-report consistency beyond the chosen source report", "Whether a claimed exception or relief is legally available; requires review", "Complete regulatory update monitoring outside the selected block"],
+  "checks": [
+    {"id":"C2-28-S1","clause":"28(a)","label":"當期 Scope 1 數值","kind":"automatic","rule_quote":"Scope 1 greenhouse gas emissions","actual_pdf_page":22,"scope":"scope1_scope2"},
+    {"id":"C2-28-S2","clause":"28(b)","label":"當期 Scope 2 數值","kind":"automatic","rule_quote":"Scope 2 greenhouse gas emissions","actual_pdf_page":22,"scope":"scope1_scope2"},
+    {"id":"C2-28-UNIT","clause":"28 chapeau","label":"兩項排放量單位","kind":"automatic","rule_quote":"expressed as metric tons of CO2 equivalent","actual_pdf_page":22,"scope":"scope1_scope2"},
+    {"id":"C2-28-PERIOD","clause":"28 chapeau","label":"數據期間是否為目標財年","kind":"automatic","rule_quote":"generated during the reporting period","actual_pdf_page":22,"scope":"scope1_scope2"},
+    {"id":"C2-28-GROSS","clause":"28 chapeau","label":"是否清楚披露絕對總排放量而非淨抵銷值","kind":"judgement","rule_quote":"its absolute gross greenhouse gas emissions","actual_pdf_page":22,"scope":"scope1_scope2","query":"gross net offset absolute greenhouse emissions","guidance":"數值或 Total GHG 標籤本身不能證明 absolute gross；核實是否扣除抵銷。"},
+    {"id":"C2-29A","clause":"29(a)","label":"GHG Protocol 2004 或有依據的替代計量標準","kind":"judgement","rule_quote":"measure its greenhouse gas emissions in accordance with the Greenhouse Gas Protocol: A Corporate Accounting and Reporting Standard (2004)","actual_pdf_page":22,"scope":"scope1_scope2","query":"Greenhouse Gas Protocol Corporate Accounting Reporting Standard 2004","guidance":"條款另有管轄機關／另一上市交易所要求的替代方法例外。Scope 3 專屬註腳不能證明 Scope 1/2 採用此標準；來源只列排放因子或 AR4 亦不足。"},
+    {"id":"C2-29BI-APPROACH","clause":"29(b)(i)","label":"計量方法披露","kind":"judgement","rule_quote":"the measurement approach, inputs and assumptions the issuer uses to measure its greenhouse gas emissions","actual_pdf_page":23,"scope":"scope1_scope2","query":"measurement approach operational control financial control greenhouse","guidance":"辨識實際方法及適用排放範圍；僅列地區／因子不是完整計量方法。"},
+    {"id":"C2-29BI-INPUTS","clause":"29(b)(i)","label":"輸入資料及假設披露","kind":"judgement","rule_quote":"the measurement approach, inputs and assumptions the issuer uses to measure its greenhouse gas emissions","actual_pdf_page":23,"scope":"scope1_scope2","query":"emission factors assumptions fuel refrigerants electricity inputs","guidance":"因子來源可作部分支持，仍要評估輸入資料及假設是否充分；不能核實未取得的原始台帳。"},
+    {"id":"C2-29BII","clause":"29(b)(ii)","label":"選擇方法、輸入及假設的原因","kind":"judgement","rule_quote":"the reason why the issuer has chosen the measurement approach, inputs and assumptions it uses to measure its greenhouse gas emissions","actual_pdf_page":23,"scope":"scope1_scope2","query":"measurement reason chosen accuracy assumptions factors","guidance":"引用來源不等於已解釋選擇原因；與本年度變更原因分開判斷。"},
+    {"id":"C2-29BIII","clause":"29(b)(iii)","label":"計量方法、輸入及假設的變更及原因","kind":"judgement","rule_quote":"any changes the issuer made to the measurement approach, inputs and assumptions during the reporting period and the reasons for those changes","actual_pdf_page":23,"scope":"scope1_scope2","query":"updated emission factors improve accuracy changes","guidance":"說明改過甚麼及為何；未提變更不能自行假設沒變。"},
+    {"id":"C2-29C-BASIS","clause":"29(c)","label":"Scope 2 location-based 基準","kind":"judgement","rule_quote":"disclose its location-based Scope 2 greenhouse gas emissions","actual_pdf_page":23,"scope":"scope1_scope2","query":"location-based market-based Scope 2 electricity","guidance":"使用地區電力因子不自動等於已清楚披露 location-based；market-based 不能代替 location-based。","workflow_follow_up":"確認並清楚披露 location-based Scope 2 及其計算依據；market-based 可按適用情況另列，不能代替 location-based 披露。"},
+    {"id":"C2-29C-CONTRACTS","clause":"29(c)","label":"理解 Scope 2 所需合約文書資料","kind":"judgement","rule_quote":"provide information about any contractual instruments that is necessary to enable an understanding of the issuer’s Scope 2 greenhouse gas emissions","actual_pdf_page":23,"scope":"scope1_scope2","query":"Scope 2 contractual instruments renewable certificate electricity","guidance":"先確認是否涉及相關合約及所需資訊；未找到描述不等於沒有合約或不適用。"}
+  ]
+}

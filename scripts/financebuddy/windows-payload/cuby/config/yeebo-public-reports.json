@@ -1,0 +1,160 @@
+{
+  "schema": 1,
+  "documents": [
+    {
+      "source_id": "S12",
+      "path": "dataset/reports/億都_ESG報告_FY2025-26_繁中.pdf",
+      "file_name": "億都_ESG報告_FY2025-26_繁中.pdf",
+      "sha256": "cee06a1f89d2bf3ef1f3a4f3e60f66d501b615a0f55e776413aaa201d84ab744",
+      "size": 2318832,
+      "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0730/2026073000062_c.pdf",
+      "entity": "yeebo",
+      "report_fiscal_year": "2025/26",
+      "report_kind": "esg",
+      "language": "zh-Hant"
+    },
+    {
+      "source_id": "S15",
+      "path": "dataset/reports/億都_年報_FY2025-26_繁中.pdf",
+      "file_name": "億都_年報_FY2025-26_繁中.pdf",
+      "sha256": "6ed2a5ba9fb4f1f74f6da5b380409b50be068965244b9ccf1b5ae29191be620f",
+      "size": 1919169,
+      "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0730/2026073000054_c.pdf",
+      "entity": "yeebo",
+      "report_fiscal_year": "2025/26",
+      "report_kind": "annual",
+      "language": "zh-Hant"
+    },
+    {
+      "source_id": "S23",
+      "path": "dataset/reports/億都_ESG報告_FY2025-26_EN.pdf",
+      "file_name": "億都_ESG報告_FY2025-26_EN.pdf",
+      "sha256": "e4823c8f1f883b0ba8a29f9928e81806960ce29a701539ff9771f34929b4f832",
+      "size": 1789434,
+      "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0730/2026073000061.pdf",
+      "entity": "yeebo",
+      "report_fiscal_year": "2025/26",
+      "report_kind": "esg",
+      "language": "en"
+    },
+    {
+      "source_id": "S29",
+      "path": "dataset/reports/億都_年報_FY2025-26_EN.pdf",
+      "file_name": "億都_年報_FY2025-26_EN.pdf",
+      "sha256": "00e1330e5ace638a543efd893880bca35a5641fe4c4552317f59a675cc7db60c",
+      "size": 1756468,
+      "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0730/2026073000053.pdf",
+      "entity": "yeebo",
+      "report_fiscal_year": "2025/26",
+      "report_kind": "annual",
+      "language": "en"
+    },
+    {
+      "source_id": "S18",
+      "path": "dataset/reports/億都_ESG報告_FY2023-24_繁中.pdf",
+      "file_name": "億都_ESG報告_FY2023-24_繁中.pdf",
+      "sha256": "027bd13ce0d6ed49623f03ecba8144cbece730ae6d585bb9457c75f6be4bed66",
+      "size": 902457,
+      "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2024/0722/2024072201073_c.pdf",
+      "entity": "yeebo",
+      "report_fiscal_year": "2023/24",
+      "report_kind": "esg",
+      "language": "zh-Hant"
+    },
+    {
+      "source_id": "S19",
+      "path": "dataset/reports/億都_ESG報告_FY2023-24_EN.pdf",
+      "file_name": "億都_ESG報告_FY2023-24_EN.pdf",
+      "sha256": "a9bf8970ec02a653186daa20bbdfa418f18eb77e460a40f178746fea882e419c",
+      "size": 742620,
+      "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2024/0722/2024072201072.pdf",
+      "entity": "yeebo",
+      "report_fiscal_year": "2023/24",
+      "report_kind": "esg",
+      "language": "en"
+    },
+    {
+      "source_id": "S20",
+      "path": "dataset/reports/億都_ESG報告_FY2024-25_繁中.pdf",
+      "file_name": "億都_ESG報告_FY2024-25_繁中.pdf",
+      "sha256": "9005a64527fb73d13e0b856f9ec2c730bc8e00e13087bb71455450b919b4c392",
+      "size": 1625521,
+      "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2025/0725/2025072500086_c.pdf",
+      "entity": "yeebo",
+      "report_fiscal_year": "2024/25",
+      "report_kind": "esg",
+      "language": "zh-Hant"
+    },
+    {
+      "source_id": "S21",
+      "path": "dataset/reports/億都_ESG報告_FY2024-25_EN.pdf",
+      "file_name": "億都_ESG報告_FY2024-25_EN.pdf",
+      "sha256": "b7015fc25c54638081422cd1ec66b4b26a01f7c8d5e08bcc31ad61372e71fe67",
+      "size": 1451365,
+      "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2025/0725/2025072500085.pdf",
+      "entity": "yeebo",
+      "report_fiscal_year": "2024/25",
+      "report_kind": "esg",
+      "language": "en"
+    },
+    {
+      "source_id": "S24",
+      "path": "dataset/reports/億都_年報_FY2023-24_繁中.pdf",
+      "file_name": "億都_年報_FY2023-24_繁中.pdf",
+      "sha256": "af0a17732b13c51665eaf78bf48f8a9e8ef39175dab73d8cccb500a4b04fd27d",
+      "size": 1866585,
+      "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2024/0722/2024072201015_c.pdf",
+      "entity": "yeebo",
+      "report_fiscal_year": "2023/24",
+      "report_kind": "annual",
+      "language": "zh-Hant"
+    },
+    {
+      "source_id": "S25",
+      "path": "dataset/reports/億都_年報_FY2023-24_EN.pdf",
+      "file_name": "億都_年報_FY2023-24_EN.pdf",
+      "sha256": "52005192e3ee076c698e63498a5a312042015d5a9f0f7a9398381cc5f6f68700",
+      "size": 1747001,
+      "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2024/0722/2024072201014.pdf",
+      "entity": "yeebo",
+      "report_fiscal_year": "2023/24",
+      "report_kind": "annual",
+      "language": "en"
+    },
+    {
+      "source_id": "S26",
+      "path": "dataset/reports/億都_年報_FY2024-25_繁中.pdf",
+      "file_name": "億都_年報_FY2024-25_繁中.pdf",
+      "sha256": "aaa72933bee7425810bd62b54383fa725c854295eea35910285ac53f56267e3c",
+      "size": 2285431,
+      "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2025/0725/2025072500078_c.pdf",
+      "entity": "yeebo",
+      "report_fiscal_year": "2024/25",
+      "report_kind": "annual",
+      "language": "zh-Hant"
+    },
+    {
+      "source_id": "S27",
+      "path": "dataset/reports/億都_年報_FY2024-25_EN.pdf",
+      "file_name": "億都_年報_FY2024-25_EN.pdf",
+      "sha256": "f7e2668f8e2b6fa67715885adbb0bfd675434bf5959813e88c2a739c3c2de3b2",
+      "size": 2166165,
+      "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2025/0725/2025072500077.pdf",
+      "entity": "yeebo",
+      "report_fiscal_year": "2024/25",
+      "report_kind": "annual",
+      "language": "en"
+    }
+  ],
+  "rules": [
+    {
+      "source_id": "S10",
+      "path": "dataset/rules/HKEX_主板C2_ESG守則_EN.pdf",
+      "file_name": "HKEX_主板C2_ESG守則_EN.pdf",
+      "sha256": "4bbf50f7f9231953e26d0bf391d53aa178dd9d4c774806db97072fa22dbb4746",
+      "size": 142306,
+      "url": "https://en-rules.hkex.com.hk/sites/default/files/net_file_store/HKEX4476_3841_VER36624.pdf",
+      "bundled": true
+    }
+  ]
+}

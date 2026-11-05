@@ -1800,3 +1800,6 @@ export * from './desktop-screen-capture.js';
 export * from './computer-use-onboarding.js';
 export * from './finance-consistency.js';
 export * from './finance-projects.js';
+export * from './finance-peers.js';
+export * from './finance-input.js';
+export * from "./finance-followups.js";

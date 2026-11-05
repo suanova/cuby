@@ -1,0 +1,79 @@
+.consistency-source-comparison {
+  margin: 0 0 12px;
+}
+
+.consistency-source-comparison > h4 {
+  margin: 0 0 8px;
+  color: #425b54;
+  font-size: 12px;
+}
+
+.consistency-source-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
+}
+
+.consistency-source-panel {
+  --source-color: #174a80;
+  --source-background: #f0f6fc;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--source-color);
+  border-top-width: 4px;
+  border-radius: 8px;
+  background: var(--source-background);
+  color: var(--source-color);
+}
+
+.consistency-source-panel--en {
+  --source-color: #663b82;
+  --source-background: #f8f2fc;
+}
+
+.consistency-source-panel > strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+
+.consistency-source-fragment > button {
+  max-width: 100%;
+  min-height: 24px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.consistency-source-fragment > button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.consistency-source-fragment > blockquote {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.consistency-source-fragment + .consistency-source-fragment {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--source-color);
+}
+
+.consistency-source-panel .consistency-source-focus {
+  color: inherit;
+  font-weight: 750;
+}
