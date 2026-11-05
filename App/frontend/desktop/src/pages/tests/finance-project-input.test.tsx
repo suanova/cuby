@@ -44,7 +44,7 @@ function expectNoWrites(request: ReturnType<typeof vi.fn>) { expect(request.mock
 describe("Current report identity and exact previous-year preview (component mocks)", () => {
   it("shows company and known FY/type/language before files, without binding native history or using remembered project", async () => {
     localStorage.setItem("financebuddy.project", pid); const mocks = await render();
-    const panel = container.querySelector('[aria-label="知識庫已知報告"]')!;
+    const panel = container.querySelector('[aria-label="歷年原稿"]')!;
     expect(panel.textContent).toContain("億都（Yeebo）"); expect(panel.textContent).toContain("FY2025/26"); expect(panel.textContent).toContain("FY2024/25"); expect(panel.textContent).toContain("FY2023/24"); expect(panel.textContent).toContain("ESG"); expect(panel.textContent).toContain("年報"); expect(panel.textContent).toContain("中文"); expect(panel.textContent).toContain("English");
     expect(mocks.request.mock.calls.map(([input]) => input.action)).toEqual(["input-knowledge"]); expect(mocks.upload).not.toHaveBeenCalled(); expect(container.querySelector(".finance-project-files")).toBeNull(); expect(container.textContent).toContain("儲存到新項目");
   });
@@ -56,6 +56,17 @@ describe("Current report identity and exact previous-year preview (component moc
     const plan = container.querySelector('[aria-label="儲存前文件及比較預覽"]')!;
     expect(plan.textContent).toContain("今次使用 · FY2026/27"); expect(plan.textContent).toContain("同財年對照：以上 FY2026/27 ESG 與年報"); expect(plan.textContent).toContain("2025/26-esg-en.pdf"); expect(plan.textContent).toContain("2025/26-annual-en.pdf"); expect(plan.textContent).not.toContain("2024/25-esg-en.pdf"); expect(plan.textContent).toContain("原稿已核對"); expect(plan.textContent).toContain("版本 S-2025/26-esg-en"); expect(plan.textContent).toContain("SHA256 cccccccccccc");
     expect(container.querySelectorAll('.finance-input-evidence blockquote')[0]?.textContent).toContain("PDF p.2"); expectNoWrites(mocks.request);
+  });
+  it("labels a bundled public prior and makes it available for comparison", async () => {
+    const previous = doc("2025/26", "esg", "en", { indexed_status: "local_verified" });
+    const mocks = await render({ knowledge: async () => ({ ...knowledge([previous]), source_mode: "public_snapshot" }) });
+    expect(container.querySelector('[aria-label="歷年原稿"]')!.textContent).toContain("億都公開報告 · 隨附版本");
+    await select(["current.pdf"]);
+    const plan = container.querySelector('[aria-label="儲存前文件及比較預覽"]')!;
+    expect(plan.textContent).toContain("去年原稿 · FY2025/26（隨附公開報告，只讀）");
+    expect(plan.textContent).toContain("隨附公開原件已核對");
+    expect(container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')[3]!.disabled).toBe(false);
+    expectNoWrites(mocks.request);
   });
   it("does not substitute an older FY when the exact prior original is missing, and lets other checks continue", async () => {
     const mocks = await render({ knowledge: async () => knowledge([doc("2024/25")]) }); await select(["current.pdf"]);
