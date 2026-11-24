@@ -311,6 +311,11 @@ declare the origin in the manifest.
 sends `host-context-changed` with the new `displayMode`. The app can report its
 height with `ui/notifications/size-changed`; the host applies it to the iframe.
 
+`containerDimensions` is `{ width, maxHeight }` in pixels. Inline it is the fixed
+chat budget, `800 × 640`. In fullscreen it is the frame's measured width and the
+height left below it in the window, and the host sends `host-context-changed`
+again when the window is resized.
+
 ### Large results
 
 Tool results larger than 256 KiB, or containing images, are externalized under

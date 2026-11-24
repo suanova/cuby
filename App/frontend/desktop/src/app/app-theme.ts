@@ -83,6 +83,36 @@ export function watchCubyTheme(callback: () => void): () => void {
   };
 }
 
+const INLINE_APP_VIEW_CONTAINER = { width: 800, maxHeight: 640 };
+
+/**
+ * The room an app view has. An inline view keeps the fixed chat budget. An
+ * expanded view sits in a fixed overlay, which is then the frame's offset
+ * parent: report the frame's real width and the height left below its top
+ * edge, so a page can lay out for the window it actually has.
+ */
+export function appViewContainer(input: {
+  displayMode: "inline" | "fullscreen";
+  frame?: {
+    clientWidth: number;
+    offsetTop: number;
+    offsetParent: { clientHeight: number } | null;
+  } | null;
+  overlayPaddingBottom?: number;
+}): { width: number; maxHeight: number } {
+  const overlay = input.frame?.offsetParent;
+  if (input.displayMode !== "fullscreen" || !input.frame || !overlay) {
+    return { ...INLINE_APP_VIEW_CONTAINER };
+  }
+  const width = Math.floor(input.frame.clientWidth);
+  const maxHeight = Math.floor(
+    overlay.clientHeight - input.frame.offsetTop - (input.overlayPaddingBottom ?? 0),
+  );
+  // No layout yet (or a test DOM without one): keep the inline budget.
+  if (!(width > 0) || !(maxHeight > 0)) return { ...INLINE_APP_VIEW_CONTAINER };
+  return { width, maxHeight };
+}
+
 export function cubyHostContext(input: {
   displayMode: "inline" | "fullscreen";
   container: { width: number; height?: number; maxHeight?: number };

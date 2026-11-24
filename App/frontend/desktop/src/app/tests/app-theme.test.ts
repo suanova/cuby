@@ -1,5 +1,37 @@
 import { describe, expect, it } from "vitest";
-import { buildAppCsp, cubyHostContext, injectAppCsp } from "../app-theme.js";
+import { appViewContainer, buildAppCsp, cubyHostContext, injectAppCsp } from "../app-theme.js";
+
+describe("appViewContainer", () => {
+  const expandedFrame = { clientWidth: 1408, offsetTop: 61, offsetParent: { clientHeight: 900 } };
+
+  it("keeps the fixed chat budget for an inline view", () => {
+    expect(appViewContainer({ displayMode: "inline" })).toEqual({ width: 800, maxHeight: 640 });
+    expect(appViewContainer({ displayMode: "inline", frame: expandedFrame }))
+      .toEqual({ width: 800, maxHeight: 640 });
+  });
+
+  it("reports the frame's real width and the height left below it in fullscreen", () => {
+    expect(appViewContainer({ displayMode: "fullscreen", frame: expandedFrame, overlayPaddingBottom: 16 }))
+      .toEqual({ width: 1408, maxHeight: 823 });
+    expect(appViewContainer({
+      displayMode: "fullscreen",
+      frame: { clientWidth: 1887.6, offsetTop: 61, offsetParent: { clientHeight: 1040 } },
+    })).toEqual({ width: 1887, maxHeight: 979 });
+  });
+
+  it("falls back to the inline budget when the frame has no layout", () => {
+    expect(appViewContainer({ displayMode: "fullscreen" })).toEqual({ width: 800, maxHeight: 640 });
+    expect(appViewContainer({ displayMode: "fullscreen", frame: null })).toEqual({ width: 800, maxHeight: 640 });
+    expect(appViewContainer({
+      displayMode: "fullscreen",
+      frame: { clientWidth: 1408, offsetTop: 61, offsetParent: null },
+    })).toEqual({ width: 800, maxHeight: 640 });
+    expect(appViewContainer({
+      displayMode: "fullscreen",
+      frame: { clientWidth: 0, offsetTop: 0, offsetParent: { clientHeight: 0 } },
+    })).toEqual({ width: 800, maxHeight: 640 });
+  });
+});
 
 describe("cubyHostContext", () => {
   it("maps Cuby tokens to MCP Apps style variables", () => {
