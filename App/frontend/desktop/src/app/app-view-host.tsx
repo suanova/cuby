@@ -1,14 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import type { AgentAppView } from "../state/agent-tool-traces.js";
-import { cubyHostContext, detectCubyLocale, detectCubyTheme, injectAppCsp, watchCubyTheme } from "./app-theme.js";
+import { appViewContainer, cubyHostContext, detectCubyLocale, detectCubyTheme, injectAppCsp, watchCubyTheme } from "./app-theme.js";
 import { AppViewBridge } from "./app-view-bridge.js";
 import type { AppBridgeTransport } from "./app-view-types.js";
 import { AppViewFrame } from "./app-view-frame.js";
 
-function hostContextFor(displayMode: "inline" | "fullscreen"): Record<string, unknown> {
+function hostContextFor(
+  displayMode: "inline" | "fullscreen",
+  iframe: HTMLIFrameElement | null,
+): Record<string, unknown> {
+  const overlay = displayMode === "fullscreen" ? iframe?.offsetParent ?? null : null;
   return cubyHostContext({
     displayMode,
-    container: { width: 800, maxHeight: 640 },
+    container: appViewContainer({
+      displayMode,
+      frame: iframe,
+      overlayPaddingBottom: overlay
+        ? Number.parseFloat(getComputedStyle(overlay).paddingBottom) || 0
+        : 0,
+    }),
     locale: detectCubyLocale(),
     theme: detectCubyTheme(),
   });
@@ -135,7 +145,7 @@ export function AppViewHost(props: {
     const bridge = new AppViewBridge({
       iframe,
       view: frame.view,
-      hostContext: () => hostContextFor(displayModeRef.current),
+      hostContext: () => hostContextFor(displayModeRef.current, iframeRef.current),
       transport: props.client,
       onDisplayModeChange: (mode) => setDisplayMode(mode),
       onSizeChange: (size) => {
@@ -155,13 +165,23 @@ export function AppViewHost(props: {
 
   useEffect(() => {
     if (!frame) return;
-    bridgeRef.current?.sendHostContextChanged(hostContextFor(displayMode));
+    bridgeRef.current?.sendHostContextChanged(hostContextFor(displayMode, iframeRef.current));
+  }, [displayMode, frame]);
+
+  useEffect(() => {
+    if (!frame || displayMode !== "fullscreen") return;
+    // The expanded view follows the window: tell the page when its room changes.
+    const onResize = () => {
+      bridgeRef.current?.sendHostContextChanged(hostContextFor("fullscreen", iframeRef.current));
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, [displayMode, frame]);
 
   useEffect(() => {
     if (!frame) return;
     return watchCubyTheme(() => {
-      bridgeRef.current?.sendHostContextChanged(hostContextFor(displayModeRef.current));
+      bridgeRef.current?.sendHostContextChanged(hostContextFor(displayModeRef.current, iframeRef.current));
     });
   }, [frame]);
 
